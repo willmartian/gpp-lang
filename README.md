@@ -24,6 +24,11 @@ would, and a scenario does the same thing every run. A reviewer only has to ask 
 spec tests the right thing. When nothing else works, `TestId` finds an element by test id,
 and it stands out in review.
 
+A spec is written in the words of whoever uses what it tests. A web app's users click
+buttons and read headings, so those are Spec++'s words. A library's users write code, so a
+library's specs are best written as code, and Spec++ doesn't test one directly. Business
+rules are tested through the product, where the people who know them see them.
+
 ## Getting started
 
 Spec++ needs Node.js 22.13 or later.

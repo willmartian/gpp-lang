@@ -11,11 +11,34 @@ Things that came up while building Spec++ and haven't been done.
       except words marked as side-effect checks (an email was sent). Needs words to say which
       kind they are.
 
+## Decided against
+
+- **Unit tests of business logic,** say through a Vitest backend with words like `Equal` and
+  words written in JavaScript. A spec is written in the words of whoever uses what it tests,
+  and a library's users write code, so code is its best spec. JavaScript words that call an
+  app's functions would be step definitions under another name. Business rules are tested
+  through the product, with a Scenario Outline's table of examples, and made quick with
+  Given shortcuts rather than by testing lower down.
+
+## Other interfaces
+
+Interfaces with users of their own, and their own words, are where Spec++ could grow
+instead. They also reach apps in any language, as the browser already does, without
+porting Spec++.
+
+- [ ] **Mobile apps.** Their users tap buttons and read headings too, so the shared words
+      fit as they are, given a driver that finds things by role and accessible name. Which
+      driver is undecided.
+- [ ] **Command lines:** running a command and seeing its output.
+- [ ] **HTTP APIs,** at the level of requests and responses; see `Get` and `Post` below.
+
 ## The language
 
 - [ ] **An escape hatch for words written in JavaScript.** Agreed shape: you can add words but
       never match sentences. So a `words.js`-style file of words with declared forms, the same
-      `form()` the builtins use, so the checker still works.
+      `form()` the builtins use, so the checker still works. Its words are for Given
+      shortcuts and things a user would recognise, not for calling an app's code to test it
+      (see Decided against).
 - [ ] **A wider standard vocabulary** for the usual reasons to reach for JavaScript:
   - [ ] requests: `Post` and `Get`, through Playwright's API client
   - [ ] mocking routes: `Mock`, through `page.route`
