@@ -1,6 +1,5 @@
 Feature: Persistence
 
-  @fixme
   Scenario: Todos survive a reload
     Given I Visit "/"
     And I Add "buy some cheese"

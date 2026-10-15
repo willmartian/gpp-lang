@@ -3,7 +3,6 @@ Feature: Item
   Background:
     Given I Visit "/"
 
-  @fixme
   Scenario: Marking todos as complete
     Given I Add "buy some cheese"
     And I Add "feed the cat"
@@ -13,7 +12,6 @@ Feature: Item
     When I Tick the Todo "feed the cat"
     Then the Checkbox "Toggle Todo" Within the Todo "feed the cat" should be Checked
 
-  @fixme
   Scenario: Un-marking a todo
     Given I Add "buy some cheese"
     And I Add "feed the cat"
@@ -22,7 +20,6 @@ Feature: Item
     Then the Checkbox "Toggle Todo" Within the Todo "buy some cheese" should Not be Checked
     And I should See "2 items left"
 
-  @fixme
   Scenario: Editing a todo
     Given I Add "buy some cheese"
     And I Add "feed the cat"

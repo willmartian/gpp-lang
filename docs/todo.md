@@ -53,6 +53,11 @@ porting Spec++.
   - [ ] the convention of `Signed-in` for the shortcut state versus `Sign-in` for the real action
 - [ ] **Reading fields from values,** like `the Email of the Admin`, and how field names avoid
       clashing with other words.
+- [ ] **Match only the text a screen reader reads.** Playwright's text matching (`hasText`,
+      `getByText`, `toContainText`, `toHaveText`) matches hidden text, even `aria-hidden` and
+      `display: none`, so `Containing` on a role with no name, `Contain`, `Read` and
+      `See "some text"` can pass on text nobody hears; checked on 1.63. Its aria snapshots leave that text out, so a selector engine
+      following their rules could fix it everywhere at once.
 - [ ] **Counting, and queries without a name.** There's no way to say "3 rows"; role queries
       always need a name. Testing Library's `ByDisplayValue` is missing too.
 - [ ] **Friction in prose.**

@@ -74,6 +74,16 @@ test('a well-typed scenario, tables and scopes included, is clean', () => {
   assert.deepEqual(checkFiles({ 'a.spp': scenario(...steps) }).scenarios, [])
 })
 
+test('a role with no name is found by what it contains, never by a name', () => {
+  assert.deepEqual(
+    checkFiles({ 'a.spp': scenario('When I Click the Button "Done" Within the Listitem Containing "Kale"') }).scenarios,
+    [],
+  )
+  assert.deepEqual(checkFiles({ 'a.spp': scenario('When I Click the Listitem "Kale"') }).scenarios, [
+    'a.spp:3:22 Listitem expected Containing "some text" (a Listitem has no name to match exactly), but got "Kale"',
+  ])
+})
+
 const add = ['Define: Add Text (Item)', '  Fill the Field "Item" with Item', '  Click the Button "Add"', ''].join('\n')
 
 test("a Define's callers are checked against its header", () => {

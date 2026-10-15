@@ -52,7 +52,9 @@ export const playwright: Driver<BrowserContext, Locator> = {
     const { name } = query
     switch (query.by) {
       case 'role':
-        return r.getByRole(query.role as AriaRole, { name, exact: true })
+        return query.content
+          ? r.getByRole(query.role as AriaRole).filter({ hasText: name })
+          : r.getByRole(query.role as AriaRole, { name, exact: true })
       case 'label':
         return r.getByLabel(name, { exact: true })
       case 'text':

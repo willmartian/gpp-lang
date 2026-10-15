@@ -22,6 +22,17 @@ is handy for rows. `Within` (or `In`) searches inside another element:
 When I Click the Button "Remove" Within the Row Containing "Kale"
 ```
 
+Some roles have no name: ARIA doesn't name them from their content, and they rarely have a
+label. These are `Listitem`, `Alert`, `Status`, `Log`, `Timer`, `Marquee`, `Note`, `Article`,
+`Blockquote`, `Definition`, `Term`, `Time`, and the roles ARIA forbids naming, like
+`Paragraph`, `Generic` and `Code`. They take only `Containing`, which matches the text inside
+them, as Playwright's `filter({ hasText })` does. Every other role is found by its name,
+which is what a screen reader says, even with `Containing`.
+
+```gherkin
+When I Click the Button "Destroy" Within the Listitem Containing "feed the cat"
+```
+
 ### Doing things
 
 `Visit "/path"`, `Reload`, `Back`, `Click`, `Double-click`, `Hover`, `Focus`, `Check`,

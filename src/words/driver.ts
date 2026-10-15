@@ -16,8 +16,11 @@ export type QueryKind = 'label' | 'text' | 'placeholder' | 'alt' | 'title' | 'te
 
 // How to find something. Names match exactly. A loose query matches part of
 // the text, ignoring case, and takes the first match: what See "some text"
-// looks for.
-export type Query = { by: 'role'; role: string; name: Name } | { by: QueryKind; name: Name; loose?: boolean }
+// looks for. A role query by content matches the text inside instead of the
+// name, for roles that have no name (UNNAMED_ROLES in shared.ts).
+export type Query =
+  | { by: 'role'; role: string; name: Name; content?: boolean }
+  | { by: QueryKind; name: Name; loose?: boolean }
 
 export type Action =
   | { do: 'click' | 'double-click' | 'hover' | 'focus' | 'check' | 'uncheck' | 'clear' }

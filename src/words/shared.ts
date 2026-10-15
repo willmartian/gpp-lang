@@ -3,7 +3,8 @@
 // Queries are Testing Library's, spelled as Cognate words: a role name
 // (Button, Heading, Checkbox…) takes the accessible name to its right and
 // leaves an Element. Spec++ asks for exact names, as Testing Library does,
-// unless you say Containing.
+// unless you say Containing. Roles with no name, like Listitem, take only
+// Containing, and look at the text inside them instead.
 //
 // Assertions are deferred. "Then I should Not See the Button "Save"" runs See
 // before Not, so See can't just fail on the spot; it leaves an Expectation on
@@ -17,8 +18,8 @@
 
 import type { Stack } from '../language/cognate.ts'
 import { describe, type Env, SppError, unwrap } from '../language/cognate.ts'
-import type { Context, Form } from '../language/types.ts'
-import { called, formsFor, oneOf, TableType, TextType, type } from '../language/types.ts'
+import type { Context, Form, Type } from '../language/types.ts'
+import { article, called, formsFor, oneOf, TableType, TextType, type } from '../language/types.ts'
 import type { Action, Driver, Name, Query, QueryKind, State } from './driver.ts'
 
 // Any driver: its members are methods, so one that needs more, like a page, fits.
@@ -151,24 +152,65 @@ const QUERY_WORDS: [QueryKind, ...string[]][] = [
   ['testId', 'TestId'],
 ]
 
+// Roles with no name to find them by: ARIA names neither from their content
+// nor, usually, from an author's label. Most are roles ARIA forbids naming;
+// the rest, like listitem, are ones ARIA hasn't settled (w3c/aria#1800).
+// Containing finds them by the text inside instead, and an exact name is a
+// mistake. Every other role is found by its name, which is what a screen
+// reader says.
+export const UNNAMED_ROLES: ReadonlySet<string> = new Set([
+  // naming prohibited
+  'caption',
+  'code',
+  'deletion',
+  'emphasis',
+  'generic',
+  'insertion',
+  'none',
+  'paragraph',
+  'presentation',
+  'strong',
+  'subscript',
+  'superscript',
+  // named by an author, but rarely
+  'alert',
+  'article',
+  'blockquote',
+  'definition',
+  'listitem',
+  'log',
+  'marquee',
+  'note',
+  'status',
+  'term',
+  'time',
+  'timer',
+])
+
 // Finding things: a word for each role and query the driver has, then
 // Containing and Within.
 export function queries(env: Env, driver: AnyDriver): Env {
   env.kind(ElementType)
 
   // A query finds by name, within a Scope if one comes after it.
-  const query = (word: string, by: (name: Name) => Query): Form[] => {
+  const query = (word: string, by: (name: Name) => Query, takes: Type<string | Pattern> = QueryName): Form[] => {
     const found = (ctx: Context, root: Found | null, name: string | Pattern, within = '') =>
       new Found(driver.find(ctx, root?.handle ?? null, by(nameOf(name))), `the ${word} ${say(name)}${within}`)
     return [
-      form([QueryName, ScopeType], ElementType, (ctx, name, scope) =>
+      form([takes, ScopeType], ElementType, (ctx, name, scope) =>
         found(ctx, scope.found, name, ` within ${scope.found.label}`),
       ),
-      form([QueryName], ElementType, (ctx, name) => found(ctx, null, name)),
+      form([takes], ElementType, (ctx, name) => found(ctx, null, name)),
     ]
   }
 
-  for (const role of driver.roles) env.word(cap(role), ...query(cap(role), (name) => ({ by: 'role', role, name })))
+  for (const role of driver.roles) {
+    const word = cap(role)
+    if (UNNAMED_ROLES.has(role)) {
+      const text = called(PatternType, `Containing "some text" (${article(word)} has no name to match exactly)`)
+      env.word(word, ...query(word, (name) => ({ by: 'role', role, name, content: true }), text))
+    } else env.word(word, ...query(word, (name) => ({ by: 'role', role, name })))
+  }
   for (const [kind, ...words] of QUERY_WORDS) {
     if (!driver.queries.includes(kind)) continue
     // Synonyms share their forms, and so describe what they found the same way.

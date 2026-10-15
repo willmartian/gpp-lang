@@ -2,21 +2,8 @@
 
 What came up converting Playwright's
 [`demo-todo-app.spec.ts`](demo-todo-app.spec.ts) to [`features`](features). Each gap has
-the closest thing Spec++ can say today, which is what the features use. Scenarios that
-can't run yet are tagged `@fixme`.
-
-18 of the 24 scenarios are `@fixme`, all because of the first gap. With a temporary patch
-that made `Listitem Containing "…"` fall back to the item's text, all 24 passed, so nothing
-else is blocking.
-
-## Blocking
-
-- [ ] **Finding something by the text inside it.** A TodoMVC list item has no accessible
-      name, so `the Listitem Containing "feed the cat"` finds nothing, and there's no way to
-      pick one todo out of several. Playwright has `filter({ hasText })`, and the spec uses
-      `nth()`. Rows work only because a row takes its name from its content. `Todo` in
-      [`words.spp`](features/words.spp) is written as if it worked, so fixing this should
-      only mean removing the `@fixme` tags.
+the closest thing Spec++ can say today, which is what the features use. All 24 scenarios
+run.
 
 ## Coverage the features lose
 

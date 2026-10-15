@@ -6,12 +6,10 @@ Feature: Clear completed button
     And I Add "feed the cat"
     And I Add "book a doctors appointment"
 
-  @fixme
   Scenario: It shows once something is done
     When I Tick the Todo "buy some cheese"
     Then I should See the Button "Clear completed"
 
-  @fixme
   Scenario: It removes what's done
     When I Tick the Todo "feed the cat"
     And I Click the Button "Clear completed"
@@ -19,7 +17,6 @@ Feature: Clear completed button
     But I should See "buy some cheese"
     And I should See "book a doctors appointment"
 
-  @fixme
   Scenario: It hides when nothing is done
     When I Tick the Todo "buy some cheese"
     And I Click the Button "Clear completed"

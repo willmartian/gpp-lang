@@ -50,6 +50,10 @@ their steps.
 - **Names match exactly.** `Containing "Kale"` matches a case-insensitive substring instead.
   `Within` (or `In`) looks inside something else:
   `Click the Button "Remove" Within the Row Containing "Kale"`.
+- **Some roles have no name.** `Listitem`, `Alert`, `Status`, `Article`, `Paragraph` and a
+  few more aren't named by the text inside them, so they take only `Containing`, which
+  matches that text: `the Listitem Containing "Kale"`. Don't add an `aria-label` to the app to
+  give one a name.
 - **Checks read like English.** Use `See` a thing or `See "some text"`, or put what the
   thing should be after it: `the Checkbox "Terms" should be Checked`. `Not` flips any
   check: `I should Not See "Kale"`. Checks retry until they pass or time out.

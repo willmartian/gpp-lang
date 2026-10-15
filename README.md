@@ -81,7 +81,8 @@ Finding things follows [Testing Library](https://testing-library.com/docs/querie
 | `Placeholder`, `Alt`, `Title`, `TestId` | an element by that attribute |
 
 Names match exactly. `Containing "Kale"` matches part of a name, and `Within` searches
-inside another element.
+inside another element. Roles that have no name, like `Listitem` and `Alert`, are found
+by the text inside them, with `Containing`.
 
 Actions: `Visit`, `Reload`, `Back`, `Click`, `Double-click`, `Hover`, `Focus`, `Check`,
 `Uncheck`, `Clear`, `Fill`, `Type`, `Select`, `Press`.
