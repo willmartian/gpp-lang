@@ -1,4 +1,4 @@
-# 🥒 Spec++
+# ✅ Spec++
 
 Specs that run. Written by agents, read by people.
 
