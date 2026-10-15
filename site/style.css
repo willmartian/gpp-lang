@@ -1,31 +1,31 @@
 @font-face {
   font-family: "Iosevka Aile";
-  src: url("/fonts/iosevka-aile-latin-400-normal.woff2") format("woff2");
+  src: url("fonts/iosevka-aile-latin-400-normal.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Iosevka Aile";
-  src: url("/fonts/iosevka-aile-latin-600-normal.woff2") format("woff2");
+  src: url("fonts/iosevka-aile-latin-600-normal.woff2") format("woff2");
   font-weight: 600;
   font-display: swap;
 }
 @font-face {
   font-family: "Iosevka";
-  src: url("/fonts/iosevka-latin-400-normal.woff2") format("woff2");
+  src: url("fonts/iosevka-latin-400-normal.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Iosevka";
-  src: url("/fonts/iosevka-latin-400-italic.woff2") format("woff2");
+  src: url("fonts/iosevka-latin-400-italic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: "Iosevka";
-  src: url("/fonts/iosevka-latin-600-normal.woff2") format("woff2");
+  src: url("fonts/iosevka-latin-600-normal.woff2") format("woff2");
   font-weight: 600;
   font-display: swap;
 }

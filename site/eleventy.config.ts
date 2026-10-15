@@ -5,9 +5,13 @@
 //
 //     npm run docs        # serve on localhost:8080, rebuilding on change
 //     npm run docs:build  # write site/_site
+//
+// GitHub Pages serves it under /spp-lang/, which CI passes as --pathprefix;
+// HtmlBasePlugin adds it to every absolute URL in the HTML.
 
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
+import { HtmlBasePlugin } from '@11ty/eleventy'
 import type MarkdownIt from 'markdown-it'
 import { browser } from '../src/backends/playwright/words.ts'
 import { core } from '../src/language/cognate.ts'
@@ -43,6 +47,7 @@ interface EleventyConfig {
   addPassthroughCopy(paths: string | Record<string, string>): void
   addWatchTarget(path: string): void
   amendLibrary(engine: 'md', amend: (md: MarkdownIt) => void): void
+  addPlugin(plugin: unknown): void
 }
 
 export default function (config: EleventyConfig) {
@@ -66,6 +71,7 @@ export default function (config: EleventyConfig) {
   config.addGlobalData('repo', REPO)
   config.addGlobalData('groups', groups)
 
+  config.addPlugin(HtmlBasePlugin)
   config.addPassthroughCopy('site/style.css')
   for (const font of FONTS) {
     config.addPassthroughCopy({ [`node_modules/@fontsource/${font}`]: `fonts/${path.basename(font)}` })
