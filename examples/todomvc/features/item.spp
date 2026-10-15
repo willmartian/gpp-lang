@@ -28,5 +28,7 @@ Feature: Item
     Then the Editor should have the Value "feed the cat"
     When I Fill the Editor with "buy some sausages"
     And I Press "Enter" on the Editor
-    Then I should See "buy some sausages"
-    But I should Not See "feed the cat"
+    Then the Todos should Read:
+      | buy some cheese            |
+      | buy some sausages          |
+      | book a doctors appointment |

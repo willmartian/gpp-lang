@@ -59,8 +59,10 @@ function grouped(words: Env): string[] {
   const out: string[] = []
   const groups = new Map<string, { names: string[]; forms: readonly Form[] }>()
   for (const name of new Set(words.names())) {
-    const forms = words.lookup(name)
-    if (!Array.isArray(forms)) continue
+    const word = words.lookup(name)
+    if (!Array.isArray(word)) continue
+    // A form that's always a mistake isn't a way to use the word.
+    const forms = word.filter((f: Form) => !f.mistake)
     const key = forms.map((f: Form) => `${shape(f)} ${takes(f)}`).join('\n')
     const group = groups.get(key)
     if (group) group.names.push(name)

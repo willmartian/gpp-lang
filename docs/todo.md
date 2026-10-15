@@ -13,6 +13,10 @@ Things that came up while building Spec++ and haven't been done.
 
 ## Decided against
 
+- **Loops over what's on the page,** like Cypress's `.each()`, Robot Framework's `FOR` or
+  testRigor's `until`. How often they run depends on the page, so a spec wouldn't do the
+  same thing every run, and a loop over nothing passes. Lists are checked whole instead,
+  with `Each`, `No`, `Count` and `Read` with a table, which retry and fail loudly.
 - **Unit tests of business logic,** say through a Vitest backend with words like `Equal` and
   words written in JavaScript. A spec is written in the words of whoever uses what it tests,
   and a library's users write code, so code is its best spec. JavaScript words that call an
@@ -56,10 +60,16 @@ porting Spec++.
 - [ ] **Match only the text a screen reader reads.** Playwright's text matching (`hasText`,
       `getByText`, `toContainText`, `toHaveText`) matches hidden text, even `aria-hidden` and
       `display: none`, so `Containing` on a role with no name, `Contain`, `Read` and
-      `See "some text"` can pass on text nobody hears; checked on 1.63. Its aria snapshots leave that text out, so a selector engine
-      following their rules could fix it everywhere at once.
-- [ ] **Counting, and queries without a name.** There's no way to say "3 rows"; role queries
-      always need a name. Testing Library's `ByDisplayValue` is missing too.
+      `See "some text"` can pass on text nobody hears; checked on 1.63. Its aria snapshots
+      leave that text out, so a selector engine following their rules could fix it
+      everywhere at once.
+- [ ] **Plurals.** `Count 3 Row` and `Each Checkbox` read well enough, but `Count 3 Rows` is
+      an unknown word. TodoMVC defines `Todos` as a word of its own. Looking a plural up as
+      its singular would do, if it doesn't make mistakes harder to see.
+- [ ] **A role with nothing after it can take the verb's text as its name.**
+      `Fill the Textbox with "hi"` finds the textbox named "hi", and then says
+      "Fill expected some text, but there was nothing left", which doesn't say why.
+- [ ] **Testing Library's `ByDisplayValue` is missing.**
 - [ ] **Friction in prose.**
   - [ ] Numbers in prose ("3 items") are code.
   - [ ] Punctuation like `$`, `%` or `&` is an error.

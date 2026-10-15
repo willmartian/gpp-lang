@@ -79,8 +79,38 @@ test('a role with no name is found by what it contains, never by a name', () => 
     checkFiles({ 'a.spp': scenario('When I Click the Button "Done" Within the Listitem Containing "Kale"') }).scenarios,
     [],
   )
+  // Even though a Listitem with nothing after it would fit.
   assert.deepEqual(checkFiles({ 'a.spp': scenario('When I Click the Listitem "Kale"') }).scenarios, [
     'a.spp:3:22 Listitem expected Containing "some text" (a Listitem has no name to match exactly), but got "Kale"',
+  ])
+})
+
+test('a role can be found by something inside it, or by nothing but its role', () => {
+  const steps = [
+    'When I Click the Button "Done" Within the Listitem Containing the Checkbox "Toggle"',
+    'Then the Dialog should be Visible',
+    'And the Field Containing the Button "x" should be Empty',
+  ]
+  assert.deepEqual(checkFiles({ 'a.spp': scenario(...steps) }).scenarios, [
+    'a.spp:5:13 Field expected a "name" to look for, but got Containing Button "x"',
+  ])
+})
+
+test('Each, No and Count check everything a query finds, and Read a table checks it in order', () => {
+  const steps = [
+    'Then Each Checkbox "Bought" should be Checked',
+    'And No Checkbox "Bought" Within the Row Containing "Eggs" should be Checked',
+    'And I should Count 3 Row',
+    'And the Listitem should Read:',
+    '  | Eggs |',
+    '  | Milk |',
+  ]
+  assert.deepEqual(checkFiles({ 'a.spp': scenario(...steps) }).scenarios, [])
+  assert.deepEqual(checkFiles({ 'a.spp': scenario('Then Each Checkbox "Bought"') }).scenarios, [
+    'a.spp:3:10 Each expected a check, but there was nothing left',
+  ])
+  assert.deepEqual(checkFiles({ 'a.spp': scenario('Then I should Count Row') }).scenarios, [
+    'a.spp:3:19 Count expected how many there should be, but got Row',
   ])
 })
 

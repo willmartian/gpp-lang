@@ -45,16 +45,32 @@ export const playwright: Driver<BrowserContext, Locator> = {
   roles: ROLES,
   queries: ['label', 'text', 'placeholder', 'alt', 'title', 'testId'],
   actions: ['click', 'double-click', 'hover', 'focus', 'check', 'uncheck', 'clear', 'fill', 'type', 'select', 'press'],
-  states: ['visible', 'hidden', 'checked', 'enabled', 'disabled', 'focused', 'empty', 'value', 'text', 'containing'],
+  states: [
+    'visible',
+    'hidden',
+    'checked',
+    'enabled',
+    'disabled',
+    'focused',
+    'empty',
+    'value',
+    'text',
+    'containing',
+    'texts',
+    'count',
+  ],
 
   find({ page }, root, query) {
     const r = root ?? page
+    if (query.by === 'role') {
+      const { name, text, has } = query
+      let found = r.getByRole(query.role as AriaRole, name === undefined ? {} : { name, exact: true })
+      if (text !== undefined) found = found.filter({ hasText: text })
+      if (has) found = found.filter({ has })
+      return found
+    }
     const { name } = query
     switch (query.by) {
-      case 'role':
-        return query.content
-          ? r.getByRole(query.role as AriaRole).filter({ hasText: name })
-          : r.getByRole(query.role as AriaRole, { name, exact: true })
       case 'label':
         return r.getByLabel(name, { exact: true })
       case 'text':
@@ -102,29 +118,58 @@ export const playwright: Driver<BrowserContext, Locator> = {
     return page.keyboard.press(key)
   },
 
-  expect(ctx, target, state, not) {
+  expect(ctx, target, state, not, once) {
     const e = not ? ctx.expect(target).not : ctx.expect(target)
+    // Checking once is a check that times out straight away; it still looks.
+    const o = once ? { timeout: 1 } : {}
     switch (state.is) {
       case 'visible':
-        return e.toBeVisible()
+        return e.toBeVisible(o)
       case 'hidden':
-        return e.toBeHidden()
+        return e.toBeHidden(o)
       case 'checked':
-        return e.toBeChecked()
+        return e.toBeChecked(o)
       case 'enabled':
-        return e.toBeEnabled()
+        return e.toBeEnabled(o)
       case 'disabled':
-        return e.toBeDisabled()
+        return e.toBeDisabled(o)
       case 'focused':
-        return e.toBeFocused()
+        return e.toBeFocused(o)
       case 'empty':
-        return e.toBeEmpty()
+        return e.toBeEmpty(o)
       case 'value':
-        return e.toHaveValue(state.text)
+        return e.toHaveValue(state.text, o)
       case 'text':
-        return e.toHaveText(state.text)
+        return e.toHaveText(state.text, o)
       case 'containing':
-        return e.toContainText(state.text)
+        return e.toContainText(state.text, o)
+      case 'texts':
+        return e.toHaveText(state.texts, o)
+      case 'count':
+        return e.toHaveCount(state.count, o)
+    }
+  },
+
+  all(_, target) {
+    return target.all()
+  },
+
+  // expect.poll retries for as long as the project's expect timeout.
+  async retry(ctx, attempt) {
+    let last: unknown
+    const passes = async () => {
+      try {
+        await attempt()
+        return true
+      } catch (err) {
+        last = err
+        return false
+      }
+    }
+    try {
+      await ctx.expect.poll(passes).toBe(true)
+    } catch (err) {
+      throw last ?? err
     }
   },
 }

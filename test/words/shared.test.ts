@@ -20,6 +20,8 @@ const small: Driver<Context, unknown> = {
   act: unused,
   press: unused,
   expect: unused,
+  all: unused,
+  retry: unused,
 }
 
 const vocabularyOf = (driver: Driver<Context, unknown>) =>

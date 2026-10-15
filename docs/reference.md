@@ -33,6 +33,17 @@ which is what a screen reader says, even with `Containing`.
 When I Click the Button "Destroy" Within the Listitem Containing "feed the cat"
 ```
 
+`Containing` can also take an element, to find a role with that element inside it, as
+Playwright's `filter({ has })` does. A role with nothing after it finds every element with
+that role, for `Each`, `No`, `Count` and `Read` below, or when there's only one, like
+`the Dialog`.
+
+```gherkin
+Then the Listitem Containing the Checkbox "Toggle Todo" should Read:
+  | buy some cheese |
+  | feed the cat    |
+```
+
 ### Doing things
 
 `Visit "/path"`, `Reload`, `Back`, `Click`, `Double-click`, `Hover`, `Focus`, `Check`,
@@ -62,6 +73,23 @@ And I should be At "/dashboard"
 ```
 
 Checks retry until they pass or time out, like Playwright's `expect`.
+
+### Checking everything found
+
+A query can find more than one thing. These check all of them, and retry as a whole:
+
+| Check | Passes when | Playwright |
+| --- | --- | --- |
+| `Each Checkbox "Bought" should be Checked` | at least one is found, and every one is checked | each one's `expect` |
+| `No Checkbox "Bought" should be Checked` | none of them is checked, or none is found | each one's `expect` |
+| `I should Count 3 Row` | exactly 3 are found | `toHaveCount` |
+| `the Listitem should Read:` and a table | they read the table's rows, in order, and there are as many | `toHaveText([…])` |
+
+`Every` is the same as `Each`, and `None` as `No`. `Each` passes only if it found something,
+since a check of nothing would pass whatever the page showed. `Not Each` passes when at least
+one isn't, and `Not No` when at least one is. `Read`'s table has one column.
+
+There are no loops: a loop over what's on the page wouldn't do the same thing every run.
 
 ### Everything else
 

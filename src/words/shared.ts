@@ -18,8 +18,8 @@
 
 import type { Stack } from '../language/cognate.ts'
 import { describe, type Env, SppError, unwrap } from '../language/cognate.ts'
-import type { Context, Form, Type } from '../language/types.ts'
-import { article, called, formsFor, oneOf, TableType, TextType, type } from '../language/types.ts'
+import type { Context, Form } from '../language/types.ts'
+import { article, called, formsFor, mistake, NumberType, oneOf, TableType, TextType, type } from '../language/types.ts'
 import type { Action, Driver, Name, Query, QueryKind, State } from './driver.ts'
 
 // Any driver: its members are methods, so one that needs more, like a page, fits.
@@ -37,6 +37,18 @@ export class Pattern {
   }
   describe() {
     return `Containing ${JSON.stringify(this.text)}`
+  }
+}
+
+// Containing the Button "Remove": something inside, for a role query to look for.
+export class Holding {
+  found: Found
+
+  constructor(found: Found) {
+    this.found = found
+  }
+  describe() {
+    return `Containing ${this.found.describe()}`
   }
 }
 
@@ -110,11 +122,21 @@ export class Expectation {
 export const ElementType = type('Element', 'something on the page', (v): v is Found => v instanceof Found)
 export const PatternType = type('Pattern', 'Containing "some text"', (v): v is Pattern => v instanceof Pattern)
 export const NameType = oneOf<string | Pattern>('some text', TextType, PatternType)
+export const HoldingType = type(
+  'Holding',
+  'Containing something on the page',
+  (v): v is Holding => v instanceof Holding,
+)
 export const ScopeType = type('Scope', 'Within something', (v): v is Scope => v instanceof Scope)
 export const MatcherType = type('Matcher', 'a check', (v): v is Matcher => v instanceof Matcher)
 export const CheckType = type('Check', 'a check', (v): v is Expectation => v instanceof Expectation)
 
 const QueryName = called(NameType, 'a "name" to look for')
+
+// What a role is found by: a name, or what's inside it.
+type Inside = string | Pattern | Holding
+const RoleName = oneOf<Inside>('a "name" to look for', TextType, PatternType, HoldingType)
+const Content = oneOf<Inside>('Containing "some text"', PatternType, HoldingType)
 
 // The shared words run with whatever context their driver wants.
 const form = formsFor<Context>()
@@ -122,7 +144,7 @@ const form = formsFor<Context>()
 // ---------------------------------------------------------------- helpers
 
 export const nameOf = (v: string | Pattern): Name => (v instanceof Pattern ? v.regex : v)
-export const say = (v: string | Pattern) => (v instanceof Pattern ? v.describe() : JSON.stringify(v))
+export const say = (v: Inside) => (typeof v === 'string' ? JSON.stringify(v) : v.describe())
 
 export function escapeRegExp(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -192,34 +214,56 @@ export const UNNAMED_ROLES: ReadonlySet<string> = new Set([
 export function queries(env: Env, driver: AnyDriver): Env {
   env.kind(ElementType)
 
-  // A query finds by name, within a Scope if one comes after it.
-  const query = (word: string, by: (name: Name) => Query, takes: Type<string | Pattern> = QueryName): Form[] => {
-    const found = (ctx: Context, root: Found | null, name: string | Pattern, within = '') =>
-      new Found(driver.find(ctx, root?.handle ?? null, by(nameOf(name))), `the ${word} ${say(name)}${within}`)
-    return [
-      form([takes, ScopeType], ElementType, (ctx, name, scope) =>
-        found(ctx, scope.found, name, ` within ${scope.found.label}`),
-      ),
-      form([takes], ElementType, (ctx, name) => found(ctx, null, name)),
-    ]
+  // What a query finds, within a Scope if one came after it, described by
+  // the words that found it.
+  const found = (ctx: Context, word: string, query: Query, by: Inside | null, scope?: Scope) => {
+    const label = [`the ${word}`, by === null ? [] : say(by), scope ? `within ${scope.found.label}` : []].flat()
+    return new Found(driver.find(ctx, scope?.found.handle ?? null, query), label.join(' '))
   }
 
-  for (const role of driver.roles) {
+  // A query by name: role words take the name to their right.
+  const named = (word: string, query: (name: Name) => Query): Form[] => [
+    form([QueryName, ScopeType], ElementType, (ctx, name, scope) => found(ctx, word, query(nameOf(name)), name, scope)),
+    form([QueryName], ElementType, (ctx, name) => found(ctx, word, query(nameOf(name)), name)),
+  ]
+
+  // A role is found by its name, or by what's inside it, or with nothing
+  // after it, as every element with that role. A role with no name is found
+  // only by what's inside it, and given a name, says why that won't do.
+  const role = (role: string): Form[] => {
     const word = cap(role)
-    if (UNNAMED_ROLES.has(role)) {
-      const text = called(PatternType, `Containing "some text" (${article(word)} has no name to match exactly)`)
-      env.word(word, ...query(word, (name) => ({ by: 'role', role, name, content: true }), text))
-    } else env.word(word, ...query(word, (name) => ({ by: 'role', role, name })))
+    const unnamed = UNNAMED_ROLES.has(role)
+    const takes = unnamed
+      ? called(Content, `Containing "some text" (${article(word)} has no name to match exactly)`)
+      : RoleName
+    const query = (by: Inside | null): Query => {
+      if (by === null) return { by: 'role', role }
+      if (by instanceof Holding) return { by: 'role', role, has: by.found.handle }
+      return unnamed ? { by: 'role', role, text: nameOf(by) } : { by: 'role', role, name: nameOf(by) }
+    }
+    const forms = [
+      form([takes, ScopeType], ElementType, (ctx, by, scope) => found(ctx, word, query(by), by, scope)),
+      form([takes], ElementType, (ctx, by) => found(ctx, word, query(by), by)),
+    ]
+    if (unnamed) forms.push(mistake([TextType], ([name]) => `${word} expected ${takes.phrase}, but got ${name}`))
+    forms.push(
+      form([ScopeType], ElementType, (ctx, scope) => found(ctx, word, query(null), null, scope)),
+      form([], ElementType, (ctx) => found(ctx, word, query(null), null)),
+    )
+    return forms
   }
+
+  for (const r of driver.roles) env.word(cap(r), ...role(r))
   for (const [kind, ...words] of QUERY_WORDS) {
     if (!driver.queries.includes(kind)) continue
     // Synonyms share their forms, and so describe what they found the same way.
-    const forms = query(words[0], (name) => ({ by: kind, name }))
+    const forms = named(words[0], (name) => ({ by: kind, name }))
     for (const word of words) env.word(word, ...forms)
   }
   env.word(
     'Containing',
     form([TextType], PatternType, (_, text) => new Pattern(text)),
+    form([called(ElementType, 'something on the page')], HoldingType, (_, found) => new Holding(found)),
   )
 
   const within = form(
@@ -285,7 +329,7 @@ export function actions(env: Env, driver: AnyDriver): Env {
 // ---------------------------------------------------------------- checks
 
 type TextState = Extract<State, { text: Name }>['is']
-type BareState = Exclude<State['is'], TextState>
+type BareState = Exclude<State['is'], TextState | 'texts' | 'count'>
 
 const STATE_WORDS: [BareState, string][] = [
   ['visible', 'Visible'],
@@ -328,16 +372,97 @@ export function checks(env: Env, driver: AnyDriver): Env {
       )
   }
   for (const [is, word] of TEXT_STATE_WORDS) {
-    if (can(is))
-      env.word(
-        word,
-        form([NameType], MatcherType, (_, v) => new Matcher(`${word} ${say(v)}`, { is, text: nameOf(v) })),
+    if (!can(is)) continue
+    const forms = [form([NameType], MatcherType, (_, v) => new Matcher(`${word} ${say(v)}`, { is, text: nameOf(v) }))]
+    // Read given a table: what everything found reads, in order, one row each.
+    if (is === 'text' && can('texts'))
+      forms.push(
+        form([called(TableType, 'a table of one column')], MatcherType, (_, rows) => {
+          const texts = rows.map((row) => {
+            if (row.length !== 1)
+              throw new SppError(`${word} expected a table of one column, but a row has ${row.length}`)
+            return row[0]
+          })
+          return new Matcher(`${word} ${texts.map((t) => JSON.stringify(t)).join(', ')}`, { is: 'texts', texts })
+        }),
       )
+    env.word(word, ...forms)
+  }
+  if (can('count'))
+    env.word(
+      'Count',
+      form([called(NumberType, 'how many there should be'), ElementType], CheckType, (ctx, count, found) =>
+        new Matcher(`Count ${count}`, { is: 'count', count }).against(found, ctx, driver),
+      ),
+    )
+  for (const [quantifier, ...words] of QUANTIFIER_WORDS) {
+    const quantified = form([ElementType, MatcherType], CheckType, (ctx, found, matcher) =>
+      quantify(quantifier, words[0], found, matcher, ctx, driver),
+    )
+    for (const word of words) env.word(word, quantified)
   }
   return env.word(
     'Not',
     form([MatcherType], MatcherType, (_, m) => m.negate()),
     form([CheckType], CheckType, (_, c) => c.negate()),
+  )
+}
+
+// Each and No check everything a query finds, the way Inform 7 says "if each
+// door is open" and "if no door is open". Each wants at least one, since a
+// check of nothing would pass whatever the page showed, and every one to
+// pass. No wants none to pass, and passes for none at all, like Not See.
+// Not makes them "not every one" and "at least one".
+type Quantifier = 'each' | 'no'
+
+const QUANTIFIER_WORDS: [Quantifier, ...string[]][] = [
+  ['each', 'Each', 'Every'],
+  ['no', 'No', 'None'],
+]
+
+// The states a matcher checks of everything found together, not of each.
+const TOGETHER: readonly State['is'][] = ['texts', 'count']
+
+function quantify<C extends Context, H>(
+  quantifier: Quantifier,
+  word: string,
+  found: Found,
+  matcher: Matcher,
+  ctx: C,
+  driver: Driver<C, H>,
+): Expectation {
+  // Each Checkbox "Bought" Checked, as it was written.
+  const label = `${word} ${found.label.replace(/^the /, '')} ${matcher.describe()}`
+  if (TOGETHER.includes(matcher.state.is)) {
+    if (quantifier === 'each') return matcher.against(found, ctx, driver)
+    throw new SppError(`${word} checks each thing found, but ${matcher.describe()} checks them all together`)
+  }
+  const each = quantifier === 'each'
+  return new Expectation(label, (not) =>
+    driver.retry(ctx, async () => {
+      const all = await driver.all(ctx, found.handle as H)
+      // Whether each one passes the matcher, checked once: retry repeats it.
+      const passes: boolean[] = []
+      for (const handle of all)
+        passes.push(
+          await driver.expect(ctx, handle, matcher.state, matcher.negated, true).then(
+            () => true,
+            () => false,
+          ),
+        )
+      const wrong = passes.findIndex((p) => p !== each)
+      const of = `number ${wrong + 1} of ${all.length}`
+      if (!not) {
+        if (each && !all.length) throw new SppError(`${label}, but there was nothing to check`)
+        // The one that's wrong is the opposite of the matcher, for Each.
+        if (wrong >= 0) throw new SppError(`${label}, but ${of} is ${(each ? matcher.negate() : matcher).describe()}`)
+      } else if (wrong < 0) {
+        const n = all.length
+        const which = each ? 'every one' : 'none'
+        const but = n ? `${which} of the ${n} found is ${matcher.describe()}` : 'there was nothing to check'
+        throw new SppError(`Not ${label}, but ${but}`)
+      }
+    }),
   )
 }
 

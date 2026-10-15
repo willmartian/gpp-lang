@@ -15,25 +15,34 @@ Feature: Editing
     When I Double-click the Todo "feed the cat"
     And I Fill the Editor with "buy some sausages"
     And I Click the Heading "todos"
-    Then I should See "buy some sausages"
-    But I should Not See "feed the cat"
+    Then the Todos should Read:
+      | buy some cheese            |
+      | buy some sausages          |
+      | book a doctors appointment |
 
   Scenario: Trimming what's entered
     When I Double-click the Todo "feed the cat"
     And I Fill the Editor with "    buy some sausages    "
     And I Press "Enter" on the Editor
-    Then I should See the Text "buy some sausages"
+    Then the Todos should Read:
+      | buy some cheese            |
+      | buy some sausages          |
+      | book a doctors appointment |
 
   Scenario: An empty todo is removed
     When I Double-click the Todo "feed the cat"
     And I Clear the Editor
     And I Press "Enter" on the Editor
-    Then I should Not See "feed the cat"
+    Then the Todos should Read:
+      | buy some cheese            |
+      | book a doctors appointment |
     And I should See "2 items left"
 
   Scenario: Escape cancels
     When I Double-click the Todo "feed the cat"
     And I Fill the Editor with "buy some sausages"
     And I Press "Escape" on the Editor
-    Then I should See "feed the cat"
-    But I should Not See "buy some sausages"
+    Then the Todos should Read:
+      | buy some cheese            |
+      | feed the cat               |
+      | book a doctors appointment |

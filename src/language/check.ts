@@ -108,6 +108,8 @@ interface Way {
   outputs: (args: Val[]) => Val[]
   // the Define it is, for a Define's
   def?: Def
+  // what's wrong, for a form that's always a mistake
+  mistake?: (given: string[]) => string
 }
 
 // ---------------------------------------------------------------- places
@@ -401,8 +403,8 @@ class Checker {
       return {
         name,
         kind: 'builtin',
-        signatures: known.forms.map((f) => signature(name, f)),
-        outputs: known.forms.map((f) => (f.output ? membersOf(f.output) : [])),
+        signatures: known.forms.filter((f) => !f.mistake).map((f) => signature(name, f)),
+        outputs: known.forms.filter((f) => !f.mistake).map((f) => (f.output ? membersOf(f.output) : [])),
       }
     }
     if (known.kind === 'value') {
@@ -622,6 +624,7 @@ class Checker {
     return {
       inputs: form.inputs.map((t) => ({ members: membersOf(t), phrase: t.phrase, key: t })),
       outputs: (args) => (form.output ? [{ ty: form.output, shown: [name, ...args.map(show)].join(' ') }] : []),
+      mistake: form.mistake,
     }
   }
 
@@ -714,6 +717,7 @@ class Checker {
     }
     const n = chosen.way.inputs.length
     const args = chosen.way.inputs.map((want, i) => sim.peek(i) ?? sim.fromCaller(want))
+    if (chosen.way.mistake) throw new Mistake(chosen.way.mistake(args.map(show)))
     sim.stack.length = Math.max(0, sim.stack.length - n)
     sim.stack.push(...chosen.way.outputs(args))
     return chosen.way

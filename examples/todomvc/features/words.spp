@@ -12,6 +12,11 @@ Define: Add Text (Name)
 Define: Todo Text (Name)
   the Listitem Containing Name
 
+# Every todo in the list, in order. The filters below the list are list items too,
+# but only a todo has a checkbox.
+Define: Todos
+  the Listitem Containing the Checkbox "Toggle Todo"
+
 Define: Tick Todo
   Check the Checkbox "Toggle Todo" Within Todo
 

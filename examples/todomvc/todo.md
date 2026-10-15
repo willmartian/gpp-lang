@@ -7,13 +7,6 @@ run.
 
 ## Coverage the features lose
 
-- [ ] **A list's exact contents, in order.** The spec checks
-      `toHaveText(['buy some cheese', 'feed the cat', …])`. The features `See` each todo,
-      which misses the order and anything extra. This affects adding, appending to the
-      bottom, and every edit.
-- [ ] **Counting.** This is already in the repo's [`todo.md`](../../docs/todo.md). The spec's
-      `toHaveCount(2)` became "2 items left", which is what a user sees, but it counts
-      active todos, not the todos shown.
 - [ ] **Classes: `completed` and `selected`.** The features check the checkbox instead of
       `completed`, and the URL (`At "/#/active"`) instead of `selected`. Should "struck
       through" or "highlighted" count as something a user can see (see "Enforce Given /

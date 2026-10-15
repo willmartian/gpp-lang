@@ -562,6 +562,7 @@ export async function apply(name: string, forms: readonly Form[], stack: Stack, 
   const fits = (f: Form) => f.inputs.every((t, i) => i < stack.length && accepts(t, stack[stack.length - 1 - i]))
   const form = forms.find(fits)
   if (!form) throw mismatch(name, forms, stack)
+  if (form.mistake) throw new SppError(form.mistake(form.inputs.map((_, i) => describe(stack[stack.length - 1 - i]))))
   const args = form.inputs.map((t) => given(t, stack.pop()))
   const result = await form.impl(ctx, ...args)
   if (!form.output) return

@@ -8,12 +8,14 @@ Feature: Mark all as completed
 
   Scenario: Marking all as completed
     When I Check the Toggle-all
-    Then I should See "0 items left"
+    Then Each Checkbox "Toggle Todo" should be Checked
+    And I should See "0 items left"
 
   Scenario: Clearing the complete state of all
     When I Check the Toggle-all
     And I Uncheck the Toggle-all
-    Then I should See "3 items left"
+    Then No Checkbox "Toggle Todo" should be Checked
+    And I should See "3 items left"
 
   Scenario: Toggle-all follows the todos
     When I Check the Toggle-all

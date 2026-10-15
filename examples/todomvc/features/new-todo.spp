@@ -5,10 +5,12 @@ Feature: New todo
 
   Scenario: Adding todos
     When I Add "buy some cheese"
-    Then I should See "buy some cheese"
+    Then the Todos should Read:
+      | buy some cheese |
     When I Add "feed the cat"
-    Then I should See "buy some cheese"
-    And I should See "feed the cat"
+    Then the Todos should Read:
+      | buy some cheese |
+      | feed the cat |
 
   Scenario: The field clears once a todo is added
     When I Add "buy some cheese"
@@ -18,5 +20,9 @@ Feature: New todo
     When I Add "buy some cheese"
     And I Add "feed the cat"
     And I Add "book a doctors appointment"
-    Then I should See "3 items left"
+    Then the Todos should Read:
+      | buy some cheese            |
+      | feed the cat               |
+      | book a doctors appointment |
+    And I should See "3 items left"
     And the TestId "todo-count" should Read "3 items left"

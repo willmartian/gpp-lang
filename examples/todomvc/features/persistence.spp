@@ -6,6 +6,8 @@ Feature: Persistence
     And I Add "feed the cat"
     When I Tick the Todo "buy some cheese"
     And I Reload
-    Then I should See "feed the cat"
+    Then the Todos should Read:
+      | buy some cheese |
+      | feed the cat    |
     And the Checkbox "Toggle Todo" Within the Todo "buy some cheese" should be Checked
     But the Checkbox "Toggle Todo" Within the Todo "feed the cat" should Not be Checked

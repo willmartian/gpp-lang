@@ -57,6 +57,10 @@ their steps.
 - **Checks read like English.** Use `See` a thing or `See "some text"`, or put what the
   thing should be after it: `the Checkbox "Terms" should be Checked`. `Not` flips any
   check: `I should Not See "Kale"`. Checks retry until they pass or time out.
+- **Check lists whole.** A role with nothing after it, or `Containing` an element, finds
+  every match: `Each Checkbox "Bought" should be Checked`, `No Checkbox "Bought" should be
+  Checked`, `I should Count 3 Row`, or `the Listitem should Read:` with a table of what
+  each reads, in order. There are no loops; don't repeat a step per item to check a list.
 - **A step's data table or doc string acts as if it were written at the end of the step.**
   Write `When I Fill in the form:` with a `| label | value |` table, or
   `When I Fill the Field "Notes" with:` with a doc string.

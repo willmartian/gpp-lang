@@ -73,6 +73,19 @@ export interface Form<C extends Context = Context> {
   // A method, so a form whose words need more, like a page, still counts as a
   // Form: whoever runs a vocabulary gives it the context its words need.
   impl(ctx: C, ...args: unknown[]): unknown
+  // For a form that's always a mistake, what's wrong, given how its inputs
+  // read. It's never run: the checker and the runtime say this instead.
+  mistake?: (given: string[]) => string
+}
+
+// A way of calling a word that's a likely mistake with a better explanation
+// than the forms that don't fit would give, like an exact name for a role
+// that has none.
+export function mistake<C extends Context>(
+  inputs: readonly Type<unknown>[],
+  say: (given: string[]) => string,
+): Form<C> {
+  return { inputs, output: null, impl: () => undefined, mistake: say }
 }
 
 // Forms for a vocabulary whose words need a context of type C. The impl's

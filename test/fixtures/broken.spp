@@ -34,3 +34,39 @@ Feature: Things that should fail
   @fail
   Scenario: The wrong kind of thing
     When I Click "Add"
+
+  @fail
+  Scenario: Not every one
+    Given I Add "Eggs"
+    And I Add "Milk"
+    When I Check the Checkbox "Bought" Within the Row Containing "Eggs"
+    Then Each Checkbox "Bought" should be Checked
+
+  @fail
+  Scenario: Each of nothing
+    Then Each Checkbox "Bought" should be Checked
+
+  @fail
+  Scenario: One of them is
+    Given I Add "Eggs"
+    And I Add "Milk"
+    When I Check the Checkbox "Bought" Within the Row Containing "Milk"
+    Then No Checkbox "Bought" should be Checked
+
+  @fail
+  Scenario: Not every one, when every one is
+    Given I Add "Eggs"
+    When I Check the Checkbox "Bought" Within the Row Containing "Eggs"
+    Then Not Each Checkbox "Bought" should be Checked
+
+  @fail
+  Scenario: The wrong count
+    Given I Add "Eggs"
+    Then I should Count 2 Checkbox "Bought"
+
+  @fail
+  Scenario: The wrong order
+    Then the Columnheader should Read:
+      | Bought |
+      | Item   |
+      |        |

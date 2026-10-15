@@ -82,20 +82,28 @@ Finding things follows [Testing Library](https://testing-library.com/docs/querie
 
 Names match exactly. `Containing "Kale"` matches part of a name, and `Within` searches
 inside another element. Roles that have no name, like `Listitem` and `Alert`, are found
-by the text inside them, with `Containing`.
+by the text inside them, with `Containing`. `Containing` can also take an element, as in
+`the Row Containing the Button "Undo"`, and a role with nothing after it finds every
+element with that role.
 
 Actions: `Visit`, `Reload`, `Back`, `Click`, `Double-click`, `Hover`, `Focus`, `Check`,
 `Uncheck`, `Clear`, `Fill`, `Type`, `Select`, `Press`.
 
 Checks: `See`, `Visible`, `Hidden`, `Checked`, `Enabled`, `Disabled`, `Focused`, `Empty`,
 `Value`, `Read`, `Contain`, `At` and `Titled`. `Not` negates any of them, and they retry
-like Playwright's `expect`.
+like Playwright's `expect`. `Each` and `No` check everything a query finds, `Count` checks
+how many it finds, and `Read` with a table checks what they read, in order.
 
 ```gherkin
 When I Click the Button "Remove" Within the Row Containing "Kale"
 Then I should Not See the Cell "Kale"
 And I should be At "/list"
+And No Checkbox "Bought" should be Checked
+And I should Count 2 Row Within the Table
 ```
+
+There are no loops. A loop over what's on the page wouldn't do the same thing every run,
+so lists are checked whole instead.
 
 Backgrounds, Scenario Outlines, Rules and data tables work as in Cucumber. Tags become
 Playwright tags, so `@skip`, `@only` and `--grep @smoke` work.
