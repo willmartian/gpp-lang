@@ -133,7 +133,3 @@ Open questions about ` ```spp ` blocks in Markdown files.
       rescan. Fine now; see the notes on large repos above.
 - [ ] **The extension doesn't start for a project with only Markdown:** it starts on a
       `.spp` file.
-
-## Publishing
-
-- [ ] **CI.** Run the unit tests, the browser tests and the VS Code tests (under `xvfb-run`).
