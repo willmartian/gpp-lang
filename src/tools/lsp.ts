@@ -515,8 +515,11 @@ interface FileSymbol {
   children?: { name: string; line: number }[]
 }
 
+// A word's signatures, then, for a builtin, what it's for and an example.
 function signatures(info: WordInfo): string {
-  return `\`\`\`\n${info.signatures.join('\n')}\n\`\`\``
+  const code = (lines: string, lang = '') => `\`\`\`${lang}\n${lines}\n\`\`\``
+  const doc = info.doc ? [info.doc.summary, code(info.doc.examples[0], 'spp')] : []
+  return [code(info.signatures.join('\n')), ...doc].join('\n\n')
 }
 
 // A line's tokens, or as many as can be made out while it's being typed.

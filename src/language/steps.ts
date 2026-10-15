@@ -96,11 +96,37 @@ export function keywords<C extends Context>(settle: (stack: Stack, ctx: C) => Pr
       .word('Then', ...keyword('Then'))
       .word('And', conjunction)
       .word('But', conjunction)
+      .doc({ group: 'Steps', summary: 'Starts a step that sets the scene.', examples: ['Given I Visit "/"'] }, 'Given')
+      .doc(
+        { group: 'Steps', summary: 'Starts a step that does something.', examples: ['When I Click the Button "Add"'] },
+        'When',
+      )
+      .doc(
+        { group: 'Steps', summary: 'Starts a step that checks something.', examples: ['Then I should See "Added"'] },
+        'Then',
+      )
+      .doc(
+        {
+          group: 'Steps',
+          summary: "Starts a step like the one above it. A scenario can't start with one.",
+          examples: ['Then I should See "Added"\nAnd I should Not See "Empty"'],
+        },
+        'And',
+        'But',
+      )
       // A bullet carries on the mode above, or, first, is a step of no mode.
       .word(
         '*',
         conjunction,
         form([StepType], ModeType, (ctx, step) => runs(ctx, step, new Mode('*'))),
+      )
+      .doc(
+        {
+          group: 'Steps',
+          summary: 'Starts a step like the one above it, or, first, a step of no kind.',
+          examples: ['* I Visit "/"'],
+        },
+        '*',
       )
   )
 }

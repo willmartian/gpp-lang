@@ -6,7 +6,8 @@ A Claude Code plugin that helps Claude write `.spp` files. It has two parts.
 teaches Claude:
 
 - the language's rules
-- to read `spp-lang dictionary` first, so it uses your project's own words
+- to read `spp-lang dictionary` first, the reference for every built-in word and your
+  project's own
 - to run `spp-lang check` after every edit, and fix what it reports
 
 **The language server, `spp-lang lsp`.** After Claude edits a `.spp` file, or a Markdown file

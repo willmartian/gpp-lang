@@ -27,7 +27,9 @@
     "test:e2e": "playwright test",
     "demo": "node examples/demo/serve.ts",
     "prepack": "npm run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs": "eleventy --config=site/eleventy.config.ts --serve",
+    "docs:build": "eleventy --config=site/eleventy.config.ts"
   },
   "keywords": [
     "gherkin",
@@ -56,12 +58,17 @@
     "@playwright/test": "^1.63.0"
   },
   "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
     "@biomejs/biome": "2.5.15",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
+    "@fontsource/iosevka": "^5.3.0",
+    "@fontsource/iosevka-aile": "^5.3.0",
     "@playwright/test": "^1.63.0",
+    "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.6.3",
     "husky": "^9.1.7",
+    "shiki": "^4.5.0",
     "typescript": "^7.0.2"
   }
 }

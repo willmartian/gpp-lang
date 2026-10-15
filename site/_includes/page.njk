@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.url == "/" %}Spec++ · Specs that run{% else %}{{ title }} · Spec++{% endif %}</title>
+  <meta name="description" content="Specs that run. Written by agents, read by people.">
+  <link rel="preload" href="/fonts/iosevka-aile-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/iosevka-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥒</text></svg>">
+</head>
+<body>
+  <header>
+    <a class="name" href="/">Spec++</a>
+    <a href="{{ repo }}">GitHub</a>
+  </header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Docs">
+      <ul>
+        {%- for p in pages %}
+        <li>
+          <a href="{{ p.url }}"{% if p.url == page.url %} aria-current="page"{% endif %}>{{ p.nav }}</a>
+          {%- if p.url == page.url and toc.length %}
+          <ul class="toc">
+            {%- for h in toc %}
+            <li><a href="#{{ h.id }}">{{ h.text | escape }}</a></li>
+            {%- endfor %}
+          </ul>
+          {%- endif %}
+        </li>
+        {%- endfor %}
+      </ul>
+    </nav>
+    <main>
+{{ content | safe }}
+      <footer>
+        <a href="{{ repo }}/edit/master/{{ source }}">Edit this page</a>
+        <span>MIT licensed</span>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

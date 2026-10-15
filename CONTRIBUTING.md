@@ -32,3 +32,16 @@ To try it by hand, use Run and Debug → **Run Spec++ extension**, which opens a
 on this repo with the extension loaded. Its language server runs from source on Node, through
 `scripts/nix-node`. For Playwright's extension to run scenarios on NixOS, start VS Code from
 the dev shell (`nix develop -c code .`) so Chromium finds its libraries.
+
+## The docs site
+
+`site/` builds the README and `docs/` into a site with [Eleventy](https://www.11ty.dev/). The
+Words page is generated from each built-in word's doc: its `.doc()` in `src/words/shared.ts`,
+`src/backends/playwright/words.ts` and `src/language/steps.ts`. `spp-lang dictionary` and hover
+show the same docs, and `test/words/docs.test.ts` checks every word has one and every example
+checks.
+
+```sh
+npm run docs         # serves it on localhost:8080, rebuilding as you edit
+npm run docs:build   # writes site/_site
+```

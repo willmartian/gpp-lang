@@ -113,9 +113,8 @@ porting Spec++.
 - [ ] **The Neovim setup in the README is untested.**
 - [ ] **The language server rescans the workspace** on every open and save. That's fine now;
       in a large repo it wants a watcher-based cache.
-- [ ] **The dictionary shows types, not meanings.** Built-in words have no descriptions,
-      and a `Define`'s comment isn't shown with it. Both would help people and Claude
-      choose the right word.
+- [ ] **A `Define`'s comment isn't shown** in the dictionary or on hover, as a built-in word's
+      doc is.
 
 ## Markdown
 

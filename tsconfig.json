@@ -14,5 +14,5 @@
     "verbatimModuleSyntax": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src", "bin", "test", "examples", "playwright.config.ts"]
+  "include": ["src", "bin", "test", "examples", "site", "playwright.config.ts"]
 }

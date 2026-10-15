@@ -26,11 +26,15 @@ Run this from the project root before writing any steps:
 npx spp-lang dictionary
 ```
 
-It lists every word the project's `.spp` files can use, both built-in words and the
-project's own `Define`s, with what each takes and leaves. It comes from the same
-declarations the checker uses, so it's always current. Use only words that it lists or that
-you `Define`. Don't invent words, and reuse the project's `Define`s instead of repeating
-their steps.
+It's the reference for every word the project's `.spp` files can use. Each built-in word is
+listed by group (Finding, Doing, Checking, Lists, Steps) with what it does, what it takes
+and leaves, and an example step. The project's own `Define`s are listed after them, with
+where they are. It comes from the same declarations the checker uses, so it's always
+current.
+
+- Use only words it lists or that you `Define`. Don't invent words.
+- Reuse the project's `Define`s instead of repeating their steps.
+- Copy the shape of a word's example: what comes after the word, and in what order.
 
 ## The rules
 
@@ -43,24 +47,12 @@ their steps.
 - **A step has to use everything it makes.** A step that only finds something, like
   `When the Button "Add"`, is a mistake. Any value left over at the end of the step has to
   be a check.
-- **`I` does nothing.** It's there so that `Given I Visit "/"` reads naturally.
-- **Find things the way a user does**: by role and accessible name (`Button`, `Heading`,
-  `Checkbox`, `Row`…), label (`Field`), text (`Text`), and so on. Don't use CSS selectors;
-  there's no way to write one.
-- **Names match exactly.** `Containing "Kale"` matches a case-insensitive substring instead.
-  `Within` (or `In`) looks inside something else:
-  `Click the Button "Remove" Within the Row Containing "Kale"`.
-- **Some roles have no name.** `Listitem`, `Alert`, `Status`, `Article`, `Paragraph` and a
-  few more aren't named by the text inside them, so they take only `Containing`, which
-  matches that text: `the Listitem Containing "Kale"`. Don't add an `aria-label` to the app to
-  give one a name.
-- **Checks read like English.** Use `See` a thing or `See "some text"`, or put what the
-  thing should be after it: `the Checkbox "Terms" should be Checked`. `Not` flips any
-  check: `I should Not See "Kale"`. Checks retry until they pass or time out.
-- **Check lists whole.** A role with nothing after it, or `Containing` an element, finds
-  every match: `Each Checkbox "Bought" should be Checked`, `No Checkbox "Bought" should be
-  Checked`, `I should Count 3 Row`, or `the Listitem should Read:` with a table of what
-  each reads, in order. There are no loops; don't repeat a step per item to check a list.
+- **Find things the way a user does,** by role, label and text. There are no CSS selectors.
+  `TestId` is a last resort.
+- **Don't change the app to suit a spec.** If a role has no name, find it by the text inside
+  it, with `Containing`, rather than adding an `aria-label`.
+- **Check lists whole,** with the words in the dictionary's Lists group. There are no loops:
+  don't repeat a step per item to check a list.
 - **A step's data table or doc string acts as if it were written at the end of the step.**
   Write `When I Fill in the form:` with a `| label | value |` table, or
   `When I Fill the Field "Notes" with:` with a doc string.

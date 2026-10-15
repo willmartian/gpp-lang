@@ -13,18 +13,31 @@ function dictionaryOf(files: Record<string, string>) {
   return dictionary(words, analyze(discover([dir]).map(load), { words, settle: leftovers, cwd: dir }), dir)
 }
 
-test('built-in words with the same forms are listed together', () => {
+test('a built-in word is listed with what it does, its forms and an example', () => {
   const lines = dictionaryOf({}).split('\n')
-  const click = lines.indexOf('Click, Double-click, Hover, Focus, Check, Uncheck, Clear')
-  assert.notEqual(click, -1)
-  assert.equal(lines[click + 1], '  Element ->    takes something on the page')
+  const click = lines.indexOf('Click')
+  assert.deepEqual(lines.slice(click, click + 4), [
+    'Click',
+    '  Clicks an element.',
+    '  Element ->    takes something on the page',
+    '  Example: When I Click the Button "Sign in"',
+  ])
+})
+
+test('words that share a doc are listed together, under its group', () => {
+  const lines = dictionaryOf({}).split('\n')
+  const each = lines.indexOf('Each, Every')
+  assert.notEqual(each, -1)
+  assert.ok(lines.indexOf('Lists:') < each)
+  assert.match(lines.find((l) => l.startsWith('Roles: ')) ?? '', /^Roles: Alertdialog, Application, /)
 })
 
 test('a word with several forms lists each, with what it takes', () => {
   const lines = dictionaryOf({}).split('\n')
   const press = lines.indexOf('Press')
-  assert.deepEqual(lines.slice(press, press + 3), [
+  assert.deepEqual(lines.slice(press, press + 4), [
     'Press',
+    '  Presses a key, on an element or on the page.',
     '  Text, Element ->    takes a "Key" to press, then something on the page',
     '  Text ->             takes a "Key" to press',
   ])
@@ -57,8 +70,9 @@ test('with no Defines, the dictionary says so', () => {
 test('step keywords are listed as the words they are', () => {
   const lines = dictionaryOf({}).split('\n')
   const and = lines.indexOf('And, But')
-  assert.deepEqual(lines.slice(and, and + 2), [
+  assert.deepEqual(lines.slice(and, and + 3), [
     'And, But',
+    "  Starts a step like the one above it. A scenario can't start with one.",
     '  Step, Mode -> Mode    takes a step, then a Given, When or Then above it',
   ])
 })

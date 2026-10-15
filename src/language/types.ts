@@ -108,6 +108,21 @@ export function formsFor<C extends Context>() {
   return form
 }
 
+// What a built-in word is for, for people: the dictionary, hover and the docs
+// site all show it. Words that do the same thing, like synonyms, share one.
+export interface Doc {
+  group: Group
+  // a name for the words together, where there are many, like "Roles"
+  title?: string
+  // one line, as a sentence
+  summary: string
+  // steps that use it, each checked against the built-in words by the tests
+  examples: readonly string[]
+}
+
+export const GROUPS = ['Finding', 'Doing', 'Checking', 'Lists', 'Steps', 'Other'] as const
+export type Group = (typeof GROUPS)[number]
+
 // "Click : Element ->", as a checker or an editor would show it.
 export function signature(name: string, form: Form): string {
   const inputs = form.inputs.map((t) => t.name).join(', ')

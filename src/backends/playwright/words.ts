@@ -198,6 +198,12 @@ export function browser(parent: Env | null = null): Env {
       'Back',
       form([], (ctx) => ctx.page.goBack()),
     )
+    .doc({ group: 'Doing', summary: 'Goes to a path on the app, or a URL.', examples: ['Given I Visit "/"'] }, 'Visit')
+    .doc({ group: 'Doing', summary: 'Reloads the page.', examples: ['When I Reload the page'] }, 'Reload')
+    .doc(
+      { group: 'Doing', summary: "Goes back, as the browser's back button does.", examples: ['When I go Back'] },
+      'Back',
+    )
 
   actions(env, playwright)
   checks(env, playwright)
@@ -227,6 +233,22 @@ export function browser(parent: Env | null = null): Env {
             return (not ? e.not : e).toHaveTitle(nameOf(title))
           }),
       ),
+    )
+    .doc(
+      {
+        group: 'Checking',
+        summary: "Checks the page's path, or its whole URL.",
+        examples: ['Then I should be At "/dashboard"'],
+      },
+      'At',
+    )
+    .doc(
+      {
+        group: 'Checking',
+        summary: "Checks the page's title.",
+        examples: ['Then the page should be Titled "Dashboard"'],
+      },
+      'Titled',
     )
 }
 

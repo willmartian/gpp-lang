@@ -18,7 +18,7 @@
 
 import type { Stack } from '../language/cognate.ts'
 import { describe, type Env, SppError, unwrap } from '../language/cognate.ts'
-import type { Context, Form } from '../language/types.ts'
+import type { Context, Doc, Form } from '../language/types.ts'
 import { article, called, formsFor, mistake, NumberType, oneOf, TableType, TextType, type } from '../language/types.ts'
 import type { Action, Driver, Name, Query, QueryKind, State } from './driver.ts'
 
@@ -165,13 +165,43 @@ function eitherOrder(act: (ctx: Context, found: Found, text: string) => Promise<
 // ---------------------------------------------------------------- queries
 
 // The word for each kind of query that isn't by role.
-const QUERY_WORDS: [QueryKind, ...string[]][] = [
-  ['label', 'Field', 'Label'],
-  ['text', 'Text'],
-  ['placeholder', 'Placeholder'],
-  ['alt', 'Alt'],
-  ['title', 'Title'],
-  ['testId', 'TestId'],
+const QUERY_WORDS: [QueryKind, Omit<Doc, 'group'>, ...string[]][] = [
+  [
+    'label',
+    {
+      summary: 'Finds a form control by its label.',
+      examples: ['When I Fill the Field "Email" with "will@example.com"', 'When I Check the Label "Remember me"'],
+    },
+    'Field',
+    'Label',
+  ],
+  [
+    'text',
+    { summary: 'Finds an element by its text.', examples: ['When I Click the Text "Forgot your password?"'] },
+    'Text',
+  ],
+  [
+    'placeholder',
+    {
+      summary: 'Finds a form control by its placeholder.',
+      examples: ['When I Fill the Placeholder "Search" with "kale"'],
+    },
+    'Placeholder',
+  ],
+  [
+    'alt',
+    { summary: 'Finds an image by its alt text.', examples: ['Then I should See the Alt "Company logo"'] },
+    'Alt',
+  ],
+  ['title', { summary: 'Finds an element by its title.', examples: ['When I Hover the Title "Settings"'] }, 'Title'],
+  [
+    'testId',
+    {
+      summary: 'Finds an element by its test id. A last resort: it stands out in review.',
+      examples: ['When I Click the TestId "chart-bar-3"'],
+    },
+    'TestId',
+  ],
 ]
 
 // Roles with no name to find them by: ARIA names neither from their content
@@ -254,11 +284,39 @@ export function queries(env: Env, driver: AnyDriver): Env {
   }
 
   for (const r of driver.roles) env.word(cap(r), ...role(r))
-  for (const [kind, ...words] of QUERY_WORDS) {
+  const roles = driver.roles.filter((r) => !UNNAMED_ROLES.has(r)).map(cap)
+  const unnamed = driver.roles.filter((r) => UNNAMED_ROLES.has(r)).map(cap)
+  env.doc(
+    {
+      group: 'Finding',
+      title: 'Roles',
+      summary: 'Finds an element by its ARIA role and accessible name, which must match exactly.',
+      examples: [
+        'When I Click the Button "Sign in"',
+        'Then I should See the Heading "Welcome back"',
+        'Then the Dialog should be Visible',
+      ],
+    },
+    ...roles,
+  )
+  env.doc(
+    {
+      group: 'Finding',
+      title: 'Roles with no name',
+      summary: "Finds an element by its ARIA role and the text inside it. These roles aren't named by their content.",
+      examples: [
+        'When I Click the Button "Destroy" Within the Listitem Containing "feed the cat"',
+        'Then the Alert Containing "Saved" should be Visible',
+      ],
+    },
+    ...unnamed,
+  )
+  for (const [kind, doc, ...words] of QUERY_WORDS) {
     if (!driver.queries.includes(kind)) continue
     // Synonyms share their forms, and so describe what they found the same way.
     const forms = named(words[0], (name) => ({ by: kind, name }))
     for (const word of words) env.word(word, ...forms)
+    env.doc({ group: 'Finding', ...doc }, ...words)
   }
   env.word(
     'Containing',
@@ -271,7 +329,32 @@ export function queries(env: Env, driver: AnyDriver): Env {
     ScopeType,
     (_, found) => new Scope(found),
   )
-  return env.word('Within', within).word('In', within)
+  return env
+    .word('Within', within)
+    .word('In', within)
+    .doc(
+      {
+        group: 'Finding',
+        summary: 'Matches part of a name or text, ignoring case, or an element with another inside it.',
+        examples: [
+          'When I Click the Button "Remove" Within the Row Containing "Kale"',
+          'Then I should See the Row Containing the Button "Undo"',
+        ],
+      },
+      'Containing',
+    )
+    .doc(
+      {
+        group: 'Finding',
+        summary: 'Looks inside another element.',
+        examples: [
+          'When I Click the Link "Help" Within the Navigation',
+          'When I Click the Button "Close" In the Dialog',
+        ],
+      },
+      'Within',
+      'In',
+    )
 }
 
 // ---------------------------------------------------------------- actions
@@ -279,14 +362,14 @@ export function queries(env: Env, driver: AnyDriver): Env {
 // The actions that take only the thing they act on.
 type BareAction = Exclude<Action, { text: string } | { key: string }>['do']
 
-const ACTION_WORDS: [BareAction, string][] = [
-  ['click', 'Click'],
-  ['double-click', 'Double-click'],
-  ['hover', 'Hover'],
-  ['focus', 'Focus'],
-  ['check', 'Check'],
-  ['uncheck', 'Uncheck'],
-  ['clear', 'Clear'],
+const ACTION_WORDS: [BareAction, string, summary: string, example: string][] = [
+  ['click', 'Click', 'Clicks an element.', 'When I Click the Button "Sign in"'],
+  ['double-click', 'Double-click', 'Double-clicks an element.', 'When I Double-click the Text "buy milk"'],
+  ['hover', 'Hover', 'Moves the mouse over an element.', 'When I Hover the Button "Share"'],
+  ['focus', 'Focus', 'Focuses an element.', 'When I Focus the Field "Email"'],
+  ['check', 'Check', 'Checks a checkbox or radio button.', 'When I Check the Checkbox "Terms"'],
+  ['uncheck', 'Uncheck', 'Unchecks a checkbox.', 'When I Uncheck the Checkbox "Newsletter"'],
+  ['clear', 'Clear', 'Empties a field.', 'When I Clear the Field "Search"'],
 ]
 
 // Doing things, as far as the driver can.
@@ -294,12 +377,14 @@ export function actions(env: Env, driver: AnyDriver): Env {
   const can = (a: Action['do']) => driver.actions.includes(a)
   const act = (ctx: Context, found: Found, action: Action) => driver.act(ctx, found.handle, action)
 
-  for (const [action, word] of ACTION_WORDS) {
+  for (const [action, word, summary, example] of ACTION_WORDS) {
     if (can(action))
-      env.word(
-        word,
-        form([ElementType], (ctx, found) => act(ctx, found, { do: action })),
-      )
+      env
+        .word(
+          word,
+          form([ElementType], (ctx, found) => act(ctx, found, { do: action })),
+        )
+        .doc({ group: 'Doing', summary, examples: [example] }, word)
   }
   if (can('fill')) {
     const fill = eitherOrder((ctx, found, text) => act(ctx, found, { do: 'fill', text }))
@@ -311,16 +396,51 @@ export function actions(env: Env, driver: AnyDriver): Env {
             await driver.act(ctx, driver.find(ctx, null, { by: 'label', name: label }), { do: 'fill', text: value })
         }),
       )
-    env.word('Fill', ...fill)
+    env.word('Fill', ...fill).doc(
+      {
+        group: 'Doing',
+        summary: 'Fills a field, replacing what was in it. Given a table, fills each field by its label.',
+        examples: [
+          'When I Fill the Field "Email" with "will@example.com"',
+          'When I Fill "hunter2" into the Field "Password"',
+          'When I Fill in the form:\n  | Email    | will@example.com |\n  | Password | hunter2          |',
+        ],
+      },
+      'Fill',
+    )
   }
-  if (can('type')) env.word('Type', ...eitherOrder((ctx, found, text) => act(ctx, found, { do: 'type', text })))
-  if (can('select')) env.word('Select', ...eitherOrder((ctx, found, text) => act(ctx, found, { do: 'select', text })))
+  if (can('type'))
+    env.word('Type', ...eitherOrder((ctx, found, text) => act(ctx, found, { do: 'type', text }))).doc(
+      {
+        group: 'Doing',
+        summary: 'Types into a field one key at a time, as a person would.',
+        examples: ['When I Type "kale" into the Field "Search"'],
+      },
+      'Type',
+    )
+  if (can('select'))
+    env.word('Select', ...eitherOrder((ctx, found, text) => act(ctx, found, { do: 'select', text }))).doc(
+      {
+        group: 'Doing',
+        summary: 'Chooses an option in a select box.',
+        examples: ['When I Select "Blue" in the Combobox "Colour"'],
+      },
+      'Select',
+    )
   if (can('press')) {
     const Key = called(TextType, 'a "Key" to press')
     env.word(
       'Press',
       form([Key, ElementType], (ctx, key, found) => act(ctx, found, { do: 'press', key })),
       form([Key], (ctx, key) => driver.press(ctx, key)),
+    )
+    env.doc(
+      {
+        group: 'Doing',
+        summary: 'Presses a key, on an element or on the page.',
+        examples: ['When I Press "Enter"', 'When I Press "Escape" in the Dialog'],
+      },
+      'Press',
     )
   }
   return env
@@ -331,21 +451,47 @@ export function actions(env: Env, driver: AnyDriver): Env {
 type TextState = Extract<State, { text: Name }>['is']
 type BareState = Exclude<State['is'], TextState | 'texts' | 'count'>
 
-const STATE_WORDS: [BareState, string][] = [
-  ['visible', 'Visible'],
-  ['hidden', 'Hidden'],
-  ['checked', 'Checked'],
-  ['enabled', 'Enabled'],
-  ['disabled', 'Disabled'],
-  ['focused', 'Focused'],
-  ['empty', 'Empty'],
+const STATE_WORDS: [BareState, string, summary: string, example: string][] = [
+  ['visible', 'Visible', 'Checks an element is visible.', 'Then the Dialog "Cookies" should be Visible'],
+  ['hidden', 'Hidden', 'Checks an element is hidden, or not there.', 'Then the Dialog "Cookies" should be Hidden'],
+  [
+    'checked',
+    'Checked',
+    'Checks a checkbox or radio button is checked.',
+    'Then the Checkbox "Terms" should be Checked',
+  ],
+  ['enabled', 'Enabled', 'Checks an element is enabled.', 'Then the Button "Save" should be Enabled'],
+  ['disabled', 'Disabled', 'Checks an element is disabled.', 'Then the Button "Save" should be Disabled'],
+  ['focused', 'Focused', 'Checks an element has focus.', 'Then the Field "Email" should be Focused'],
+  ['empty', 'Empty', 'Checks an element has no text, or a field no value.', 'Then the Field "Search" should be Empty'],
 ]
 
 // The states that take some text, like Value "eggs".
-const TEXT_STATE_WORDS: [TextState, string][] = [
-  ['value', 'Value'],
-  ['text', 'Read'],
-  ['containing', 'Contain'],
+const TEXT_STATE_WORDS: [TextState, string, Omit<Doc, 'group'>][] = [
+  [
+    'value',
+    'Value',
+    {
+      summary: "Checks a field's value.",
+      examples: ['Then the Field "Email" should have the Value "will@example.com"'],
+    },
+  ],
+  [
+    'text',
+    'Read',
+    {
+      summary: "Checks an element's whole text. Given a table, checks what everything found reads, in order.",
+      examples: [
+        'Then the Status should Read "2 items left"',
+        'Then the Listitem should Read:\n  | buy some cheese |\n  | feed the cat    |',
+      ],
+    },
+  ],
+  [
+    'containing',
+    'Contain',
+    { summary: "Checks part of an element's text.", examples: ['Then the Alert should Contain "saved"'] },
+  ],
 ]
 
 // Checking things: See, a word for each state the driver can check, and Not.
@@ -362,16 +508,25 @@ export function checks(env: Env, driver: AnyDriver): Env {
           return visible.against(new Found(handle, `the text ${say(text)}`), ctx, driver)
         }),
       )
-    env.word('See', ...see)
+    env.word('See', ...see).doc(
+      {
+        group: 'Checking',
+        summary: 'Checks an element is visible, or some text anywhere on the page.',
+        examples: ['Then I should See the Heading "Welcome back"', 'Then I should See "Saved"'],
+      },
+      'See',
+    )
   }
-  for (const [is, word] of STATE_WORDS) {
+  for (const [is, word, summary, example] of STATE_WORDS) {
     if (can(is))
-      env.word(
-        word,
-        form([], MatcherType, () => new Matcher(word, { is })),
-      )
+      env
+        .word(
+          word,
+          form([], MatcherType, () => new Matcher(word, { is })),
+        )
+        .doc({ group: 'Checking', summary, examples: [example] }, word)
   }
-  for (const [is, word] of TEXT_STATE_WORDS) {
+  for (const [is, word, doc] of TEXT_STATE_WORDS) {
     if (!can(is)) continue
     const forms = [form([NameType], MatcherType, (_, v) => new Matcher(`${word} ${say(v)}`, { is, text: nameOf(v) }))]
     // Read given a table: what everything found reads, in order, one row each.
@@ -386,26 +541,45 @@ export function checks(env: Env, driver: AnyDriver): Env {
           return new Matcher(`${word} ${texts.map((t) => JSON.stringify(t)).join(', ')}`, { is: 'texts', texts })
         }),
       )
-    env.word(word, ...forms)
+    env.word(word, ...forms).doc({ group: 'Checking', ...doc }, word)
   }
   if (can('count'))
-    env.word(
-      'Count',
-      form([called(NumberType, 'how many there should be'), ElementType], CheckType, (ctx, count, found) =>
-        new Matcher(`Count ${count}`, { is: 'count', count }).against(found, ctx, driver),
-      ),
-    )
-  for (const [quantifier, ...words] of QUANTIFIER_WORDS) {
+    env
+      .word(
+        'Count',
+        form([called(NumberType, 'how many there should be'), ElementType], CheckType, (ctx, count, found) =>
+          new Matcher(`Count ${count}`, { is: 'count', count }).against(found, ctx, driver),
+        ),
+      )
+      .doc(
+        {
+          group: 'Lists',
+          summary: 'Checks how many elements a query finds.',
+          examples: ['Then I should Count 3 Row Within the Table'],
+        },
+        'Count',
+      )
+  for (const [quantifier, doc, ...words] of QUANTIFIER_WORDS) {
     const quantified = form([ElementType, MatcherType], CheckType, (ctx, found, matcher) =>
       quantify(quantifier, words[0], found, matcher, ctx, driver),
     )
     for (const word of words) env.word(word, quantified)
+    env.doc({ group: 'Lists', ...doc }, ...words)
   }
-  return env.word(
-    'Not',
-    form([MatcherType], MatcherType, (_, m) => m.negate()),
-    form([CheckType], CheckType, (_, c) => c.negate()),
-  )
+  return env
+    .word(
+      'Not',
+      form([MatcherType], MatcherType, (_, m) => m.negate()),
+      form([CheckType], CheckType, (_, c) => c.negate()),
+    )
+    .doc(
+      {
+        group: 'Checking',
+        summary: 'Turns a check around.',
+        examples: ['Then I should Not See the Button "Delete"', 'Then the Checkbox "Terms" should Not be Checked'],
+      },
+      'Not',
+    )
 }
 
 // Each and No check everything a query finds, the way Inform 7 says "if each
@@ -415,9 +589,25 @@ export function checks(env: Env, driver: AnyDriver): Env {
 // Not makes them "not every one" and "at least one".
 type Quantifier = 'each' | 'no'
 
-const QUANTIFIER_WORDS: [Quantifier, ...string[]][] = [
-  ['each', 'Each', 'Every'],
-  ['no', 'No', 'None'],
+const QUANTIFIER_WORDS: [Quantifier, Omit<Doc, 'group'>, ...string[]][] = [
+  [
+    'each',
+    {
+      summary: 'Checks every element a query finds. Fails if it finds none.',
+      examples: ['Then Each Checkbox "Bought" should be Checked'],
+    },
+    'Each',
+    'Every',
+  ],
+  [
+    'no',
+    {
+      summary: 'Checks no element a query finds passes. Passes if it finds none.',
+      examples: ['Then No Checkbox "Bought" should be Checked'],
+    },
+    'No',
+    'None',
+  ],
 ]
 
 // The states a matcher checks of everything found together, not of each.

@@ -5,3 +5,4 @@ playwright-report/
 dist/
 .claude/settings.local.json
 .spp-tests/
+site/_site/

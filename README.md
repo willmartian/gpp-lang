@@ -13,25 +13,22 @@ Feature: Signing in
     Then I should See the Heading "Welcome back"
 ```
 
-Spec++ is Gherkin without step definitions. Capitalised words are code and lowercase words
-are prose, so a step runs as written. Every scenario runs as a Playwright test.
+Gherkin without step definitions. Every scenario runs as a Playwright test.
 
-## Why
+- **Capitalised words are code.** Lowercase words are prose, for people.
+- **Code runs right to left.** In `Click the Button "Sign in"`, `Button` finds the button
+  named "Sign in", then `Click` clicks it.
+- **Elements are found as a user finds them:** by role, label and text, as in
+  [Testing Library](https://testing-library.com/docs/queries/about). There are no CSS
+  selectors.
+- **A scenario does the same thing every run.** There are no sleeps, conditionals or loops.
+- **Mistakes are caught before a browser starts.** Every word has a type.
+- **The rest is Gherkin.** Backgrounds, Scenario Outlines, Rules, data tables and tags work as
+  in Cucumber.
 
-Agents writing tests reach for sleeps, conditionals and CSS selectors until a test passes.
-Spec++ doesn't have them. Steps find elements by role, label and visible text, as a user
-would, and a scenario does the same thing every run. A reviewer only has to ask whether the
-spec tests the right thing. When nothing else works, `TestId` finds an element by test id,
-and it stands out in review.
+## Install
 
-A spec is written in the words of whoever uses what it tests. A web app's users click
-buttons and read headings, so those are Spec++'s words. A library's users write code, so a
-library's specs are best written as code, and Spec++ doesn't test one directly. Business
-rules are tested through the product, where the people who know them see them.
-
-## Getting started
-
-Spec++ needs Node.js 22.13 or later.
+Needs Node.js 22.13 or later.
 
 ```sh
 npm install --save-dev spp-lang @playwright/test
@@ -49,137 +46,34 @@ export default defineConfig({
 })
 ```
 
+Add `.spp-tests/` to `.gitignore`.
+
+## Run
+
 ```sh
-npx playwright test
-npx playwright test features/sign-in.spp:12   # the scenario on line 12
+npx playwright test                         # every scenario
+npx playwright test features/sign-in.spp:12 # the scenario on line 12
+npx spp-lang check                          # check without running
+npx spp-lang dictionary                     # every word you can use
 ```
 
-`defineSppConfig` generates a small test file per `.spp` file in `.spp-tests/`, which you
-should add to `.gitignore`. The rest of Playwright works as usual: projects, retries,
-sharding, UI mode, the trace viewer and
-[its VS Code extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
-Failures point at the word in the `.spp` file that failed.
+## Docs
 
-Without a Playwright config, `npx spp-lang test --base-url http://localhost:3000` runs every
-`.spp` file under the current directory.
-
-## The language
-
-Capitalised words run right to left. In `Click the Button "Sign in"`, the text comes first,
-`Button` turns it into the button with that name, and `Click` clicks it. Lowercase words
-are skipped. Under the hood it's a small stack-based language, borrowed from
-[Cognate](https://cognate-lang.github.io/). The [reference](docs/reference.md) covers
-everything below in more detail, along with config options and multi-project setups.
-
-Finding things follows [Testing Library](https://testing-library.com/docs/queries/about):
-
-| Word | Finds |
+| Page | Covers |
 | --- | --- |
-| `Button`, `Heading`, `Link`, `Checkbox`, `Row`, `Dialog`… | an element by ARIA role and name |
-| `Field`, `Label` | a form control by its label |
-| `Text` | an element by its text |
-| `Placeholder`, `Alt`, `Title`, `TestId` | an element by that attribute |
+| [Words](docs/words.md) | every built-in word |
+| [Defines](docs/defines.md) | your own words |
+| [Running](docs/running.md) | config, projects, the CLI, tags |
+| [Markdown](docs/markdown.md) | ` ```spp ` blocks that run as tests |
+| [Editors](docs/editors.md) | the language server, VS Code, Claude Code, Neovim |
 
-Names match exactly. `Containing "Kale"` matches part of a name, and `Within` searches
-inside another element. Roles that have no name, like `Listitem` and `Alert`, are found
-by the text inside them, with `Containing`. `Containing` can also take an element, as in
-`the Row Containing the Button "Undo"`, and a role with nothing after it finds every
-element with that role.
+## Why
 
-Actions: `Visit`, `Reload`, `Back`, `Click`, `Double-click`, `Hover`, `Focus`, `Check`,
-`Uncheck`, `Clear`, `Fill`, `Type`, `Select`, `Press`.
+- **Agents writing tests reach for sleeps, conditionals and CSS selectors** until a test
+  passes. Spec++ has none of them, so a reviewer only has to ask whether a spec tests the
+  right thing.
+- **A spec is written in the words of whoever uses what it tests.** A web app's users click
+  buttons and read headings, so those are Spec++'s words. A library's users write code, so
+  its specs are best written as code.
 
-Checks: `See`, `Visible`, `Hidden`, `Checked`, `Enabled`, `Disabled`, `Focused`, `Empty`,
-`Value`, `Read`, `Contain`, `At` and `Titled`. `Not` negates any of them, and they retry
-like Playwright's `expect`. `Each` and `No` check everything a query finds, `Count` checks
-how many it finds, and `Read` with a table checks what they read, in order.
-
-```gherkin
-When I Click the Button "Remove" Within the Row Containing "Kale"
-Then I should Not See the Cell "Kale"
-And I should be At "/list"
-And No Checkbox "Bought" should be Checked
-And I should Count 2 Row Within the Table
-```
-
-There are no loops. A loop over what's on the page wouldn't do the same thing every run,
-so lists are checked whole instead.
-
-Backgrounds, Scenario Outlines, Rules and data tables work as in Cucumber. Tags become
-Playwright tags, so `@skip`, `@only` and `--grep @smoke` work.
-
-### Your own words
-
-Project vocabulary is written in Spec++ too, with `Define`:
-
-```gherkin
-Define: Add Text (Item)
-  Fill the Field "Item" with Item
-  Click the Button "Add"
-
-Feature: The grocery list
-
-  Scenario: Adding things
-    When I Add "Milk" to the list
-    Then I should See the Cell "Milk"
-```
-
-After its name, a Define lists what it takes: `Text`, `Number`, `Element`, `Table` or
-`Any`, with an optional name in brackets. Defines can sit above a Feature or in a file of
-their own, and every file in the project can use them. A Define that leaves one value,
-like `Define: Cart` leaving a region of the page, becomes a type that other Defines can take.
-
-### Checking
-
-Every word has a type, so steps are checked before a browser starts. The types of your own
-Defines are inferred from how they're used.
-
-```
-SppError: Click expected something on the page, but got "Add"
-
-  > 4 |     When I Click "Add"
-      |            ^
-```
-
-```sh
-npx spp-lang check        # check without running
-npx spp-lang dictionary   # list every word you can use, with its type
-```
-
-## In Markdown
-
-` ```spp ` blocks in Markdown files run as tests too, like Rust's doctests, so the examples
-in your docs stay true. Mark a block ` ```spp ignore ` to leave it out. See
-[`examples/demo/features/README.md`](examples/demo/features/README.md).
-
-## Editors
-
-`spp-lang lsp` is a language server with diagnostics, hover, go to definition, find
-references and completion.
-
-- **VS Code:** install
-  [the Spec++ extension](https://marketplace.visualstudio.com/items?itemName=spp-lang.spp-vscode).
-  It uses your project's `spp-lang` if there is one.
-- **Claude Code:** install the plugin, which teaches Claude the language and runs the
-  language server.
-
-  ```sh
-  claude plugin marketplace add willmartian/spp-lang
-  claude plugin install spp-lang@spp-lang
-  ```
-
-- **Neovim** (0.11 or later):
-
-  ```lua
-  vim.filetype.add({ extension = { spp = 'spp' } })
-  vim.lsp.config('spp', {
-    cmd = { 'npx', 'spp-lang', 'lsp' },
-    filetypes = { 'spp' },
-    root_markers = { 'package.json', '.git' },
-  })
-  vim.lsp.enable('spp')
-  ```
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+[Contributing](CONTRIBUTING.md)

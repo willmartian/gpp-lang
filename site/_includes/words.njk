@@ -1,0 +1,34 @@
+---
+layout: page.njk
+---
+{{ content | safe }}
+
+<dl class="index">
+  {%- for group in groups %}
+  <dt><a href="#{{ group.id }}">{{ group.name }}</a></dt>
+  <dd>
+    {%- for entry in group.entries %}
+    <a href="#{{ entry.id }}">{{ entry.title or entry.names | join(", ") }}</a>
+    {%- endfor %}
+  </dd>
+  {%- endfor %}
+</dl>
+
+{%- for group in groups %}
+<h2 id="{{ group.id }}">{{ group.name }}</h2>
+{%- for entry in group.entries %}
+<section class="entry" id="{{ entry.id }}">
+  <h3>{{ entry.title or entry.names | join(", ") }}</h3>
+  {%- if entry.title %}
+  <p class="names">{{ entry.names | join(", ") }}</p>
+  {%- endif %}
+  <p>{{ entry.summary | escape }}</p>
+  <table class="forms">
+    {%- for form in entry.forms %}
+    <tr><td><code>{{ form.shape | escape }}</code></td><td>{{ form.takes | escape }}</td></tr>
+    {%- endfor %}
+  </table>
+  {{ entry.examples | safe }}
+</section>
+{%- endfor %}
+{%- endfor %}

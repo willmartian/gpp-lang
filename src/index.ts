@@ -15,8 +15,20 @@ export type { Fence } from './language/markdown.ts'
 export { fences, sppFences, sppLines } from './language/markdown.ts'
 export type { CodeLine, Sections } from './language/sections.ts'
 export { codeLines, sections, split } from './language/sections.ts'
-export type { Context, Form, Type } from './language/types.ts'
-export { AnyType, called, formsFor, NumberType, oneOf, signature, TableType, TextType, type } from './language/types.ts'
+export { keywords } from './language/steps.ts'
+export type { Context, Doc, Form, Group, Type } from './language/types.ts'
+export {
+  AnyType,
+  called,
+  formsFor,
+  GROUPS,
+  NumberType,
+  oneOf,
+  signature,
+  TableType,
+  TextType,
+  type,
+} from './language/types.ts'
 export { dictionary } from './tools/dictionary.ts'
 export type { Action, Capabilities, Driver, Name, Query, QueryKind, State } from './words/driver.ts'
 export {

@@ -1,0 +1,344 @@
+@font-face {
+  font-family: "Iosevka Aile";
+  src: url("/fonts/iosevka-aile-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Iosevka Aile";
+  src: url("/fonts/iosevka-aile-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Iosevka";
+  src: url("/fonts/iosevka-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Iosevka";
+  src: url("/fonts/iosevka-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Iosevka";
+  src: url("/fonts/iosevka-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  --paper: #fbfaf6;
+  --ink: #1f1e1b;
+  --muted: #75716a;
+  --rule: #e5e1d8;
+  --wash: #f3f1ea;
+  --accent: #3f7a3b;
+
+  /* Code. In Spec++, the words that run stand out and the prose falls back. */
+  --code-foreground: var(--ink);
+  --code-background: var(--wash);
+  --code-token-keyword: var(--muted);
+  --code-token-string: #9a5b1e;
+  --code-token-string-expression: #9a5b1e;
+  --code-token-comment: #9c978e;
+  --code-token-constant: #2d6a8a;
+  --code-token-function: var(--accent);
+  --code-token-parameter: var(--ink);
+  --code-token-punctuation: #b0aba1;
+  --code-token-link: var(--accent);
+  --spp-prose: #8f8a81;
+  --spp-word: var(--accent);
+  --spp-number: var(--code-token-constant);
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151513;
+    --ink: #e7e4dc;
+    --muted: #9b968c;
+    --rule: #2c2b27;
+    --wash: #1d1c1a;
+    --accent: #95c78d;
+
+    --code-token-string: #d9a46a;
+    --code-token-string-expression: #d9a46a;
+    --code-token-comment: #6f6b63;
+    --code-token-constant: #8cc0dc;
+    --code-token-punctuation: #57544d;
+    --spp-prose: #7d796f;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 68rem;
+  padding: 0 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  font:
+    400 1rem / 1.6 "Iosevka Aile",
+    system-ui,
+    sans-serif;
+  /* -> and ++ as typed, not as arrows */
+  font-variant-ligatures: none;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  color: var(--accent);
+}
+
+p,
+ul,
+ol {
+  margin: 0 0 1rem;
+}
+
+h1 + p {
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+li + li {
+  margin-top: 0.25rem;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+header a {
+  color: var(--muted);
+  text-decoration: none;
+}
+header .name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr);
+  gap: 3rem;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 2rem 0;
+  font-size: 0.94rem;
+}
+.sidebar ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sidebar li {
+  margin: 0;
+}
+.sidebar a {
+  display: block;
+  padding: 0.2rem 0;
+  color: var(--muted);
+  text-decoration: none;
+}
+.sidebar a:hover,
+.sidebar a[aria-current="page"] {
+  color: var(--ink);
+}
+.sidebar a[aria-current="page"] {
+  font-weight: 600;
+}
+.sidebar .toc {
+  margin: 0.25rem 0 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--rule);
+  font-size: 0.9rem;
+}
+
+main {
+  padding: 2rem 0 0;
+  max-width: 46rem;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  line-height: 1.25;
+  scroll-margin-top: 1rem;
+}
+h1 {
+  font-size: 1.9rem;
+  margin: 0 0 0.5rem;
+}
+h2 {
+  font-size: 1.3rem;
+  margin: 2.5rem 0 0.75rem;
+}
+h3 {
+  font-size: 1.05rem;
+  margin: 1.75rem 0 0.5rem;
+}
+
+code,
+pre {
+  font-family: "Iosevka", ui-monospace, monospace;
+  font-size: 0.94em;
+}
+:not(pre) > code {
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  background: var(--wash);
+}
+pre {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  border-radius: 6px;
+  line-height: 1.55;
+}
+
+/* Spec++: lowercase prose, capitalised code. */
+pre.language-spp {
+  --code-foreground: var(--spp-prose);
+}
+
+table {
+  width: 100%;
+  margin: 0 0 1.25rem;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+  display: block;
+  overflow-x: auto;
+}
+th,
+td {
+  padding: 0.45rem 1rem 0.45rem 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* The Words page: an index, then an entry per word. */
+.index {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1.25rem;
+  margin: 2rem 0;
+  font-size: 0.94rem;
+}
+.index dt {
+  font-weight: 600;
+}
+.index dd {
+  margin: 0;
+  font-family: "Iosevka", ui-monospace, monospace;
+}
+.index dd a {
+  margin-right: 0.75rem;
+  text-decoration: none;
+}
+
+.entry {
+  padding: 1rem 0 0.25rem;
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: 1rem;
+}
+.entry h3 {
+  margin: 0 0 0.25rem;
+  font-family: "Iosevka", ui-monospace, monospace;
+  color: var(--accent);
+}
+.entry .names {
+  color: var(--muted);
+  font-family: "Iosevka", ui-monospace, monospace;
+  font-size: 0.88rem;
+}
+.entry p {
+  margin-bottom: 0.5rem;
+}
+.entry pre {
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 1rem;
+}
+.forms {
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+}
+.forms td {
+  padding: 0.2rem 1.25rem 0.2rem 0;
+  border: 0;
+  color: var(--muted);
+}
+.forms td:first-child {
+  white-space: nowrap;
+}
+.forms code {
+  padding: 0;
+  background: none;
+  color: var(--ink);
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding: 1.25rem 0 3rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 52rem) {
+  .layout {
+    display: block;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .sidebar > ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1rem;
+  }
+  .sidebar .toc {
+    display: none;
+  }
+  .index {
+    grid-template-columns: 1fr;
+  }
+}

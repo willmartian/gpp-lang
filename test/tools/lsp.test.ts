@@ -165,6 +165,15 @@ test('the language server', async (t) => {
     assert.match(hover.contents.value, /Defined at words\.spp:1/)
   })
 
+  await t.test('shows what a built-in word is for, and an example', async () => {
+    const hover = await connection.sendRequest<{ contents: { value: string } }>('textDocument/hover', {
+      textDocument: { uri },
+      position: { line: 3, character: 11 },
+    })
+    assert.match(hover.contents.value, /Click : Element ->/)
+    assert.match(hover.contents.value, /Clicks an element\.\n\n```spp\nWhen I Click the Button "Sign in"\n```/)
+  })
+
   await t.test('in a Define, knows what its header takes', async () => {
     const hover = await connection.sendRequest<{ contents: { value: string } }>('textDocument/hover', {
       textDocument: { uri: wordsUri },

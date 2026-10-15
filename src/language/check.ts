@@ -24,7 +24,7 @@ import { notAKind, parse, SppError, specificity, unknownWord } from './cognate.t
 import type { Scenario, SppFile, Step, Vocabulary } from './load.ts'
 import { lineCol } from './load.ts'
 import { keywordForms, keywords, StepType } from './steps.ts'
-import type { Form, Type } from './types.ts'
+import type { Doc, Form, Type } from './types.ts'
 import { AnyType, article, NumberType, signature, TableType, TextType, type } from './types.ts'
 
 export interface Diagnostic {
@@ -239,6 +239,8 @@ export function check(files: SppFile[], options: CheckOptions): Report {
 export interface WordInfo {
   name: string
   kind: 'builtin' | 'define' | 'value'
+  // what a builtin is for
+  doc?: Doc
   // "Click : Element ->", one per form
   signatures: string[]
   // the base types each form leaves, or null for a form that leaves anything
@@ -403,6 +405,7 @@ class Checker {
       return {
         name,
         kind: 'builtin',
+        doc: this.options.words.docOf(name) ?? KEYWORDS.docOf(name),
         signatures: known.forms.filter((f) => !f.mistake).map((f) => signature(name, f)),
         outputs: known.forms.filter((f) => !f.mistake).map((f) => (f.output ? membersOf(f.output) : [])),
       }

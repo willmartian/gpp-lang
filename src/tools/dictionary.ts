@@ -1,42 +1,70 @@
 // The dictionary: every word a .spp file can use, built in or Defined, with
 // what it takes and what it leaves. It's read from the same forms and
 // inferred Defines the checker uses, so it can't drift from what the words
-// do. Run it as `spp-lang dictionary`.
+// do. Run it as `spp-lang dictionary`; the docs site shows the same entries.
 //
-//     Click, Double-click, Hover, Focus, Check, Uncheck, Clear
+//     Click
+//       Clicks an element.
 //       Element ->    takes something on the page
+//       Example: When I Click the Button "Sign in"
 //
-// Words with the same forms, like the ARIA roles, are listed together.
+// Words that share a doc, like the ARIA roles, are listed together.
 
 import path from 'node:path'
 import type { Analysis } from '../language/check.ts'
 import type { Env } from '../language/cognate.ts'
 import { keywords } from '../language/steps.ts'
-import type { Form } from '../language/types.ts'
+import { type Doc, type Form, GROUPS } from '../language/types.ts'
 
 const KEYWORDS = keywords(async () => {})
 
 const WIDTH = 96
 
+// The words that share a doc, and the ways to use them.
+export interface Entry {
+  names: string[]
+  doc: Doc
+  forms: readonly Form[]
+}
+
+// The built-in words and step keywords, one entry per doc, in the order of
+// GROUPS, then the order they were documented in. The tests see that every
+// builtin has a doc.
+export function entries(words: Env): Entry[] {
+  const byDoc = new Map<Doc, Entry>()
+  for (const scope of [words, KEYWORDS]) {
+    for (let env: Env | null = scope; env; env = env.parent) {
+      for (const [key, doc] of env.docs) {
+        const forms = env.forms(key)
+        if (!forms) continue
+        const name = env.spellings.get(key) ?? key
+        const entry = byDoc.get(doc)
+        if (entry) entry.names.push(name)
+        // A form that's always a mistake isn't a way to use the word.
+        else byDoc.set(doc, { names: [name], doc, forms: forms.filter((f) => !f.mistake) })
+      }
+    }
+  }
+  return [...byDoc.values()].sort((a, b) => GROUPS.indexOf(a.doc.group) - GROUPS.indexOf(b.doc.group))
+}
+
 export function dictionary(words: Env, analysis: Analysis, cwd = process.cwd()): string {
   const out = [
     'Built-in words',
     '',
-    'Each line is one way to use a word: what it takes, in reading order, and what it leaves.',
-    'The first thing a word takes is written right after it. Define is syntax, not a word,',
-    "so it isn't listed.",
+    'Each line under a word is one way to use it: what it takes, in reading order, and what it',
+    'leaves. The first thing a word takes is written right after it. Define is syntax, not a',
+    "word, so it isn't listed.",
     '',
   ]
 
-  out.push(...grouped(words))
-  out.push(
-    'Step keywords',
-    '',
-    'A step is a block, and its keyword is a word that runs it. Each leaves its mode for the',
-    "next step, and And takes the one above it, so a scenario can't start with And.",
-    '',
-    ...grouped(KEYWORDS),
-  )
+  const all = entries(words)
+  for (const group of GROUPS) {
+    const these = all.filter((e) => e.doc.group === group)
+    if (!these.length) continue
+    out.push(`${group}:`, '')
+    for (const entry of these) out.push(...listed(entry), '')
+  }
 
   const defines = analysis.words().filter((w) => w.kind === 'define')
   out.push('Defined in this project', '')
@@ -54,50 +82,40 @@ export function dictionary(words: Env, analysis: Analysis, cwd = process.cwd()):
   return out.join('\n').trimEnd()
 }
 
-// Words with the same forms, together, one line per form.
-function grouped(words: Env): string[] {
-  const out: string[] = []
-  const groups = new Map<string, { names: string[]; forms: readonly Form[] }>()
-  for (const name of new Set(words.names())) {
-    const word = words.lookup(name)
-    if (!Array.isArray(word)) continue
-    // A form that's always a mistake isn't a way to use the word.
-    const forms = word.filter((f: Form) => !f.mistake)
-    const key = forms.map((f: Form) => `${shape(f)} ${takes(f)}`).join('\n')
-    const group = groups.get(key)
-    if (group) group.names.push(name)
-    else groups.set(key, { names: [name], forms })
-  }
-  for (const { names, forms } of groups.values()) {
-    out.push(...wrap(names))
-    const width = Math.max(...forms.map((f) => shape(f).length))
-    for (const f of forms) out.push(`  ${shape(f).padEnd(width)}    ${takes(f)}`)
-    out.push('')
-  }
-  return out
+// An entry: its words, what they're for, a line per form and an example.
+function listed({ names, doc, forms }: Entry): string[] {
+  const width = Math.max(...forms.map((f) => shape(f).length))
+  const [example] = doc.examples
+  return [
+    ...wrap(names, doc.title),
+    `  ${doc.summary}`,
+    ...forms.map((f) => `  ${shape(f).padEnd(width)}    ${takes(f)}`),
+    ...(example ? `Example: ${example}`.split('\n').map((line) => `  ${line}`) : []),
+  ]
 }
 
 // "Text | Pattern, Scope -> Element"
-function shape(f: Form): string {
+export function shape(f: Form): string {
   const inputs = f.inputs.map((t) => t.name).join(', ')
   return `${inputs}${inputs ? ' ' : ''}->${f.output ? ` ${f.output.name}` : ''}`
 }
 
 // 'takes a "name" to look for, then Within something'
-function takes(f: Form): string {
+export function takes(f: Form): string {
   return f.inputs.length ? `takes ${f.inputs.map((t) => t.phrase).join(', then ')}` : 'takes nothing'
 }
 
-// A list of names, over as many lines as it needs.
-function wrap(names: string[]): string[] {
+// A list of names, after a title if there is one, over as many lines as it needs.
+function wrap(names: string[], title?: string): string[] {
   const lines: string[] = []
-  let line = ''
-  for (const name of names) {
-    const next = line ? `${line}, ${name}` : name
-    if (next.length > WIDTH && line) {
-      lines.push(`${line},`)
-      line = name
-    } else line = next
+  let line = title ? `${title}: ` : ''
+  for (const [i, name] of names.entries()) {
+    const next = i < names.length - 1 ? `${name}, ` : name
+    if (line.trim() && (line + next).trimEnd().length > WIDTH) {
+      lines.push(line.trimEnd())
+      line = ''
+    }
+    line += next
   }
   lines.push(line)
   return lines

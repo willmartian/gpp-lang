@@ -19,7 +19,7 @@
 //     colon comes first, "Define: Add", and its body is indented under it.
 //   - Comments are Gherkin's: a line starting with #.
 
-import type { Context, Form, Type } from './types.ts'
+import type { Context, Doc, Form, Type } from './types.ts'
 import { AnyType, article, formsFor, NumberType, signature, TableType, TextType, type } from './types.ts'
 
 export class SppError extends Error {
@@ -416,6 +416,8 @@ export class Env {
   spellings = new Map<string, string>()
   // The kinds a Define's header can name, keyed in lowercase.
   kinds = new Map<string, Type>()
+  // What builtins are for, keyed in lowercase.
+  docs = new Map<string, Doc>()
 
   constructor(parent: Env | null = null) {
     this.parent = parent
@@ -423,6 +425,20 @@ export class Env {
   // A builtin, in one or more forms.
   word(name: string, ...forms: Form[]): this {
     return this.set(name, forms)
+  }
+  // What some builtins are for, for people. They're listed in the order
+  // they're documented, so a word made again, like the quantifier None after
+  // the role, moves to where it was documented last.
+  doc(doc: Doc, ...names: string[]): this {
+    for (const name of names) {
+      this.docs.delete(name.toLowerCase())
+      this.docs.set(name.toLowerCase(), doc)
+    }
+    return this
+  }
+  docOf(name: string): Doc | undefined {
+    const key = name.toLowerCase()
+    for (let e: Env | null = this; e; e = e.parent) if (e.docs.has(key)) return e.docs.get(key)
   }
   // A Defined word.
   // Another Define of a word adds to it, here; one in an inner scope hides it.
@@ -665,6 +681,14 @@ export function core(): Env {
       .word(
         'Print',
         form([AnyType], (ctx, v) => (ctx.print ?? console.log)(describe(v))),
+      )
+      .doc(
+        { group: 'Other', summary: 'Does nothing, so a step can read as a sentence.', examples: ['Given I Visit "/"'] },
+        'I',
+      )
+      .doc(
+        { group: 'Other', summary: 'Prints a value, for debugging.', examples: ['When I Print the Button "Save"'] },
+        'Print',
       )
       .kind(TextType)
       .kind(NumberType)
