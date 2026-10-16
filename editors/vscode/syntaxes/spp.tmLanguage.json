@@ -1,5 +1,5 @@
 {
-  "$comment": "The Gherkin around Spec++'s code: comments, keywords, tags, tables, doc strings. The language server's semantic tokens mark which words are code. Rules start at a line's start or, in an spp`…` template, just after its backtick, and a step or a table ends at a backtick, which closes a template.",
+  "$comment": "Gherkin, with Spec++'s code in steps and Defines: capitalised words, numbers, symbols and strings, as the lexer finds them (cognate.ts). In .spp files and Markdown, the language server's semantic tokens refine it, telling what a Define is given apart from a word. Rules start at a line's start or, in an spp`…` template, just after its backtick, and a step or a table ends at a backtick, which closes a template.",
   "name": "Spec++",
   "scopeName": "source.spp",
   "patterns": [
@@ -9,6 +9,7 @@
     { "include": "#tags" },
     { "include": "#table" },
     { "include": "#step" },
+    { "include": "#defineBlock" },
     { "include": "#define" },
     { "include": "#string" }
   ],
@@ -43,7 +44,28 @@
       "begin": "(?:^|\\G)\\s*(Given|When|Then|And|But|\\*)\\s",
       "end": "$|(?<!\\\\)(?=`)",
       "beginCaptures": { "1": { "name": "keyword.other.step.spp" } },
-      "patterns": [{ "include": "#string" }]
+      "patterns": [{ "include": "#code" }]
+    },
+    "defineBlock": {
+      "begin": "(?:^|\\G)(\\s*)(Define)(?=:)",
+      "while": "(?:^|\\G)(?=\\1\\s+\\S|\\s*$)",
+      "beginCaptures": { "2": { "name": "keyword.other.spp" } },
+      "patterns": [{ "include": "#comment" }, { "include": "#code" }]
+    },
+    "code": {
+      "patterns": [{ "include": "#string" }, { "include": "#symbol" }, { "include": "#number" }, { "include": "#word" }]
+    },
+    "word": {
+      "match": "(?<![\\w'\\-?!+/*>=<^.])[A-Z](?:[A-Za-z0-9\\-?!'+/*>=<^.]*[A-Za-z0-9\\-?!'+/*>=<^])?",
+      "name": "entity.name.function.spp"
+    },
+    "number": {
+      "match": "(?<![\\w.])-?(?:[1-9][0-9]*|[0-9])(?:\\.[0-9]+)?(?:e-?[0-9]+)?(?![\\w.])",
+      "name": "constant.numeric.spp"
+    },
+    "symbol": {
+      "match": "\\\\[A-Za-z0-9\\-?!'+/*>=<^.]+",
+      "name": "string.other.symbol.spp"
     },
     "define": {
       "match": "\\bDefine\\b",
