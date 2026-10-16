@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { check, core, keywords, leftovers, loadSource } from 'spp-lang'
+import { check, core, keywords, leftovers, loadSource } from '@spp-lang/core'
 import { browser } from '../src/index.ts'
 
 const words = browser(core())

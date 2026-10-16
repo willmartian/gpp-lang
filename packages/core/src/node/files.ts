@@ -1,15 +1,15 @@
 // Finding .spp files on disk, loading them, and picking out scenarios as a
-// command line names them. Everything else in language/ works on sources
-// already read, so it runs in a browser too, as Storybook's play functions do.
+// command line names them. language/ works on sources already read, so it
+// runs in a browser too, as Storybook's play functions do.
 
 import fs from 'node:fs'
 import path from 'node:path'
-import type { Scenario, SppFile } from './load.ts'
-import { loadSource } from './load.ts'
-import { isMarkdown, sppFences } from './markdown.ts'
-import { isScript, templates } from './templates.ts'
+import type { Scenario, SppFile } from '../language/load.ts'
+import { loadSource } from '../language/load.ts'
+import { isMarkdown, sppFences } from '../language/markdown.ts'
+import { isScript, templates } from '../language/templates.ts'
 
-const SKIP = new Set(['node_modules', 'test-results', 'playwright-report'])
+export const SKIP = new Set(['node_modules', 'test-results', 'playwright-report'])
 
 // Every .spp file under the paths, and every Markdown file with an ```spp
 // block, except under those in ignore (absolute). With scripts, every script

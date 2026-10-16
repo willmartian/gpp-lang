@@ -4,20 +4,21 @@
 //
 //     // playwright.config.ts
 //     import { defineConfig } from '@playwright/test'
-//     import { defineSppConfig } from '@spp-lang/playwright'
+//     import { sppTests } from '@spp-lang/playwright'
+//     import spp from './spp.config.ts'
 //
 //     export default defineConfig({
-//       ...defineSppConfig({ features: ['features'] }),
+//       ...sppTests(spp),
 //       use: { baseURL: 'http://localhost:3000' },
 //     })
 //
-// defineSppConfig writes a test file for each .spp file, and each Markdown
-// file with an ```spp block, into its outputDir, and returns the testDir and
-// testMatch that find them. The testDir is the project's root, not the
-// outputDir, so Playwright says where tests are relative to the root:
-// features/cart.spp, not ../features/cart.spp.
+// sppTests writes a test file for each .spp file, and each Markdown file with
+// an ```spp block, that the spp.config's playwright() backend runs, into its
+// outputDir, and returns the testDir and testMatch that find them. The testDir
+// is the project's root, not the outputDir, so Playwright says where tests are
+// relative to the root: features/cart.spp, not ../features/cart.spp.
 //
-// The files are written every time Playwright loads the config, so they're
+// The files are written every time Playwright loads its config, so they're
 // never out of date, and they're no more than a list of the scenarios: what
 // each one does is read from the .spp file when it runs (runtime.ts). Each has
 // a source map back to its .spp file, so Playwright puts every test, and every
@@ -25,25 +26,11 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import type { Feature, Scenario, SppFile } from 'spp-lang'
-import { check, core, escapeRegExp, LoadError, leftovers } from 'spp-lang'
-import type { Project } from 'spp-lang/node'
-import { discover, load, registry } from 'spp-lang/node'
-import { browser } from './words.ts'
-
-export interface SppConfig {
-  // Where the .spp files are. By default, everywhere under the root.
-  features?: string[]
-  // Files and directories to leave out, like fixtures that are meant to fail.
-  ignore?: string[]
-  // Where the generated tests go, for testDir. By default, .spp-tests. Each
-  // defineSppConfig in a config needs its own.
-  outputDir?: string
-  // What the paths are relative to. By default, the directory of the config
-  // that calls defineSppConfig, as Playwright's own paths are.
-  root?: string
-}
+import { pathToFileURL } from 'node:url'
+import type { Feature, LoadError, Scenario, SppConfig } from '@spp-lang/core'
+import { escapeRegExp } from '@spp-lang/core'
+import type { Loaded, Project } from './project.ts'
+import { isPlaywright, loadProject } from './project.ts'
 
 // What a Playwright config, or one of its projects, needs to run the
 // generated tests. An explicit testDir also means Playwright doesn't leave out
@@ -53,47 +40,21 @@ export interface SppTests {
   testMatch: RegExp
 }
 
-export function defineSppConfig(config: SppConfig = {}): SppTests {
-  const root = path.resolve(config.root ?? callerDir())
-  const strings = (paths: string[] | undefined, what: string) => {
-    if (paths !== undefined && !(Array.isArray(paths) && paths.every((p) => typeof p === 'string'))) {
-      throw new Error(`defineSppConfig: ${what} should be a list of paths`)
-    }
-    return (paths ?? []).map((p) => path.resolve(root, p))
-  }
-  const features = strings(config.features, 'features')
+export function sppTests(config: SppConfig): SppTests {
+  const backend = config.backends.find(isPlaywright)
+  if (!backend || !config.file) throw new Error('sppTests: give it a spp.config with a playwright() backend')
   const project: Project = {
-    root,
-    features: features.length ? features : [root],
-    ignore: strings(config.ignore, 'ignore'),
-    outputDir: path.resolve(root, config.outputDir ?? '.spp-tests'),
+    root: config.root,
+    config: config.file,
+    outputDir: path.resolve(config.root, backend.outputDir),
   }
-  registry.projects.push(project)
-  // Playwright loads the config in every worker too, but only its first load,
+  // Playwright loads its config in every worker too, but only its first load,
   // in the main process, should write anything.
-  if (!registry.collecting && process.env.TEST_WORKER_INDEX === undefined) generate(project)
-  return { testDir: root, testMatch: new RegExp(`^${escapeRegExp(project.outputDir + path.sep)}.*\\.spec\\.js$`) }
-}
-
-// The directory of the file that called defineSppConfig: the config. Read
-// from the stack, as Playwright reads where each test is declared.
-function callerDir(): string {
-  const prepare = Error.prepareStackTrace
-  let caller: string | null | undefined
-  try {
-    Error.prepareStackTrace = (_err, frames) => {
-      caller = frames[0]?.getFileName()
-      return ''
-    }
-    const holder: { stack?: string } = {}
-    Error.captureStackTrace(holder, defineSppConfig)
-    // Reading the stack is what runs prepareStackTrace.
-    if (holder.stack === undefined) caller = undefined
-  } finally {
-    Error.prepareStackTrace = prepare
+  if (process.env.TEST_WORKER_INDEX === undefined) generate(project, loadProject(config, backend))
+  return {
+    testDir: project.root,
+    testMatch: new RegExp(`^${escapeRegExp(project.outputDir + path.sep)}.*\\.spec\\.js$`),
   }
-  if (!caller) throw new Error("defineSppConfig couldn't tell which file called it. Give it a root.")
-  return path.dirname(caller.startsWith('file:') ? fileURLToPath(caller) : caller)
 }
 
 // ---------------------------------------------------------------- generating
@@ -103,26 +64,10 @@ const HEADER = '// Generated by Spec++'
 // .ts when run from source, .js once built.
 const RUNTIME = path.join(import.meta.dirname, `runtime${path.extname(import.meta.filename)}`)
 
-// Writes a test file for each file in the project that has scenarios or
-// mistakes, and removes those for files that no longer do. A file is only
-// written when it changes, so watchers don't see a change on every run.
-export function generate(project: Project): string[] {
-  const files: SppFile[] = []
-  const broken = new Map<string, LoadError>()
-  for (const file of discover(project.features, project.root, project.ignore)) {
-    try {
-      files.push(load(file))
-    } catch (err) {
-      if (!(err instanceof LoadError)) throw err
-      broken.set(file, err)
-    }
-  }
-  const report = check(files, {
-    words: browser(core()),
-    settle: leftovers,
-    name: (file) => path.relative(project.root, file),
-  })
-
+// Writes a test file for each file the backend runs that has scenarios, and
+// each with mistakes, and removes those for files that no longer do. A file is
+// only written when it changes, so watchers don't see a change on every run.
+export function generate(project: Project, { files, broken, own, report }: Loaded): string[] {
   const written = new Set<string>()
   const write = (source: string, test: GeneratedTest) => {
     const out = path.join(project.outputDir, `${path.relative(project.root, source)}.spec.js`)
@@ -137,7 +82,8 @@ export function generate(project: Project): string[] {
     }
   }
 
-  for (const { file, features } of files) {
+  for (const { file, features: all } of files) {
+    const features = own.has(file) ? all : []
     const defines = report.vocabulary.filter((d) => d.file === file)
     const mistakes = new Set(features.flatMap((f) => f.scenarios).filter((s) => report.scenarios.has(s)))
     if (features.some((f) => f.scenarios.length) || defines.length) write(file, { features, defines, mistakes })

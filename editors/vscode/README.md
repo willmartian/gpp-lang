@@ -22,10 +22,12 @@ The language, how to run it with Playwright, and this extension's source are in 
 
 The language server comes from your workspace's own `node_modules/spp-lang` when it has one, so
 the editor agrees with your tests. Otherwise the extension uses the one it ships with. In an
-untrusted workspace it always uses its own, and doesn't load your `playwright.config`.
+untrusted workspace it always uses its own, and doesn't load your `spp.config.ts`.
 
-The `defineSppConfig` calls in your `playwright.config` say which files make up each project.
-Each project is checked on its own, so two can `Define` the same word.
+Each `spp.config.ts` in the workspace is a project, checked on its own, so two can `Define`
+the same word. Without one, or in an untrusted workspace, the extension's own server checks
+`.spp` files and Markdown as `@spp-lang/playwright` runs them, and templates as
+`@spp-lang/storybook` does.
 
 ## Settings
 

@@ -29,5 +29,5 @@ With the wrong password, you stay where you are:
 ````
 
 - Only Markdown files with a ` ```spp ` block are part of the project.
-- `spp-lang test README.md:12` runs the scenario on line 12.
+- `npx playwright test README.md:12` runs the scenario on line 12.
 - Mistakes point at lines in the Markdown file.

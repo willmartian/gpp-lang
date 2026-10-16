@@ -107,9 +107,9 @@ porting Spec++.
       scenario, as was done by hand.
 - [ ] **`@playwright/test` is a peer dependency at `^1.63.0`,** the only version tried. Find
       the oldest that works (`test.step`'s `location` is the likely floor) and widen it.
-- [ ] **`defineSppConfig` reads which file called it from the stack,** for the directory
-      its paths are relative to. Called from a helper in another file, it needs `root`.
-- [ ] **`words` in `defineSppConfig`** for the JavaScript escape hatch, once there is one.
+- [ ] **`defineConfig` reads which file called it from the stack,** for the directory its
+      paths are relative to, so it has to be called in `spp.config.ts` itself.
+- [ ] **`words` in `defineConfig`** for the JavaScript escape hatch, once there is one.
 
 ## Editors
 

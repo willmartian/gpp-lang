@@ -21,10 +21,20 @@
 // (words.ts) and any Defines from useWords, so a mistake fails its own story
 // before anything is clicked.
 
-import type { Env, Scenario, SppFile, Step } from 'spp-lang'
-import { check, core, format, INTERPOLATION, LoadError, leftovers, loadSource, runSteps, SppError } from 'spp-lang'
+import type { Env, Scenario, SppFile, Step } from '@spp-lang/core'
+import {
+  check,
+  core,
+  format,
+  INTERPOLATION,
+  LoadError,
+  leftovers,
+  loadSource,
+  runSteps,
+  SppError,
+} from '@spp-lang/core'
 import type { StoryContext } from './vocabulary.ts'
-import { settle, storybook } from './words.ts'
+import { playWords, settle } from './words.ts'
 
 // What a play function is given, as far as Spec++ needs it. Storybook's own
 // context has all of this, so a template's type fits any renderer's play.
@@ -37,25 +47,19 @@ export type Play = (context: PlayContext) => Promise<void>
 // The Defines every template can use, from useWords.
 let defines: SppFile[] = []
 
-// Defines for every template, as .spp files given as path → contents, so a
-// mistake in one says where. Called in .storybook/preview.ts, where Vite can
-// read them:
-//
-//     useWords(import.meta.glob('../features/*.spp', { query: '?raw', import: 'default', eager: true }))
+// The project's Defines, for every template, from its .spp files and
+// Markdown, given as path → contents, so a mistake in one says where. Their
+// scenarios are another backend's. sppStories's preview entry calls it with
+// what its Vite plugin read (stories.ts).
 export function useWords(files: Record<string, string>): void {
-  defines = Object.entries(files).map(([file, src]) => {
-    const loaded = loadSource(file, src)
-    if (loaded.features.length)
-      throw new SppError(`${file} has a Feature in it, but useWords only takes Defines. Scenarios are spp templates.`)
-    return loaded
-  })
+  defines = Object.entries(files).map(([file, src]) => ({ ...loadSource(file, src), features: [] }))
   const report = check(defines, { words: words(), settle: leftovers })
   if (report.vocabulary.length) throw new SppError(report.vocabulary.map((d) => format(d, files[d.file])).join('\n\n'))
 }
 
 let builtins: Env | undefined
 const words = () => {
-  builtins ??= storybook(core())
+  builtins ??= playWords(core())
   return builtins
 }
 

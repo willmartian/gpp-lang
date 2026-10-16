@@ -7,7 +7,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "build": "tsc -b packages/playwright/tsconfig.build.json packages/storybook/tsconfig.build.json",
+    "build": "tsc -b packages/spp-lang/tsconfig.build.json packages/playwright/tsconfig.build.json packages/storybook/tsconfig.build.json",
     "typecheck": "tsc",
     "lint": "biome check",
     "format": "biome check --write",
@@ -24,6 +24,7 @@
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@playwright/test": "^1.63.0",
+    "@spp-lang/core": "workspace:*",
     "@spp-lang/playwright": "workspace:*",
     "@spp-lang/storybook": "workspace:*",
     "@types/node": "^26.6.3",

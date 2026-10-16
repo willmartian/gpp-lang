@@ -5,8 +5,8 @@ import type { Meta, StoryObj } from '@storybook/html-vite'
 import { fn } from 'storybook/test'
 import type { EditorArgs } from '../../../../examples/storybook/stories/editor.ts'
 import { editor } from '../../../../examples/storybook/stories/editor.ts'
-import type { Play } from '../../src/index.ts'
-import { spp } from '../../src/index.ts'
+import type { Play } from '../../src/play.ts'
+import { spp } from '../../src/play.ts'
 
 export default {
   title: 'Failures',

@@ -42,12 +42,21 @@ npx playwright install chromium
 ```
 
 ```ts
+// spp.config.ts: the project, and the backends that run it
+import playwright from '@spp-lang/playwright'
+import { defineConfig } from 'spp-lang'
+
+export default defineConfig({ backends: [playwright({ files: ['features'] })] })
+```
+
+```ts
 // playwright.config.ts
 import { defineConfig } from '@playwright/test'
-import { defineSppConfig } from '@spp-lang/playwright'
+import { sppTests } from '@spp-lang/playwright'
+import spp from './spp.config.ts'
 
 export default defineConfig({
-  ...defineSppConfig({ features: ['features'] }),
+  ...sppTests(spp),
   use: { baseURL: 'http://localhost:3000' },
 })
 ```
@@ -69,7 +78,7 @@ npx spp-lang dictionary                     # every word you can use
 | --- | --- |
 | [Words](docs/words.md) | every built-in word |
 | [Defines](docs/defines.md) | your own words |
-| [Running](docs/running.md) | config, projects, the CLI, tags |
+| [Running](docs/running.md) | `spp.config.ts`, Playwright, the CLI, tags |
 | [Markdown](docs/markdown.md) | ` ```spp ` blocks that run as tests |
 | [Storybook](docs/storybook.md) | templates as stories' play functions |
 | [Editors](docs/editors.md) | the language server, VS Code, Claude Code, Neovim |

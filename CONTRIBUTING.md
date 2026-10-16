@@ -9,7 +9,8 @@ A [pnpm](https://pnpm.io) workspace:
 
 | Directory | Is |
 | --- | --- |
-| `packages/spp-lang` | the language, the checker, the CLI and the language server |
+| `packages/core` | `@spp-lang/core`: the language, the checker, and the `Backend` interface |
+| `packages/spp-lang` | the CLI, the language server, and `defineConfig` for `spp.config.ts` |
 | `packages/playwright` | `@spp-lang/playwright`, which runs `.spp` files and Markdown as Playwright tests |
 | `packages/storybook` | `@spp-lang/storybook`, which runs `spp` templates as play functions |
 | `editors/vscode` | the VS Code extension |
@@ -54,8 +55,8 @@ the dev shell (`nix develop -c code .`) so Chromium finds its libraries.
 
 `site/` builds the README and `docs/` into a site with [Eleventy](https://www.11ty.dev/). The
 Words page is generated from each built-in word's doc: its `.doc()` in
-`packages/spp-lang/src/words/shared.ts`, `packages/playwright/src/words.ts` and
-`packages/spp-lang/src/language/steps.ts`. `spp-lang dictionary` and hover show the same docs,
+`packages/core/src/words/shared.ts`, `packages/playwright/src/words.ts` and
+`packages/core/src/language/steps.ts`. `spp-lang dictionary` and hover show the same docs,
 and `packages/playwright/test/docs.test.ts` checks every word has one and every example checks.
 
 ```sh

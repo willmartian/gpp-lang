@@ -86,11 +86,14 @@ test('useWords says where a mistake in a Define is', () => {
   useWords({})
 })
 
-test('useWords takes only Defines', () => {
-  assert.throws(
-    () => useWords({ 'words.spp': 'Feature: F\n  Scenario: S\n    When I Click the Button "Save"\n' }),
-    /words\.spp has a Feature in it, but useWords only takes Defines/,
-  )
+test("useWords takes a file's Defines, and leaves its scenarios to another backend", () => {
+  const words = 'Define: Retitle Text (New)\n  Fill the Field "Title" with New\n'
+  useWords({ 'a.spp': `${words}\nFeature: F\n  Scenario: S\n    When I Clik the Button "Save"\n` })
+  try {
+    assert.equal(problem('When I Retitle the post "Hello"'), null)
+  } finally {
+    useWords({})
+  }
 })
 
 test('a template with a value put in it is a mistake', () => {

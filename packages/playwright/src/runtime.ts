@@ -11,12 +11,12 @@
 // the .spp or Markdown file, so reports and failures point at the Gherkin, not
 // at Spec++'s own code.
 
-import path from 'node:path'
 import { expect, type PlaywrightTestArgs, test } from '@playwright/test'
-import type { Diagnostic, Report, Scenario, SppFile, Step, Vocabulary } from 'spp-lang'
-import { check, core, LoadError, leftovers, runSteps, SppError } from 'spp-lang'
-import type { Project } from 'spp-lang/node'
-import { discover, load } from 'spp-lang/node'
+import type { Diagnostic, Scenario, Step, Vocabulary } from '@spp-lang/core'
+import { core, runSteps, SppError } from '@spp-lang/core'
+import { loadConfig } from '@spp-lang/core/node'
+import type { Loaded, Project } from './project.ts'
+import { isPlaywright, loadProject, where } from './project.ts'
 import type { BrowserContext } from './words.ts'
 import { browser, settle } from './words.ts'
 
@@ -31,52 +31,20 @@ const MODIFIERS: Record<string, () => void> = {
 
 type Body = (args: PlaywrightTestArgs) => Promise<void>
 
-// The project as this worker has loaded it: every file that loads, why the
-// rest don't, and what the checker found.
-interface Loaded {
-  files: SppFile[]
-  broken: Map<string, LoadError>
-  vocabulary: Vocabulary[]
-  report: Report
-  scenarios: Map<string, Scenario>
-}
+// The project as this worker has loaded it, from its spp.config, once.
+const projects = new Map<string, Promise<Loaded>>()
 
-const projects = new Map<string, Loaded>()
-
-function loadProject(project: Project): Loaded {
-  const key = JSON.stringify(project)
-  const cached = projects.get(key)
+function loaded(project: Project): Promise<Loaded> {
+  const cached = projects.get(project.config)
   if (cached) return cached
-
-  const files: SppFile[] = []
-  const broken = new Map<string, LoadError>()
-  for (const file of discover(project.features, project.root, project.ignore)) {
-    try {
-      files.push(load(file))
-    } catch (err) {
-      if (!(err instanceof LoadError)) throw err
-      broken.set(file, err)
-    }
-  }
-  const scenarios = new Map<string, Scenario>()
-  for (const scenario of files.flatMap((f) => f.features).flatMap((f) => f.scenarios))
-    scenarios.set(where(scenario.file, scenario.line), scenario)
-  const loaded = {
-    files,
-    broken,
-    vocabulary: files.flatMap((f) => f.vocabulary),
-    report: check(files, {
-      words: browser(core()),
-      settle: leftovers,
-      name: (file) => path.relative(project.root, file),
-    }),
-    scenarios,
-  }
-  projects.set(key, loaded)
-  return loaded
+  const loading = loadConfig(project.config).then((config) => {
+    const backend = config.backends.find(isPlaywright)
+    if (!backend) throw new Error(`${project.config} no longer has a playwright() backend: run Playwright again`)
+    return loadProject(config, backend)
+  })
+  projects.set(project.config, loading)
+  return loading
 }
-
-const where = (file: string, line: number) => `${file}:${line}`
 
 // The tests a generated file can declare, for a project. Called as the file
 // loads, so a base URL from the command line applies to its tests.
@@ -92,13 +60,13 @@ export function project(p: Project) {
     // The scenario on this line of this file.
     scenario(file: string, line: number): Body {
       return async ({ page }) => {
-        const loaded = loadProject(p)
-        const scenario = loaded.scenarios.get(where(file, line))
+        const project = await loaded(p)
+        const scenario = project.scenarios.get(where(file, line))
         if (!scenario) throw stale(`The scenario at ${where(file, line)}`)
         for (const tag of scenario.tags) MODIFIERS[tag]?.()
-        const problem = loaded.report.scenarios.get(scenario)
+        const problem = project.report.scenarios.get(scenario)
         if (problem) throw located(problem)
-        await runScenario(scenario, loaded.vocabulary, { page, expect })
+        await runScenario(scenario, project.vocabulary, { page, expect })
       }
     },
 
@@ -106,9 +74,9 @@ export function project(p: Project) {
     // asking for a page, so no browser starts.
     mistake(file: string, line: number): Body {
       return async () => {
-        const loaded = loadProject(p)
-        const scenario = loaded.scenarios.get(where(file, line))
-        const problem = scenario && loaded.report.scenarios.get(scenario)
+        const project = await loaded(p)
+        const scenario = project.scenarios.get(where(file, line))
+        const problem = scenario && project.report.scenarios.get(scenario)
         if (!scenario || !problem) throw stale(`The mistake in the scenario at ${where(file, line)}`)
         for (const tag of scenario.tags) MODIFIERS[tag]?.()
         throw located(problem)
@@ -118,7 +86,7 @@ export function project(p: Project) {
     // The broken Define on this line, as a test that fails with its mistake.
     define(file: string, line: number): Body {
       return async () => {
-        const problem = loadProject(p).report.vocabulary.find((d) => d.file === file && d.line === line)
+        const problem = (await loaded(p)).report.vocabulary.find((d) => d.file === file && d.line === line)
         throw problem ? located(problem) : stale(`The broken Define at ${where(file, line)}`)
       }
     },
@@ -126,7 +94,7 @@ export function project(p: Project) {
     // A file that can't be read as Spec++, as a test that fails with why.
     broken(file: string): Body {
       return async () => {
-        const err = loadProject(p).broken.get(file)
+        const err = (await loaded(p)).broken.get(file)
         if (!err) throw stale(`The mistake in ${file}`)
         const [first] = err.problems
         const message = err.problems.map((problem) => problem.message).join('\n')

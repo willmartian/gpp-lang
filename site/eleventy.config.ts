@@ -14,10 +14,10 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { HtmlBasePlugin } from '@11ty/eleventy'
+import { core, fences, GROUPS } from '@spp-lang/core'
 import { browser } from '@spp-lang/playwright'
 import type MarkdownIt from 'markdown-it'
-import { core, fences, GROUPS } from 'spp-lang'
-import { entries, shape, takes } from 'spp-lang/node'
+import { entries, shape, takes } from 'spp-lang'
 import { highlight } from './highlight.ts'
 
 const ROOT = path.resolve(import.meta.dirname, '..')

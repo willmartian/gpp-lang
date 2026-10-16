@@ -1,33 +1,23 @@
 #!/usr/bin/env node
 
-// spp-lang test [paths...] [--base-url <url>] [playwright test options...]
 // spp-lang check [paths...]
 // spp-lang dictionary
 // spp-lang lsp
 //
-// Runs the scenarios with Playwright, or just checks them, without a browser,
-// or lists the words they can use. The project's Playwright config says where
-// the .spp files are; without one, every .spp file, and every Markdown file's
-// ```spp blocks, under the current directory. Everything else, like --headed,
-// --ui or --grep, goes to Playwright.
+// Checks the scenarios without running them, lists the words they can use, or
+// answers an editor. The project is the nearest spp.config above the current
+// directory: its backends say which files are its, and each file is checked
+// with the words of the backend that runs it. Running them is each backend's
+// tool's job, like Playwright's.
 
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { styleText } from 'node:util'
+import type { Backend, Diagnostic, SppConfig, SppFile } from '@spp-lang/core'
+import { format, LoadError } from '@spp-lang/core'
+import { checkProject, findConfig, load, loadConfig, projectFiles } from '@spp-lang/core/node'
 import { Command, Option } from 'commander'
-import { checkProject, findBackends } from '../src/backends.ts'
-import type { Project } from '../src/config.ts'
-import { loadProjects } from '../src/config.ts'
-import type { Diagnostic } from '../src/language/check.ts'
-import { analyze, format } from '../src/language/check.ts'
-import { core } from '../src/language/cognate.ts'
-import { discover, load } from '../src/language/files.ts'
-import type { SppFile } from '../src/language/load.ts'
-import { LoadError } from '../src/language/load.ts'
 import { dictionary } from '../src/tools/dictionary.ts'
-import { leftovers } from '../src/words/shared.ts'
 
 // Commander leaves the colour out when the output isn't a terminal, or $NO_COLOR is set.
 const style = (format: Parameters<typeof styleText>[0], text: string) =>
@@ -58,51 +48,26 @@ const program = new Command('spp-lang')
     'after',
     `
 ${style('bold', 'Examples:')}
-  ${style('dim', '$')} spp-lang test features --base-url http://localhost:3000
-  ${style('dim', '$')} spp-lang test features/cart.spp:12 --headed
   ${style('dim', '$')} spp-lang check
+  ${style('dim', '$')} spp-lang check features/cart.spp
 
-The project is what the defineSppConfig calls in the Playwright config above
-the current directory say, or, without one, every .spp file, and Markdown file
-with a \`\`\`spp block, under it. Every Define in a project can be used by all
-of its files.`,
+The project is the nearest spp.config.ts above the current directory. Its
+backends say which files are the project's, and every Define in a project can
+be used by all of its files.`,
   )
-
-program
-  .command('test')
-  .usage('[paths...] [--base-url <url>] [playwright test options...]')
-  .description('Run the scenarios as Playwright tests')
-  .argument('[paths...]')
-  .addOption(new Option('-u, --base-url <url>', 'Where "Visit "/"" goes').env('SPP_BASE_URL'))
-  .allowUnknownOption()
-  .addHelpText(
-    'after',
-    `
-Runs "playwright test" with the project's Playwright config, or, without one,
-on every .spp file under the current directory. A path can be a directory, a
-file, or a file and a line, like features/cart.spp:12, for the scenario on that
-line, or the one a step on that line is in. The \`\`\`spp blocks in Markdown
-files are scenarios too, so README.md:40 works the same.
-
-Everything else, like --headed, --ui, --grep or --project, is passed to
-"playwright test" as it is.`,
-  )
-  .action(async (args: string[], options: { baseUrl?: string }) => process.exit(await runTests(args, options.baseUrl)))
 
 program
   .command('check')
-  .description('Check the files without a browser')
+  .description('Check the files without running them')
   .argument('[paths...]')
   .addHelpText(
     'after',
     `
 Checks every file under each path, or the whole project, and exits non-zero if
 it finds a mistake. The rest of the project is still loaded, for its Defines.
-
-The spp\`…\` templates in .js and .ts files are checked too, as Storybook play
-functions, with the project's Defines.`,
+Each file is checked with the words of the backend that runs it.`,
   )
-  .action(async (paths: string[]) => process.exit(await checkOnly(await loadProjects(), paths)))
+  .action(async (paths: string[]) => process.exit(await checkOnly(paths)))
 
 program
   .command('dictionary')
@@ -111,9 +76,9 @@ program
     'after',
     `
 Lists the built-in words and the project's own Defines, with what each takes
-and leaves.`,
+and leaves: for each backend, when there's more than one.`,
   )
-  .action(async () => process.exit(await printDictionary(await loadProjects())))
+  .action(async () => process.exit(await printDictionary()))
 
 program
   .command('lsp')
@@ -142,12 +107,28 @@ function named(paths: string[], cwd: string) {
   return (file: string) => !targets.length || targets.some((t) => file === t || file.startsWith(t + path.sep))
 }
 
-// A project's files, and why those that don't load don't.
-// With scripts, its stories' spp templates too.
-function loadAll(project: Project, scripts = false): { files: SppFile[]; broken: LoadError[] } {
+// The project above the current directory, or, without one, null, having said so.
+async function project(): Promise<SppConfig | null> {
+  const file = findConfig(process.cwd())
+  if (file) return loadConfig(file)
+  console.error(`No spp.config.ts here or above. Make one that says which backends run your scenarios:
+
+  // spp.config.ts
+  import { defineConfig } from 'spp-lang'
+  import playwright from '@spp-lang/playwright'
+
+  export default defineConfig({ backends: [playwright({ files: ['features'] })] })`)
+  return null
+}
+
+// A project's files, the backend that runs each, and why those that don't
+// load don't.
+function loadAll(config: SppConfig) {
   const files: SppFile[] = []
   const broken: LoadError[] = []
-  for (const file of discover(project.features, project.root, project.ignore, scripts)) {
+  const runners = new Map<string, Backend | null>()
+  for (const { file, runner } of projectFiles(config)) {
+    runners.set(file, runner)
     try {
       files.push(load(file))
     } catch (err) {
@@ -155,80 +136,50 @@ function loadAll(project: Project, scripts = false): { files: SppFile[]; broken:
       broken.push(err)
     }
   }
-  return { files, broken }
+  return { files, broken, runnerOf: (file: string) => runners.get(file) ?? null }
 }
 
-async function checkOnly(projects: Project[], paths: string[]): Promise<number> {
+async function checkOnly(paths: string[]): Promise<number> {
+  const config = await project()
+  if (!config) return 1
   const cwd = process.cwd()
   const relative = (file: string) => path.relative(cwd, file)
   const shown = named(paths, cwd)
-  // Each project is checked whole, since the named files may use Defines from
-  // the rest of it. A file in more than one is reported once.
-  const seen = new Set<string>()
-  const checked = new Set<string>()
+  const { files, broken, runnerOf } = loadAll(config)
   let problems = 0
-  for (const project of projects) {
-    const { files, broken } = loadAll(project, true)
-    for (const err of broken) {
-      if (!shown(err.file) || seen.has(err.file)) continue
-      seen.add(err.file)
-      checked.add(err.file)
-      // A file that doesn't parse: its message already says where.
-      console.log(`${relative(err.file)}\n  ${err.message}\n`)
-      problems++
-    }
-    // Each file with the words of the backend that runs it.
-    const { diagnostics: found } = checkProject(files, await findBackends(project.root), relative)
-    // An Outline's rows share their steps, and so their mistakes.
-    const diagnostics = found.filter((d: Diagnostic) => {
-      const key = `${d.file}:${d.line}:${d.column}:${d.message}`
-      return shown(d.file) && !seen.has(key) && seen.add(key)
-    })
-    for (const d of diagnostics) console.log(`${format(d, fs.readFileSync(d.file, 'utf8'), relative)}\n`)
-    problems += diagnostics.length
-    for (const f of files) if (shown(f.file)) checked.add(f.file)
+  for (const err of broken.filter((e) => shown(e.file))) {
+    // A file that doesn't parse: its message already says where.
+    console.log(`${relative(err.file)}\n  ${err.message}\n`)
+    problems++
   }
+  // The whole project is checked, since the named files may use Defines from
+  // the rest of it. An Outline's rows share their steps, and so their mistakes.
+  const seen = new Set<string>()
+  const diagnostics = checkProject(config, files, runnerOf, relative).diagnostics.filter((d: Diagnostic) => {
+    const key = `${d.file}:${d.line}:${d.column}:${d.message}`
+    return shown(d.file) && !seen.has(key) && seen.add(key)
+  })
+  for (const d of diagnostics) console.log(`${format(d, fs.readFileSync(d.file, 'utf8'), relative)}\n`)
+  problems += diagnostics.length
 
-  const count = checked.size
-  const files = `${count} file${count === 1 ? '' : 's'}`
-  console.log(problems ? `${problems} mistake${problems === 1 ? '' : 's'} in ${files}` : `No mistakes in ${files}`)
+  const count = [...files, ...broken].filter((f) => shown(f.file)).length
+  const counted = `${count} file${count === 1 ? '' : 's'}`
+  console.log(problems ? `${problems} mistake${problems === 1 ? '' : 's'} in ${counted}` : `No mistakes in ${counted}`)
   return problems ? 1 : 0
 }
 
-async function printDictionary(projects: Project[]): Promise<number> {
+async function printDictionary(): Promise<number> {
+  const config = await project()
+  if (!config) return 1
   const cwd = process.cwd()
-  for (const [i, project] of projects.entries()) {
-    // The words of the backend that runs .spp files, or else templates.
-    const backends = await findBackends(project.root)
-    const words = backends.pages ?? backends.templates ?? core()
-    // With more than one project, each has words of its own.
-    if (projects.length > 1) {
-      const where = project.features.map((f) => path.relative(cwd, f) || '.').join(', ')
-      console.log(`${i ? '\n' : ''}${style('bold', `Project: ${where}`)}\n`)
-    }
-    // A file that doesn't parse has no Defines to list; check says why.
-    const { files } = loadAll(project)
-    console.log(
-      dictionary(words, analyze(files, { words, settle: leftovers, name: (file) => path.relative(cwd, file) }), cwd),
-    )
+  // A file that doesn't parse has no Defines to list; check says why.
+  const { files, runnerOf } = loadAll(config)
+  const { analyses } = checkProject(config, files, runnerOf, (file) => path.relative(cwd, file))
+  for (const [i, backend] of config.backends.entries()) {
+    // With more than one backend, each has words of its own.
+    if (config.backends.length > 1) console.log(`${i ? '\n' : ''}${style('bold', backend.name)}\n`)
+    const analysis = analyses.get(backend)
+    if (analysis) console.log(dictionary(backend.words(), analysis, cwd))
   }
   return 0
-}
-
-// Runs the scenarios with @spp-lang/playwright, from where the project has it.
-async function runTests(args: string[], baseURL: string | undefined): Promise<number> {
-  const require = createRequire(path.join(process.cwd(), 'package.json'))
-  let file: string
-  try {
-    file = require.resolve('@spp-lang/playwright/cli')
-  } catch {
-    console.error(
-      'spp-lang test runs scenarios with @spp-lang/playwright. Install it: npm install --save-dev @spp-lang/playwright',
-    )
-    return 1
-  }
-  const cli: unknown = await import(pathToFileURL(file).href)
-  if (typeof cli !== 'object' || cli === null || !('runTests' in cli) || typeof cli.runTests !== 'function')
-    throw new Error("@spp-lang/playwright isn't for this spp-lang: install versions that go together")
-  return cli.runTests(args, baseURL)
 }

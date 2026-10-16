@@ -10,5 +10,7 @@
     "outDir": "dist",
     "tsBuildInfoFile": "node_modules/.cache/tsconfig.build.tsbuildinfo"
   },
-  "include": ["src", "bin"]
+  "include": ["src", "bin"],
+  // @spp-lang/core's declarations, built first, rather than its source.
+  "references": [{ "path": "../core/tsconfig.build.json" }]
 }

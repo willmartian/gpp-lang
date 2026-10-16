@@ -1,0 +1,52 @@
+{
+  "name": "@spp-lang/core",
+  "version": "0.1.0",
+  "description": "Spec++'s language and checker, and what its backends are made of.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "./node": {
+        "types": "./dist/src/node.d.ts",
+        "default": "./dist/src/node.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "node --test 'test/**/*.test.ts'",
+    "prepack": "pnpm run build"
+  },
+  "keywords": [
+    "gherkin",
+    "bdd",
+    "testing-library",
+    "cognate",
+    "spp-lang"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willmartian/spp-lang.git",
+    "directory": "packages/core"
+  },
+  "dependencies": {
+    "@cucumber/gherkin": "^42.0.1",
+    "@cucumber/messages": "^34.2.1"
+  }
+}

@@ -9,8 +9,8 @@
 // Only userEvent is instrumented, so the Interactions panel shows each step
 // and what it did, and not every query made while retrying.
 
-import type { Action, Driver, Env, Name, Query, State } from 'spp-lang'
-import { SppError, settler } from 'spp-lang'
+import type { Action, Driver, Env, Name, Query, State } from '@spp-lang/core'
+import { SppError, settler } from '@spp-lang/core'
 import {
   getConfig,
   queryAllByAltText,
@@ -307,6 +307,6 @@ export const testingLibrary: Driver<StoryContext, Target> = {
 export const settle = settler(testingLibrary)
 
 // The words a play function can use.
-export function storybook(parent: Env | null = null): Env {
+export function playWords(parent: Env | null = null): Env {
   return storyWords(testingLibrary, parent)
 }

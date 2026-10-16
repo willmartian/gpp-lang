@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./node": "./src/node.ts",
     "./lsp": "./src/tools/lsp.ts"
   },
   "bin": {
@@ -21,10 +20,6 @@
         "types": "./dist/src/index.d.ts",
         "default": "./dist/src/index.js"
       },
-      "./node": {
-        "types": "./dist/src/node.d.ts",
-        "default": "./dist/src/node.js"
-      },
       "./lsp": {
         "types": "./dist/src/tools/lsp.d.ts",
         "default": "./dist/src/tools/lsp.js"
@@ -36,14 +31,12 @@
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
-    "test": "node --test 'test/**/*.test.ts'",
     "prepack": "pnpm run build"
   },
   "keywords": [
     "gherkin",
     "cucumber",
     "bdd",
-    "testing-library",
     "cognate"
   ],
   "license": "MIT",
@@ -56,8 +49,7 @@
     "directory": "packages/spp-lang"
   },
   "dependencies": {
-    "@cucumber/gherkin": "^42.0.1",
-    "@cucumber/messages": "^34.2.1",
+    "@spp-lang/core": "workspace:^",
     "commander": "^15.0.0",
     "vscode-languageserver": "^10.1.2",
     "vscode-languageserver-textdocument": "^1.0.15"

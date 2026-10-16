@@ -2,13 +2,15 @@
 //
 // It works on .spp files, on the ```spp blocks in Markdown files, and on the
 // spp`…` templates in .js and .ts files, which are Storybook play functions.
-// Each file is checked with the words of the backend that runs it, as the
-// project has it installed (backends.ts), or as given to startServer, which is
-// how a server bundled with its backends, like VS Code's, has them.
 // It keeps every project checked as you type, since Defines are shared
-// between a project's files, and answers from that. The projects are what
-// the workspace's Playwright config says (see config.ts), each checked on its
-// own, so two can Define the same word; it's read again when it changes.
+// between a project's files, and answers from that. Each spp.config in the
+// workspace is a project, each checked on its own, so two can Define the same
+// word, and a file is the nearest one's. A config is read again when it
+// changes. Each file is checked with the words of the backend that runs it.
+//
+// A workspace folder with no config, or a workspace that isn't trusted, so
+// its config mustn't run, is checked with the backends startServer is given,
+// if any: VS Code's bundled server is given both of Spec++'s.
 //
 //   - diagnostics: the checker's mistakes, and files that don't parse
 //   - hover: a word's signatures; a Define's are inferred
@@ -29,6 +31,21 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import type {
+  Analysis,
+  Backend,
+  CodeLine,
+  Line,
+  Place,
+  SppConfig,
+  SppFile,
+  Step,
+  Token,
+  WordInfo,
+} from '@spp-lang/core'
+import { codeLines, isScript, LoadError, lex, loadSource, sppLines } from '@spp-lang/core'
+import type { Checked } from '@spp-lang/core/node'
+import { checkProject, findConfigs, isConfig, loadConfig, projectFiles } from '@spp-lang/core/node'
+import type {
   CompletionItem,
   DocumentSymbol,
   SymbolKind as Kind,
@@ -41,20 +58,6 @@ import type {
 } from 'vscode-languageserver/node'
 import server from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import type { Backends, Checked } from '../backends.ts'
-import { checkProject, findBackends } from '../backends.ts'
-import type { Project } from '../config.ts'
-import { contains, everything, loadProjects } from '../config.ts'
-import type { Analysis, Line, Place, WordInfo } from '../language/check.ts'
-import type { Token } from '../language/cognate.ts'
-import { lex } from '../language/cognate.ts'
-import { discover } from '../language/files.ts'
-import type { SppFile, Step } from '../language/load.ts'
-import { LoadError, loadSource } from '../language/load.ts'
-import { sppLines } from '../language/markdown.ts'
-import type { CodeLine } from '../language/sections.ts'
-import { codeLines } from '../language/sections.ts'
-import { isScript } from '../language/templates.ts'
 
 const {
   CompletionItemKind,
@@ -77,19 +80,17 @@ const tokenType = (t: (typeof TOKEN_TYPES)[number]) => TOKEN_TYPES.indexOf(t)
 
 const WORD_CHARS = /[A-Za-z0-9\-?!'+/*>=<^.]*$/
 
-export function startServer(options: { backends?: Backends } = {}): void {
+export function startServer(options: { defaults?: Backend[] } = {}): void {
   const connection = createConnection(ProposedFeatures.all, process.stdin, process.stdout)
   const documents = new TextDocuments(TextDocument)
 
   let roots: string[] = []
-  // Every root's projects: every .spp file under it until its config is loaded.
-  let projects: Project[] = []
+  let configs: SppConfig[] = []
   let trusted = true
-  let onDisk: string[] = []
-  // Each project's checked files, and its scripts' templates.
-  let checked = new Map<Project, Checked>()
-  // Each project's backends, found when its config is.
-  let backends = new Map<Project, Backends>()
+  // Every file each project's backends cover, with its project and the
+  // backend that runs it.
+  let owners = new Map<string, { config: SppConfig; runner: Backend | null }>()
+  let checked = new Map<SppConfig, Checked>()
   // Whether the client is told which documents have semantic tokens.
   let registersTokens = false
   let steps = new Map<string, Step>()
@@ -104,7 +105,6 @@ export function startServer(options: { backends?: Backends } = {}): void {
   connection.onInitialize((params) => {
     roots = (params.workspaceFolders ?? []).map((f) => toPath(f.uri))
     if (!roots.length && params.rootUri) roots = [toPath(params.rootUri)]
-    projects = roots.map(everything)
     // A client can say the workspace isn't trusted, so its config mustn't run.
     trusted = (params.initializationOptions as { trusted?: boolean } | undefined)?.trusted !== false
     registersTokens = params.capabilities.textDocument?.semanticTokens?.dynamicRegistration === true
@@ -125,51 +125,45 @@ export function startServer(options: { backends?: Backends } = {}): void {
   // ---------------------------------------------------------------- checking
 
   function rediscover() {
-    onDisk = [...new Set(projects.flatMap((p) => discover(p.features, p.root, p.ignore, true)))]
+    owners = new Map()
+    for (const config of configs) {
+      for (const { file, runner } of projectFiles(config)) if (!owners.has(file)) owners.set(file, { config, runner })
+    }
   }
 
-  async function reloadProjects() {
-    const found = await Promise.all(
-      roots.map((root) =>
-        loadProjects(root, { trusted }).catch((err: Error) => {
-          connection.window.showErrorMessage(`Spec++: ${err.message}`)
-          return [everything(root)]
-        }),
-      ),
-    )
-    projects = found.flat()
-    backends = new Map()
-    for (const project of projects) backends.set(project, await backendsOf(project))
+  async function reloadConfigs() {
+    configs = []
+    for (const root of roots) {
+      const files = trusted ? findConfigs(root) : []
+      for (const file of files) {
+        try {
+          configs.push(await loadConfig(file))
+        } catch (err) {
+          connection.window.showErrorMessage(`Spec++: ${err instanceof Error ? err.message : String(err)}`)
+        }
+      }
+      if (!files.length && options.defaults) configs.push({ root, backends: options.defaults })
+    }
   }
 
-  // Finding a project's backends runs them, so not in an untrusted workspace.
-  async function backendsOf(project: Project): Promise<Backends> {
-    if (options.backends) return options.backends
-    if (!trusted) return {}
-    return findBackends(project.root).catch((err: Error) => {
-      connection.window.showErrorMessage(`Spec++: ${err.message}`)
-      return {}
-    })
-  }
-
-  // The projects a file is in. One that's in none, like a file open from
-  // elsewhere, is checked with the project of the root it's under, or the first.
+  // A file's project, and the backend that runs it. One its project's
+  // backends don't cover, like a file not yet saved, is the project's whose
+  // root it's deepest in, with nothing to run it.
   const within = (file: string, dir: string) => file === dir || file.startsWith(dir + path.sep)
-  function projectsOf(file: string): Project[] {
-    const own = projects.filter((p) => contains(p, file))
-    if (own.length) return own
-    const home = projects.find((p) => within(file, p.root)) ?? projects[0]
-    return home ? [home] : []
+  function ownerOf(file: string) {
+    const owner = owners.get(file)
+    if (owner) return owner
+    const config = configs.filter((c) => within(file, c.root)).sort((a, b) => b.root.length - a.root.length)[0]
+    return config && { config, runner: null }
   }
   const analysisOf = (file: string): Analysis | undefined => {
-    const [project] = projectsOf(file)
-    const c = project && checked.get(project)
-    return (isScript(file) ? c?.templates : c?.pages) ?? undefined
+    const owner = ownerOf(file)
+    return owner && checked.get(owner.config)?.analysisOf(file)
   }
 
   function refresh() {
     sources = new Map()
-    for (const file of onDisk) if (fs.existsSync(file)) sources.set(file, fs.readFileSync(file, 'utf8'))
+    for (const file of owners.keys()) if (fs.existsSync(file)) sources.set(file, fs.readFileSync(file, 'utf8'))
     for (const doc of documents.all()) {
       const file = toPath(doc.uri)
       if (/\.(spp|md)$/.test(file) || isScript(file)) sources.set(file, doc.getText())
@@ -203,12 +197,16 @@ export function startServer(options: { backends?: Backends } = {}): void {
       }
     }
 
-    const members = new Map<Project, SppFile[]>()
-    for (const f of loaded) for (const p of projectsOf(f.file)) members.set(p, [...(members.get(p) ?? []), f])
+    const members = new Map<SppConfig, SppFile[]>()
+    for (const f of loaded) {
+      const owner = ownerOf(f.file)
+      if (owner) members.set(owner.config, [...(members.get(owner.config) ?? []), f])
+    }
     checked = new Map()
-    for (const [project, files] of members) {
-      const c = checkProject(files, backends.get(project) ?? {}, (file) => path.relative(roots[0], file))
-      checked.set(project, c)
+    const runnerOf = (file: string) => ownerOf(file)?.runner ?? null
+    for (const [config, files] of members) {
+      const c = checkProject(config, files, runnerOf, (file) => path.relative(roots[0], file))
+      checked.set(config, c)
       for (const d of c.diagnostics) add(d.file, d.line, d.column, d.message)
     }
     steps = new Map()
@@ -236,7 +234,7 @@ export function startServer(options: { backends?: Backends } = {}): void {
       const documentSelector = [{ language: 'spp' }, { language: 'markdown' }]
       await connection.client.register(SemanticTokensRegistrationType.type, { documentSelector, legend, full: true })
     }
-    await reloadProjects()
+    await reloadConfigs()
     rediscover()
     refresh()
   })
@@ -250,8 +248,7 @@ export function startServer(options: { backends?: Backends } = {}): void {
     soon()
   })
   connection.onDidChangeWatchedFiles(async ({ changes }) => {
-    if (changes.some((c) => /^playwright\.config\.[cm]?[jt]s$/.test(path.basename(toPath(c.uri)))))
-      await reloadProjects()
+    if (changes.some((c) => isConfig(toPath(c.uri)))) await reloadConfigs()
     rediscover()
     soon()
   })

@@ -4,9 +4,7 @@
   "description": "Spec++ scenarios, in .spp files and Markdown, as Playwright tests.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./vocabulary": "./src/vocabulary.ts",
-    "./cli": "./src/cli.ts"
+    ".": "./src/index.ts"
   },
   "files": [
     "dist",
@@ -18,14 +16,6 @@
       ".": {
         "types": "./dist/src/index.d.ts",
         "default": "./dist/src/index.js"
-      },
-      "./vocabulary": {
-        "types": "./dist/src/vocabulary.d.ts",
-        "default": "./dist/src/vocabulary.js"
-      },
-      "./cli": {
-        "types": "./dist/src/cli.d.ts",
-        "default": "./dist/src/cli.js"
       }
     }
   },
@@ -51,10 +41,11 @@
   },
   "peerDependencies": {
     "@playwright/test": "^1.63.0",
-    "spp-lang": "^0.1.0"
+    "@spp-lang/core": "^0.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "@spp-lang/core": "workspace:*",
     "spp-lang": "workspace:*"
   }
 }

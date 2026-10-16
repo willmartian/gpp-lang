@@ -11,10 +11,8 @@
 // Words that share a doc, like the ARIA roles, are listed together.
 
 import path from 'node:path'
-import type { Analysis } from '../language/check.ts'
-import type { Env } from '../language/cognate.ts'
-import { keywords } from '../language/steps.ts'
-import { type Doc, type Form, GROUPS } from '../language/types.ts'
+import type { Analysis, Doc, Env, Form } from '@spp-lang/core'
+import { GROUPS, keywords } from '@spp-lang/core'
 
 const KEYWORDS = keywords(async () => {})
 

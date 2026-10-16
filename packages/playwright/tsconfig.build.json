@@ -11,6 +11,6 @@
     "tsBuildInfoFile": "node_modules/.cache/tsconfig.build.tsbuildinfo"
   },
   "include": ["src"],
-  // spp-lang's declarations, built first, rather than its source.
-  "references": [{ "path": "../spp-lang/tsconfig.build.json" }]
+  // @spp-lang/core's declarations, built first, rather than its source.
+  "references": [{ "path": "../core/tsconfig.build.json" }]
 }

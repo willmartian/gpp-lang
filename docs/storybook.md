@@ -5,7 +5,7 @@ The story is the scenario: its args set it up, and the template is its steps. Se
 [`examples/storybook`](../examples/storybook).
 
 ```ts
-import { spp } from '@spp-lang/storybook'
+import { spp } from '@spp-lang/storybook/play'
 
 export const SavingADraft: Story = {
   args: { title: '' },
@@ -22,6 +22,24 @@ Needs Storybook 10.
 ```sh
 npm install --save-dev spp-lang @spp-lang/storybook
 ```
+
+```ts
+// spp.config.ts: the project, and the backends that run it
+import storybook from '@spp-lang/storybook'
+import { defineConfig } from 'spp-lang'
+
+export default defineConfig({ backends: [storybook({ files: ['src'] })] })
+```
+
+```ts
+// .storybook/main.ts
+import { sppStories } from '@spp-lang/storybook'
+import spp from '../spp.config.ts'
+
+export default { ...sppStories(spp), framework: '@storybook/react-vite', stories: ['../src/**/*.stories.tsx'] }
+```
+
+`storybook()` takes `files` and `ignore`, as `playwright()` does ([Running](running.md)).
 
 - **Each line is a step**, starting with Given, When, Then, And, But or `*`. Tables and
   DocStrings go under a step, as in a Scenario. There's no `Feature:` or `Scenario:` line.
@@ -46,23 +64,15 @@ so there's no `Visit`, `Reload`, `Back`, `At` or `Titled`.
 
 ## Defines
 
-[Defines](defines.md) for every template go in `.spp` files of their own, loaded in
-`.storybook/preview.ts`:
-
-```ts
-import { useWords } from '@spp-lang/storybook'
-
-useWords(import.meta.glob('../words/*.spp', { query: '?raw', import: 'default', eager: true }))
-```
-
-A file with a `Feature:` in it is a mistake: scenarios are templates.
+[Defines](defines.md) go in the project's `.spp` files, as for any backend, and every template
+can use them. `sppStories` reads them as Storybook builds, since a play function runs in a
+browser, which can't, and changing one reloads the stories. A `Feature:` in one is another
+backend's to run.
 
 ## Checking
 
-`spp-lang check` checks every template in the project's `.js` and `.ts` files, with the
+`spp-lang check` checks every template under the `storybook()` backend's `files`, with the
 words above and the project's Defines, and says where each mistake is in the stories file.
-The project is every file under where you run it, or what a `defineSppConfig`'s `features`
-say.
 
 The [language server](editors.md) does the same as you type, and hover, completion, go to
 definition and references work inside templates. VS Code's extension also highlights them as

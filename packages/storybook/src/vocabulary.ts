@@ -1,8 +1,8 @@
-import type { Capabilities, Context, Driver } from 'spp-lang'
-import { ARIA_ROLES, actions, checks, core, Env, mistake, queries } from 'spp-lang'
-// The words a Storybook play function has, apart from what runs them
-// (words.ts), so spp-lang check and the language server can check templates
-// without Storybook installed.
+import type { Backend, Capabilities, Context, Driver } from '@spp-lang/core'
+import { ARIA_ROLES, actions, checks, core, Env, mistake, queries } from '@spp-lang/core'
+// The backend, for a project's spp.config, and the words a play function has,
+// apart from what runs them (words.ts), so spp-lang check and the language
+// server can check templates without Storybook, or a browser.
 
 export interface StoryContext extends Context {
   canvasElement: HTMLElement
@@ -49,7 +49,7 @@ const unrunnable = (): never => {
 }
 
 // The words for the checker, which reads their forms and never runs them.
-export function storybookWords(parent: Env | null = null): Env {
+function storybookWords(parent: Env | null = null): Env {
   return storyWords(
     {
       ...capabilities,
@@ -64,6 +64,25 @@ export function storybookWords(parent: Env | null = null): Env {
   )
 }
 
-// The words, for spp-lang check and the language server, which check templates
-// with them.
-export const words = () => storybookWords(core())
+const NAME = '@spp-lang/storybook'
+
+export interface StorybookOptions {
+  // Where the stories are, and the project's .spp files of Defines. By
+  // default, everything under the config.
+  files?: string[]
+  // Files and directories to leave out.
+  ignore?: string[]
+}
+
+// Runs spp`…` templates as stories' play functions.
+export function storybook(options: StorybookOptions = {}): Backend {
+  return {
+    name: NAME,
+    runs: 'templates',
+    files: options.files ?? ['.'],
+    ignore: options.ignore ?? [],
+    words: () => storybookWords(core()),
+  }
+}
+
+export const isStorybook = (b: Backend): boolean => b.name === NAME

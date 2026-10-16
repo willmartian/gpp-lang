@@ -12,14 +12,14 @@ import { test } from 'node:test'
 
 const cli = createRequire(import.meta.url).resolve('@playwright/test/cli')
 const packages = path.join(import.meta.dirname, '..', '..')
-const bin = path.join(packages, 'spp-lang', 'bin', 'spp-lang.ts')
 
 // Installs Spec++'s backends in a scratch project, as links to this repo's, so
 // its config imports them and the tools find them as they would in any project.
 function install(dir: string) {
   const scope = path.join(dir, 'node_modules', '@spp-lang')
   fs.mkdirSync(scope, { recursive: true })
-  for (const name of ['playwright']) fs.symlinkSync(path.join(packages, name), path.join(scope, name))
+  fs.symlinkSync(path.join(packages, 'playwright'), path.join(scope, 'playwright'))
+  fs.symlinkSync(path.join(packages, 'spp-lang'), path.join(dir, 'node_modules', 'spp-lang'))
 }
 
 const cart = [
@@ -54,7 +54,16 @@ function scratch(): string {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'spp-generate-')))
   install(dir)
   const files: Record<string, string> = {
-    'playwright.config.mjs': `import { defineSppConfig } from '@spp-lang/playwright'\nexport default { ...defineSppConfig({ features: ['features'] }) }\n`,
+    'spp.config.mjs': [
+      "import playwright from '@spp-lang/playwright'",
+      "import { defineConfig } from 'spp-lang'",
+      "export default defineConfig({ backends: [playwright({ files: ['features'] })] })",
+    ].join('\n'),
+    'playwright.config.mjs': [
+      "import { sppTests } from '@spp-lang/playwright'",
+      "import spp from './spp.config.mjs'",
+      'export default { ...sppTests(spp) }',
+    ].join('\n'),
     'features/cart.spp': cart,
     'features/words.spp': brokenDefine,
     'features/unreadable.spp': unreadable,
@@ -130,19 +139,6 @@ test('mistakes the checker finds fail where they are, without a browser', () => 
   assert.match(failure('Cart › A mistake') ?? '', /^failed 11:12 .*Click expected something on the page/)
   assert.match(failure('Define Wipe') ?? '', /^failed 2:3 .*Unknown word Clik/)
   assert.match(failure('unreadable.spp') ?? '', /^failed 5:7 .*inconsistent cell count/)
-})
-
-test("a step's line runs its scenario, and one of an Outline's, all its rows", () => {
-  const dir = scratch()
-  const listed = (where: string) => {
-    const run = spawnSync(process.execPath, [bin, 'test', where, '--list'], { cwd: dir, encoding: 'utf8' })
-    return run.stdout.match(/^ {2}\S.*$/gm)?.map((l) => l.trim()) ?? []
-  }
-  assert.deepEqual(listed('features/cart.spp:8'), ['features/cart.spp:7:1 › Cart › Adding'])
-  assert.deepEqual(listed('features/cart.spp:14'), [
-    'features/cart.spp:18:1 › Cart › Rows › item: Tea',
-    'features/cart.spp:19:1 › Cart › Rows › item: Jam',
-  ])
 })
 
 test("generated files go when their .spp file does, and nothing else's does", () => {

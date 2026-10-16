@@ -6,7 +6,7 @@
 // a driver.
 
 import type { expect, Locator, Page } from '@playwright/test'
-import type { Context, Driver } from 'spp-lang'
+import type { Context, Driver } from '@spp-lang/core'
 import {
   ARIA_ROLES,
   actions,
@@ -23,7 +23,7 @@ import {
   say,
   settler,
   TextType,
-} from 'spp-lang'
+} from '@spp-lang/core'
 
 export interface BrowserContext extends Context {
   page: Page

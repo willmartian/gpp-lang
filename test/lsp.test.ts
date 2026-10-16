@@ -56,7 +56,7 @@ const shop = [
 
 // Storybook play functions, which use the project's Defines too.
 const stories = [
-  "import { spp } from '@spp-lang/storybook'", //                0
+  "import { spp } from '@spp-lang/storybook/play'", //           0
   '', //                                                         1
   'export const Adding = {', //                                  2
   '  play: spp`', //                                            3
@@ -77,7 +77,16 @@ function install(dir: string) {
   const scope = path.join(dir, 'node_modules', '@spp-lang')
   fs.mkdirSync(scope, { recursive: true })
   for (const name of ['playwright', 'storybook']) fs.symlinkSync(path.join(packages, name), path.join(scope, name))
+  fs.symlinkSync(path.join(packages, 'spp-lang'), path.join(dir, 'node_modules', 'spp-lang'))
 }
+
+const config = (backends: string) =>
+  [
+    "import playwright from '@spp-lang/playwright'",
+    "import storybook from '@spp-lang/storybook'",
+    "import { defineConfig } from 'spp-lang'",
+    `export default defineConfig({ backends: [${backends}] })`,
+  ].join('\n')
 
 type Published = {
   uri: string
@@ -100,17 +109,10 @@ test('the language server', async (t) => {
   fs.writeFileSync(path.join(dir, 'other', 'words.spp'), 'Define: Add Text (Item)\n  Fill the Field "Name" with Item\n')
   fs.writeFileSync(path.join(dir, 'other', 'c.spp'), 'Feature: Other\n  Scenario: S\n    When I Add "Tea"\n')
   fs.writeFileSync(
-    path.join(dir, 'playwright.config.mjs'),
-    [
-      "import { defineSppConfig } from '@spp-lang/playwright'",
-      'export default {',
-      '  projects: [',
-      "    { ...defineSppConfig({ ignore: ['drafts', 'other'] }) },",
-      "    { ...defineSppConfig({ features: ['other'], outputDir: '.spp-tests/other' }) },",
-      '  ],',
-      '}',
-    ].join('\n'),
+    path.join(dir, 'spp.config.mjs'),
+    config("playwright({ ignore: ['drafts'] }), storybook({ ignore: ['drafts'] })"),
   )
+  fs.writeFileSync(path.join(dir, 'other', 'spp.config.mjs'), config('playwright()'))
   const uri = pathToFileURL(path.join(dir, 'a.spp')).href
   const wordsUri = pathToFileURL(path.join(dir, 'words.spp')).href
   const readmeUri = pathToFileURL(path.join(dir, 'README.md')).href

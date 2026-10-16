@@ -3,10 +3,10 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
+import type { Diagnostic } from '@spp-lang/core'
+import { check, core, leftovers } from '@spp-lang/core'
+import { discover, load } from '@spp-lang/core/node'
 import { browser } from '@spp-lang/playwright'
-import type { Diagnostic } from 'spp-lang'
-import { check, core, leftovers } from 'spp-lang'
-import { discover, load } from 'spp-lang/node'
 
 // Checks some .spp files, given as name → contents.
 function checkFiles(files: Record<string, string>) {

@@ -1,4 +1,4 @@
-import { spp } from '@spp-lang/storybook'
+import { spp } from '@spp-lang/storybook/play'
 import type { Meta, StoryObj } from '@storybook/html-vite'
 import { fn } from 'storybook/test'
 import type { EditorArgs } from './editor.ts'
