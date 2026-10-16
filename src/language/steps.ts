@@ -16,8 +16,8 @@
 // For now every mode says the same, the rule in words/shared.ts's settler: only
 // checks. Given, When and Then are where each will say more.
 
-import type { Block } from './cognate.ts'
-import { call, Env, Stack } from './cognate.ts'
+import { apply, Block, call, Env, run, SppError, Stack } from './cognate.ts'
+import type { Scenario, Step, Vocabulary } from './load.ts'
 import type { Context, Form } from './types.ts'
 import { formsFor, type } from './types.ts'
 
@@ -129,4 +129,44 @@ export function keywords<C extends Context>(settle: (stack: Stack, ctx: C) => Pr
         '*',
       )
   )
+}
+
+// What a scenario runs with: the backend's words, the project's Defines, and
+// the rule for what a step may leave.
+export interface Runner<C extends Context> {
+  words: Env
+  vocabulary: readonly Vocabulary[]
+  settle: (stack: Stack, ctx: C) => Promise<void>
+}
+
+// Runs a scenario's steps in order, each through around, which reports it as
+// its backend does, like Playwright's test.step. A step that fails throws out
+// of body with pos at the offending word, counted from the start of the
+// step's text, or before it for the keyword.
+export async function runSteps<C extends Context>(
+  scenario: Scenario,
+  { words, vocabulary, settle }: Runner<C>,
+  ctx: C,
+  around: (step: Step, body: () => Promise<void>) => Promise<void>,
+): Promise<void> {
+  const env = new Env(words)
+  for (const { program } of vocabulary) await run(program, env, new Stack(), ctx)
+
+  // The scenario's own stack, where each keyword leaves its mode for the next.
+  const steps = keywords(settle)
+  const modes = new Stack()
+  for (const step of scenario.steps) {
+    await around(step, async () => {
+      const block = new StepBlock(new Block(step.program ?? [], env), step.argument)
+      try {
+        if (step.error !== undefined) throw step.error
+        modes.push(block)
+        await apply(step.keyword.trim(), keywordForms(steps, step.keywordType), modes, ctx)
+      } catch (err) {
+        // A keyword that couldn't take what it needed is its own mistake.
+        if (!block.ran && err instanceof SppError && step.error === undefined) err.pos = -step.keyword.length
+        throw err
+      }
+    })
+  }
 }

@@ -11,6 +11,7 @@ import type { Context } from '../../language/types.ts'
 import { called, formsFor, TextType } from '../../language/types.ts'
 import type { Driver } from '../../words/driver.ts'
 import {
+  ARIA_ROLES,
   actions,
   CheckType,
   checks,
@@ -30,19 +31,10 @@ export interface BrowserContext extends Context {
 
 type AriaRole = Parameters<Page['getByRole']>[0]
 
-// Every ARIA role that makes sense to query by name, as a word.
-const ROLES = `alert alertdialog application article banner blockquote button caption cell checkbox
-  code columnheader combobox complementary contentinfo definition deletion dialog directory document
-  emphasis feed figure form generic grid gridcell group heading img insertion link list listbox
-  listitem log main marquee math meter menu menubar menuitem menuitemcheckbox menuitemradio navigation
-  none note option paragraph presentation progressbar radio radiogroup region row rowgroup rowheader
-  scrollbar search searchbox separator slider spinbutton status strong subscript superscript switch
-  tab table tablist tabpanel term textbox time timer toolbar tooltip tree treegrid treeitem`.split(/\s+/) as AriaRole[]
-
 // ---------------------------------------------------------------- the driver
 
 export const playwright: Driver<BrowserContext, Locator> = {
-  roles: ROLES,
+  roles: ARIA_ROLES,
   queries: ['label', 'text', 'placeholder', 'alt', 'title', 'testId'],
   actions: ['click', 'double-click', 'hover', 'focus', 'check', 'uncheck', 'clear', 'fill', 'type', 'select', 'press'],
   states: [

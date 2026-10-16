@@ -16,11 +16,11 @@ import { expect, type PlaywrightTestArgs, test } from '@playwright/test'
 import type { Project } from '../../config.ts'
 import type { Diagnostic, Report } from '../../language/check.ts'
 import { check } from '../../language/check.ts'
-import { apply, Block, core, Env, run, SppError, Stack } from '../../language/cognate.ts'
+import { core, SppError } from '../../language/cognate.ts'
 import { discover, load } from '../../language/files.ts'
 import type { Scenario, SppFile, Step, Vocabulary } from '../../language/load.ts'
 import { LoadError } from '../../language/load.ts'
-import { keywordForms, keywords, StepBlock } from '../../language/steps.ts'
+import { runSteps } from '../../language/steps.ts'
 import { leftovers } from '../../words/shared.ts'
 import type { BrowserContext } from './words.ts'
 import { browser, settle } from './words.ts'
@@ -141,32 +141,21 @@ export function project(p: Project) {
   }
 }
 
-export async function runScenario(scenario: Scenario, vocabulary: Vocabulary[], ctx: BrowserContext): Promise<void> {
-  const words = new Env(browser(core()))
-  for (const { program } of vocabulary) await run(program, words, new Stack(), ctx)
-
-  // The scenario's own stack, where each keyword leaves its mode for the next.
-  const steps = keywords(settle)
-  const modes = new Stack()
-  for (const step of scenario.steps) {
+export function runScenario(scenario: Scenario, vocabulary: Vocabulary[], ctx: BrowserContext): Promise<void> {
+  return runSteps(scenario, { words: browser(core()), vocabulary, settle }, ctx, (step, body) => {
     const location = { file: step.file, line: step.line, column: step.column }
-    await test.step(
+    return test.step(
       `${step.keyword}${step.text}`,
       async () => {
-        const block = new StepBlock(new Block(step.program ?? [], words), step.argument)
         try {
-          if (step.error !== undefined) throw step.error
-          modes.push(block)
-          await apply(step.keyword.trim(), keywordForms(steps, step.keywordType), modes, ctx)
+          await body()
         } catch (err) {
-          // A keyword that couldn't take what it needed is its own mistake.
-          if (!block.ran && err instanceof SppError && step.error === undefined) err.pos = -step.keyword.length
           throw pointAt(err, step)
         }
       },
       { location },
     )
-  }
+  })
 }
 
 // Makes the error's top frame the offending word in the .spp file, which
