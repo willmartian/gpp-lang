@@ -1,0 +1,65 @@
+{
+  "name": "spp-lang",
+  "version": "0.1.0",
+  "description": "Specs that run. Written by agents, read by people.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts",
+    "./lsp": "./src/tools/lsp.ts"
+  },
+  "bin": {
+    "spp-lang": "./bin/spp-lang.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "./node": {
+        "types": "./dist/src/node.d.ts",
+        "default": "./dist/src/node.js"
+      },
+      "./lsp": {
+        "types": "./dist/src/tools/lsp.d.ts",
+        "default": "./dist/src/tools/lsp.js"
+      }
+    },
+    "bin": {
+      "spp-lang": "./dist/bin/spp-lang.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "node --test 'test/**/*.test.ts'",
+    "prepack": "pnpm run build"
+  },
+  "keywords": [
+    "gherkin",
+    "cucumber",
+    "bdd",
+    "testing-library",
+    "cognate"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willmartian/spp-lang.git",
+    "directory": "packages/spp-lang"
+  },
+  "dependencies": {
+    "@cucumber/gherkin": "^42.0.1",
+    "@cucumber/messages": "^34.2.1",
+    "commander": "^15.0.0",
+    "vscode-languageserver": "^10.1.2",
+    "vscode-languageserver-textdocument": "^1.0.15"
+  }
+}

@@ -1,92 +1,35 @@
 {
-  "name": "spp-lang",
-  "version": "0.1.0",
-  "description": "Specs that run. Written by agents, read by people.",
+  "name": "spp-lang-workspace",
+  "private": true,
   "type": "module",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
-    },
-    "./storybook": {
-      "types": "./dist/src/backends/storybook/index.d.ts",
-      "default": "./dist/src/backends/storybook/index.js"
-    }
-  },
-  "bin": {
-    "spp-lang": "dist/bin/spp-lang.js"
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc",
-    "lint": "biome check",
-    "format": "biome check --write",
-    "test": "node --test 'test/**/*.test.ts'",
-    "test:e2e": "playwright test",
-    "test:storybook": "vitest run",
-    "demo": "node examples/demo/serve.ts",
-    "prepack": "npm run build",
-    "prepare": "husky",
-    "docs": "eleventy --config=site/eleventy.config.ts --serve",
-    "docs:build": "eleventy --config=site/eleventy.config.ts"
-  },
-  "keywords": [
-    "gherkin",
-    "cucumber",
-    "bdd",
-    "playwright",
-    "testing-library",
-    "storybook",
-    "cognate"
-  ],
-  "license": "MIT",
+  "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": ">=22.13"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/willmartian/spp-lang.git"
-  },
-  "dependencies": {
-    "@cucumber/gherkin": "^42.0.1",
-    "@cucumber/messages": "^34.2.1",
-    "commander": "^15.0.0",
-    "vscode-languageserver": "^10.1.2",
-    "vscode-languageserver-textdocument": "^1.0.15"
-  },
-  "peerDependencies": {
-    "@playwright/test": "^1.63.0",
-    "storybook": "^10.0.0"
-  },
-  "peerDependenciesMeta": {
-    "storybook": {
-      "optional": true
-    }
+  "scripts": {
+    "build": "tsc -b packages/playwright/tsconfig.build.json packages/storybook/tsconfig.build.json",
+    "typecheck": "tsc",
+    "lint": "biome check",
+    "format": "biome check --write",
+    "test": "pnpm --filter './packages/*' test && node --test 'test/**/*.test.ts'",
+    "test:e2e": "playwright test",
+    "test:storybook": "pnpm --recursive test:storybook",
+    "demo": "pnpm --filter example-demo start",
+    "docs": "pnpm --filter site start",
+    "docs:build": "pnpm --filter site build",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^3.1.6",
     "@biomejs/biome": "2.5.15",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
-    "@fontsource/iosevka": "^5.3.0",
-    "@fontsource/iosevka-aile": "^5.3.0",
     "@playwright/test": "^1.63.0",
-    "@storybook/addon-vitest": "^10.6.2",
-    "@storybook/html-vite": "^10.6.2",
-    "@types/markdown-it": "^14.2.0",
+    "@spp-lang/playwright": "workspace:*",
+    "@spp-lang/storybook": "workspace:*",
     "@types/node": "^26.6.3",
-    "@vitest/browser-playwright": "^4.1.12",
     "husky": "^9.1.7",
-    "shiki": "^4.5.0",
-    "storybook": "^10.6.2",
+    "spp-lang": "workspace:*",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4",
-    "vitest": "^4.1.12"
+    "vscode-jsonrpc": "^9.0.3"
   }
 }

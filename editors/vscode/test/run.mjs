@@ -66,12 +66,17 @@ fs.writeFileSync(
     '',
   ].join('\n'),
 )
-// This repo's spp-lang, from source, since there's no node_modules/spp-lang here.
+// This repo's spp-lang, from source, since there's no node_modules/spp-lang
+// here, and its backends, linked in as a project would have them installed.
+const packages = path.join(here, '..', '..', '..', 'packages')
 fs.mkdirSync(path.join(workspace, '.vscode'))
 fs.writeFileSync(
   path.join(workspace, '.vscode', 'settings.json'),
-  JSON.stringify({ 'spp.path': path.join(here, '..', '..', '..', 'bin', 'spp-lang.ts') }),
+  JSON.stringify({ 'spp.path': path.join(packages, 'spp-lang', 'bin', 'spp-lang.ts') }),
 )
+fs.mkdirSync(path.join(workspace, 'node_modules', '@spp-lang'), { recursive: true })
+for (const name of ['playwright', 'storybook'])
+  fs.symlinkSync(path.join(packages, name), path.join(workspace, 'node_modules', '@spp-lang', name))
 
 try {
   await runTests({

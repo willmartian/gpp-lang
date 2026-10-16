@@ -97,19 +97,23 @@
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node test/run.mjs",
+    "test": "pnpm run build && node test/run.mjs",
     "package": "vsce package --no-dependencies",
-    "vscode:prepublish": "npm run build"
+    "vscode:prepublish": "pnpm run build"
   },
   "dependencies": {
     "vscode-languageclient": "^10.1.2"
   },
   "devDependencies": {
+    "@spp-lang/playwright": "workspace:*",
+    "@spp-lang/storybook": "workspace:*",
     "@types/node": "^26.6.3",
     "@types/vscode": "~1.100.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
+    "spp-lang": "workspace:*",
     "typescript": "^7.0.2"
-  }
+  },
+  "private": true
 }

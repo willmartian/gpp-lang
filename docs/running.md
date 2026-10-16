@@ -4,6 +4,9 @@
 
 ```ts
 // playwright.config.ts
+import { defineConfig } from '@playwright/test'
+import { defineSppConfig } from '@spp-lang/playwright'
+
 export default defineConfig({
   ...defineSppConfig({ features: ['features'], ignore: ['features/drafts'] }),
   use: { baseURL: 'http://localhost:3000' },

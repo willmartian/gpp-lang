@@ -3,8 +3,10 @@
 // the site, and links to anything else in the repo go to GitHub. The Words
 // page adds an entry for each built-in word, from the docs the words declare.
 //
-//     npm run docs        # serve on localhost:8080, rebuilding on change
-//     npm run docs:build  # write site/_site
+//     pnpm docs        # serve on localhost:8080, rebuilding on change
+//     pnpm docs:build  # write site/_site
+//
+// It runs in site/, so paths here are relative to it.
 //
 // GitHub Pages serves it under /spp-lang/, which CI passes as --pathprefix;
 // HtmlBasePlugin adds it to every absolute URL in the HTML.
@@ -12,12 +14,10 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { HtmlBasePlugin } from '@11ty/eleventy'
+import { browser } from '@spp-lang/playwright'
 import type MarkdownIt from 'markdown-it'
-import { browser } from '../src/backends/playwright/words.ts'
-import { core } from '../src/language/cognate.ts'
-import { fences } from '../src/language/markdown.ts'
-import { GROUPS } from '../src/language/types.ts'
-import { entries, shape, takes } from '../src/tools/dictionary.ts'
+import { core, fences, GROUPS } from 'spp-lang'
+import { entries, shape, takes } from 'spp-lang/node'
 import { highlight } from './highlight.ts'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
@@ -73,7 +73,7 @@ export default function (config: EleventyConfig) {
   config.addGlobalData('groups', groups)
 
   config.addPlugin(HtmlBasePlugin)
-  config.addPassthroughCopy('site/style.css')
+  config.addPassthroughCopy('style.css')
   for (const font of FONTS) {
     config.addPassthroughCopy({ [`node_modules/@fontsource/${font}`]: `fonts/${path.basename(font)}` })
   }
@@ -99,7 +99,7 @@ export default function (config: EleventyConfig) {
   })
 
   return {
-    dir: { input: 'site', includes: '_includes', output: 'site/_site' },
+    dir: { input: '.', includes: '_includes', output: '_site' },
     // The pages are plain Markdown, and the docs show {{ }} as they are.
     markdownTemplateEngine: false,
   }

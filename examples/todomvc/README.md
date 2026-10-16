@@ -16,7 +16,7 @@ It's a project of its own, with its own [`playwright.config.ts`](playwright.conf
 from here:
 
 ```sh
-npx playwright test
+pnpm test:e2e
 ```
 
-`npm run test:e2e` from the repo's root runs it too.
+`pnpm test:e2e` from the repo's root runs it too.

@@ -1,0 +1,18 @@
+{
+  "name": "site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "eleventy --config=eleventy.config.ts --serve",
+    "build": "eleventy --config=eleventy.config.ts"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "@fontsource/iosevka": "^5.3.0",
+    "@fontsource/iosevka-aile": "^5.3.0",
+    "@spp-lang/playwright": "workspace:*",
+    "@types/markdown-it": "^14.2.0",
+    "shiki": "^4.5.0",
+    "spp-lang": "workspace:*"
+  }
+}

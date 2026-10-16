@@ -1,6 +1,6 @@
+import { spp } from '@spp-lang/storybook'
 import type { Meta, StoryObj } from '@storybook/html-vite'
 import { fn } from 'storybook/test'
-import { spp } from '../../../src/backends/storybook/index.ts'
 import type { EditorArgs } from './editor.ts'
 import { editor } from './editor.ts'
 

@@ -5,7 +5,7 @@
 
 import { readFileSync } from 'node:fs'
 import { createCssVariablesTheme, createHighlighter, type DecorationItem, type LanguageRegistration } from 'shiki'
-import { lex } from '../src/language/cognate.ts'
+import { lex } from 'spp-lang'
 
 const grammar: LanguageRegistration = JSON.parse(
   readFileSync(new URL('../editors/vscode/syntaxes/spp.tmLanguage.json', import.meta.url), 'utf8'),

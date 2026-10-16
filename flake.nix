@@ -11,7 +11,7 @@
       # Playwright downloads its own Chromium, which expects an FHS system.
       # nix-ld runs it; this hands nix-ld the libraries it links against.
       devShells.${system}.default = pkgs.mkShell {
-        packages = [ pkgs.nodejs_22 ];
+        packages = [ pkgs.nodejs_22 pkgs.pnpm ];
         NIX_LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
           glib nss nspr dbus atk at-spi2-atk at-spi2-core cups libdrm expat
           libxkbcommon mesa libgbm alsa-lib pango cairo udev

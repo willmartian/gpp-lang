@@ -2,7 +2,7 @@
 // fixtures, which must all fail, against the demo's. Each is a project of its
 // own, with its own words, so their Defines don't clash.
 import { defineConfig } from '@playwright/test'
-import { defineSppConfig } from './src/index.ts'
+import { defineSppConfig } from '@spp-lang/playwright'
 
 const demo = 'http://localhost:4173'
 const todomvc = 'http://localhost:4174'
@@ -21,7 +21,7 @@ export default defineConfig({
     },
     {
       name: 'failures',
-      ...defineSppConfig({ features: ['test/fixtures'], outputDir: '.spp-tests/failures' }),
+      ...defineSppConfig({ features: ['packages/playwright/test/fixtures'], outputDir: '.spp-tests/failures' }),
       use: { baseURL: demo },
     },
   ],

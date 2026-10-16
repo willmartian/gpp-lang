@@ -1,0 +1,8 @@
+packages:
+  - packages/*
+  - examples/*
+  - editors/vscode
+  - site
+allowBuilds:
+  '@vscode/vsce-sign': true
+  esbuild: true

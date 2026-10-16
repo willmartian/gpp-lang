@@ -1,0 +1,60 @@
+{
+  "name": "@spp-lang/playwright",
+  "version": "0.1.0",
+  "description": "Spec++ scenarios, in .spp files and Markdown, as Playwright tests.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vocabulary": "./src/vocabulary.ts",
+    "./cli": "./src/cli.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "./vocabulary": {
+        "types": "./dist/src/vocabulary.d.ts",
+        "default": "./dist/src/vocabulary.js"
+      },
+      "./cli": {
+        "types": "./dist/src/cli.d.ts",
+        "default": "./dist/src/cli.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "node --test 'test/**/*.test.ts'",
+    "prepack": "pnpm run build"
+  },
+  "keywords": [
+    "gherkin",
+    "bdd",
+    "playwright",
+    "spp-lang"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willmartian/spp-lang.git",
+    "directory": "packages/playwright"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.63.0",
+    "spp-lang": "^0.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "spp-lang": "workspace:*"
+  }
+}

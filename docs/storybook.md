@@ -5,7 +5,7 @@ The story is the scenario: its args set it up, and the template is its steps. Se
 [`examples/storybook`](../examples/storybook).
 
 ```ts
-import { spp } from 'spp-lang/storybook'
+import { spp } from '@spp-lang/storybook'
 
 export const SavingADraft: Story = {
   args: { title: '' },
@@ -20,7 +20,7 @@ export const SavingADraft: Story = {
 Needs Storybook 10.
 
 ```sh
-npm install --save-dev spp-lang
+npm install --save-dev spp-lang @spp-lang/storybook
 ```
 
 - **Each line is a step**, starting with Given, When, Then, And, But or `*`. Tables and
@@ -50,7 +50,7 @@ so there's no `Visit`, `Reload`, `Back`, `At` or `Titled`.
 `.storybook/preview.ts`:
 
 ```ts
-import { useWords } from 'spp-lang/storybook'
+import { useWords } from '@spp-lang/storybook'
 
 useWords(import.meta.glob('../words/*.spp', { query: '?raw', import: 'default', eager: true }))
 ```

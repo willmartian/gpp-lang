@@ -1,0 +1,16 @@
+{
+  // What npm gets: Node won't strip types inside node_modules, so the package
+  // ships compiled JavaScript and declarations in dist/.
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.build.tsbuildinfo"
+  },
+  "include": ["src"],
+  // spp-lang's declarations, built first, rather than its source.
+  "references": [{ "path": "../spp-lang/tsconfig.build.json" }]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "example-storybook",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev -c .storybook",
+    "test:storybook": "vitest run"
+  },
+  "devDependencies": {
+    "@spp-lang/storybook": "workspace:*",
+    "@storybook/addon-vitest": "^10.6.2",
+    "@storybook/html-vite": "^10.6.2",
+    "@vitest/browser-playwright": "^4.1.12",
+    "playwright": "^1.63.0",
+    "spp-lang": "workspace:*",
+    "storybook": "^10.6.2",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.12"
+  }
+}

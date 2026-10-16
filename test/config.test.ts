@@ -4,16 +4,23 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { pathToFileURL } from 'node:url'
-import { discover, everything, loadProjects } from '../src/index.ts'
+import { discover, everything, loadProjects } from 'spp-lang/node'
 
-const bin = path.resolve('bin/spp-lang.ts')
-// What a config in a scratch directory imports defineSppConfig from.
-const spp = JSON.stringify(pathToFileURL(path.resolve('src/index.ts')).href)
+const packages = path.join(import.meta.dirname, '..', 'packages')
+const bin = path.join(packages, 'spp-lang', 'bin', 'spp-lang.ts')
 
-// A directory of files, given as path → contents.
+// Installs Spec++'s backends in a scratch project, as links to this repo's, so
+// its config imports them and the tools find them as they would in any project.
+function install(dir: string) {
+  const scope = path.join(dir, 'node_modules', '@spp-lang')
+  fs.mkdirSync(scope, { recursive: true })
+  for (const name of ['playwright', 'storybook']) fs.symlinkSync(path.join(packages, name), path.join(scope, name))
+}
+
+// A project of files, given as path → contents.
 function project(files: Record<string, string>): string {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'spp-config-')))
+  install(dir)
   for (const [name, src] of Object.entries(files)) {
     fs.mkdirSync(path.dirname(path.join(dir, name)), { recursive: true })
     fs.writeFileSync(path.join(dir, name), src)
@@ -22,7 +29,7 @@ function project(files: Record<string, string>): string {
 }
 
 const config = (...calls: string[]) =>
-  `import { defineSppConfig } from ${spp}\nexport default { projects: [${calls.map((c) => `{ ...defineSppConfig(${c}) }`).join(', ')}] }\n`
+  `import { defineSppConfig } from '@spp-lang/playwright'\nexport default { projects: [${calls.map((c) => `{ ...defineSppConfig(${c}) }`).join(', ')}] }\n`
 
 const broken = 'Feature: F\n  Scenario: S\n    When I Clik the Button "Add"\n'
 const fine = 'Feature: F\n  Scenario: S\n    When I Click the Button "Add"\n'
@@ -108,7 +115,7 @@ test("check checks Storybook's spp templates with its words and the project's De
     'words.spp': 'Define: Retitle Text (New)\n  Fill the Field "Title" with New\n',
     'visiting.spp': 'Feature: F\n  Scenario: S\n    Given I Visit "/"\n',
     'editor.stories.ts': [
-      "import { spp } from 'spp-lang/storybook'",
+      "import { spp } from '@spp-lang/storybook'",
       '',
       'export const Retitling = {',
       '  play: spp`',

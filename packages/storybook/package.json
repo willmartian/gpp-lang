@@ -1,0 +1,63 @@
+{
+  "name": "@spp-lang/storybook",
+  "version": "0.1.0",
+  "description": "Spec++ as Storybook play functions.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vocabulary": "./src/vocabulary.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "./vocabulary": {
+        "types": "./dist/src/vocabulary.d.ts",
+        "default": "./dist/src/vocabulary.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "node --test 'test/**/*.test.ts'",
+    "test:storybook": "vitest run --config test/fixtures/vitest.config.ts",
+    "prepack": "pnpm run build"
+  },
+  "keywords": [
+    "gherkin",
+    "bdd",
+    "storybook",
+    "testing-library",
+    "spp-lang"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willmartian/spp-lang.git",
+    "directory": "packages/storybook"
+  },
+  "peerDependencies": {
+    "spp-lang": "^0.1.0",
+    "storybook": "^10.0.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-vitest": "^10.6.2",
+    "@storybook/html-vite": "^10.6.2",
+    "@vitest/browser-playwright": "^4.1.12",
+    "playwright": "^1.63.0",
+    "spp-lang": "workspace:*",
+    "storybook": "^10.6.2",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.12"
+  }
+}

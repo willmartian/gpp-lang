@@ -1,0 +1,14 @@
+{
+  "name": "example-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node serve.ts",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@spp-lang/playwright": "workspace:*",
+    "spp-lang": "workspace:*"
+  }
+}

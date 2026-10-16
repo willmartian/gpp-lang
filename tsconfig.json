@@ -1,6 +1,6 @@
 {
-  // Type-checks everything. Node runs the .ts files as they are; see
-  // tsconfig.build.json for what gets published.
+  // Type-checks everything. Node runs the .ts files as they are; see each
+  // package's tsconfig.build.json for what gets published.
   "compilerOptions": {
     "target": "es2023",
     "module": "nodenext",
@@ -14,5 +14,5 @@
     "verbatimModuleSyntax": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src", "bin", "test", "examples", "site", "playwright.config.ts", "vitest.config.ts"]
+  "include": ["packages/*/src", "packages/*/bin", "packages/*/test", "test", "examples", "site", "playwright.config.ts"]
 }

@@ -28,17 +28,23 @@ Gherkin without step definitions. Every scenario runs as a Playwright test.
 
 ## Install
 
-Needs Node.js 22.13 or later.
+Needs Node.js 22.13 or later. `spp-lang` is the language, its checker and its editor support;
+a backend runs the scenarios.
+
+| Package | Runs |
+| --- | --- |
+| `@spp-lang/playwright` | `.spp` files and Markdown's ` ```spp ` blocks, as Playwright tests |
+| `@spp-lang/storybook` | `spp` templates, as stories' play functions ([Storybook](docs/storybook.md)) |
 
 ```sh
-npm install --save-dev spp-lang @playwright/test
+npm install --save-dev spp-lang @spp-lang/playwright @playwright/test
 npx playwright install chromium
 ```
 
 ```ts
 // playwright.config.ts
 import { defineConfig } from '@playwright/test'
-import { defineSppConfig } from 'spp-lang'
+import { defineSppConfig } from '@spp-lang/playwright'
 
 export default defineConfig({
   ...defineSppConfig({ features: ['features'] }),

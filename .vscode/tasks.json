@@ -4,7 +4,7 @@
     {
       "label": "build Spec++ extension",
       "type": "shell",
-      "command": "npm install && npm run build",
+      "command": "pnpm install && pnpm run build",
       "options": { "cwd": "${workspaceFolder}/editors/vscode" },
       "problemMatcher": []
     }

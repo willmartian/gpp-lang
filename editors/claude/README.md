@@ -15,8 +15,8 @@ with ` ```spp ` blocks, Claude Code hands it the mistakes the server finds, with
 running anything. Claude's `LSP` tool can also use the server to show a word's type, go to its
 `Define`, find everywhere it's used, and list or search the project's `Define`s and scenarios.
 
-Both come from your project's own `spp-lang`, so install that first
-(`npm install --save-dev spp-lang`). The language server runs through `npx`, from the
+Both come from your project's own `spp-lang`, so install that first, with the backend that
+runs your scenarios (`npm install --save-dev spp-lang @spp-lang/playwright`). The language server runs through `npx`, from the
 directory Claude Code was started in.
 
 ## Installing
