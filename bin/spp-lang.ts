@@ -23,8 +23,9 @@ import { findConfig, loadProjects } from '../src/config.ts'
 import type { Diagnostic } from '../src/language/check.ts'
 import { analyze, check, format } from '../src/language/check.ts'
 import { core } from '../src/language/cognate.ts'
+import { discover, load } from '../src/language/files.ts'
 import type { SppFile } from '../src/language/load.ts'
-import { discover, LoadError, load } from '../src/language/load.ts'
+import { LoadError } from '../src/language/load.ts'
 import { dictionary } from '../src/tools/dictionary.ts'
 import { leftovers } from '../src/words/shared.ts'
 
@@ -155,6 +156,7 @@ function loadAll(project: Project): { files: SppFile[]; broken: LoadError[] } {
 
 function checkOnly(projects: Project[], paths: string[]): number {
   const cwd = process.cwd()
+  const relative = (file: string) => path.relative(cwd, file)
   const shown = named(paths, cwd)
   // Each project is checked whole, since the named files may use Defines from
   // the rest of it. A file in more than one is reported once.
@@ -168,16 +170,16 @@ function checkOnly(projects: Project[], paths: string[]): number {
       seen.add(err.file)
       checked.add(err.file)
       // A file that doesn't parse: its message already says where.
-      console.log(`${path.relative(cwd, err.file)}\n  ${err.message}\n`)
+      console.log(`${relative(err.file)}\n  ${err.message}\n`)
       problems++
     }
-    const report = check(files, { words: browser(core()), settle: leftovers, cwd })
+    const report = check(files, { words: browser(core()), settle: leftovers, name: relative })
     // An Outline's rows share their steps, and so their mistakes.
     const diagnostics = [...report.vocabulary, ...report.scenarios.values()].filter((d: Diagnostic) => {
       const key = `${d.file}:${d.line}:${d.column}:${d.message}`
       return shown(d.file) && !seen.has(key) && seen.add(key)
     })
-    for (const d of diagnostics) console.log(`${format(d, fs.readFileSync(d.file, 'utf8'), cwd)}\n`)
+    for (const d of diagnostics) console.log(`${format(d, fs.readFileSync(d.file, 'utf8'), relative)}\n`)
     problems += diagnostics.length
     for (const f of files) if (shown(f.file)) checked.add(f.file)
   }
@@ -199,7 +201,9 @@ function printDictionary(projects: Project[]): number {
     }
     // A file that doesn't parse has no Defines to list; check says why.
     const { files } = loadAll(project)
-    console.log(dictionary(words, analyze(files, { words, settle: leftovers, cwd }), cwd))
+    console.log(
+      dictionary(words, analyze(files, { words, settle: leftovers, name: (file) => path.relative(cwd, file) }), cwd),
+    )
   }
   return 0
 }

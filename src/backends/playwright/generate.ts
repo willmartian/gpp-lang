@@ -30,8 +30,9 @@ import type { Project } from '../../config.ts'
 import { registry } from '../../config.ts'
 import { check } from '../../language/check.ts'
 import { core } from '../../language/cognate.ts'
+import { discover, load } from '../../language/files.ts'
 import type { Feature, Scenario, SppFile } from '../../language/load.ts'
-import { discover, LoadError, load } from '../../language/load.ts'
+import { LoadError } from '../../language/load.ts'
 import { escapeRegExp, leftovers } from '../../words/shared.ts'
 import { browser } from './words.ts'
 
@@ -120,7 +121,11 @@ export function generate(project: Project): string[] {
       broken.set(file, err)
     }
   }
-  const report = check(files, { words: browser(core()), settle: leftovers, cwd: project.root })
+  const report = check(files, {
+    words: browser(core()),
+    settle: leftovers,
+    name: (file) => path.relative(project.root, file),
+  })
 
   const written = new Set<string>()
   const write = (source: string, test: GeneratedTest) => {

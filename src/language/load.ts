@@ -1,4 +1,7 @@
-// Finding .spp files and turning them into vocabulary and scenarios.
+// Turning .spp files into vocabulary and scenarios.
+//
+// Reading them from disk is files.ts's job; this works on sources already
+// read, so it runs in a browser too.
 //
 // A .spp file is Gherkin with an optional preamble: Defines above the
 // Feature line. Either half may be missing, so a file of nothing but Defines
@@ -11,14 +14,11 @@
 // compiled into flat "pickles" by @cucumber/gherkin, so an Outline's <email>
 // is already substituted by the time a step reaches the Cognate parser.
 
-import fs from 'node:fs'
-import path from 'node:path'
 import { AstBuilder, compile, Errors, GherkinClassicTokenMatcher, Parser } from '@cucumber/gherkin'
 import type { Step as AstStep, FeatureChild, PickleStepArgument, RuleChild } from '@cucumber/messages'
 import { IdGenerator } from '@cucumber/messages'
 import type { Program } from './cognate.ts'
 import { parse, SppError } from './cognate.ts'
-import { isMarkdown, sppFences } from './markdown.ts'
 import { sections } from './sections.ts'
 
 export interface Step {
@@ -71,26 +71,6 @@ export interface SppFile {
   features: Feature[]
 }
 
-const SKIP = new Set(['node_modules', 'test-results', 'playwright-report'])
-
-// Every .spp file under the paths, and every Markdown file with an ```spp
-// block, except under those in ignore (absolute).
-export function discover(paths: string[], cwd = process.cwd(), ignore: string[] = []): string[] {
-  const found: string[] = []
-  const ignored = (p: string) => ignore.some((i) => p === i || p.startsWith(i + path.sep))
-  const visit = (p: string) => {
-    if (ignored(p)) return
-    const stat = fs.statSync(p)
-    if (stat.isDirectory()) {
-      for (const entry of fs.readdirSync(p).sort()) {
-        if (!entry.startsWith('.') && !SKIP.has(entry)) visit(path.join(p, entry))
-      }
-    } else if (p.endsWith('.spp') || (isMarkdown(p) && sppFences(fs.readFileSync(p, 'utf8')).length)) found.push(p)
-  }
-  for (const p of paths) visit(path.resolve(cwd, p))
-  return found
-}
-
 // A file that can't be read as Spec++ at all, and where.
 export class LoadError extends Error {
   file: string
@@ -102,10 +82,6 @@ export class LoadError extends Error {
     this.file = file
     this.problems = problems
   }
-}
-
-export function load(file: string): SppFile {
-  return loadSource(file, fs.readFileSync(file, 'utf8'))
 }
 
 // Loads a file as it is right now, which in an editor may not be saved.
@@ -209,21 +185,6 @@ function loadFeature(file: string, src: string): Feature | null {
   })
 
   return { name: doc.feature.name, file, line: doc.feature.location.line, scenarios }
-}
-
-// Which scenarios to run, as a command line names them: a directory or file
-// runs everything in it, "file.spp:12" the scenario on line 12. An empty
-// list runs everything.
-export function selects(selections: string[], scenario: Scenario, cwd = process.cwd()): boolean {
-  if (!selections.length) return true
-  return selections.some((selection) => {
-    const lineAt = /:(\d+)$/.exec(selection)
-    const where = lineAt ? selection.slice(0, lineAt.index) : selection
-    const line = lineAt?.[1]
-    const target = path.resolve(cwd, where)
-    if (line) return scenario.file === target && scenario.lines.includes(Number(line))
-    return scenario.file === target || scenario.file.startsWith(target + path.sep)
-  })
 }
 
 function parseGherkin(file: string, src: string, newId: () => string) {

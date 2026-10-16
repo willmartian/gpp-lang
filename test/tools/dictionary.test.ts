@@ -10,7 +10,7 @@ function dictionaryOf(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-dictionary-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)
   const words = browser(core())
-  return dictionary(words, analyze(discover([dir]).map(load), { words, settle: leftovers, cwd: dir }), dir)
+  return dictionary(words, analyze(discover([dir]).map(load), { words, settle: leftovers }), dir)
 }
 
 test('a built-in word is listed with what it does, its forms and an example', () => {

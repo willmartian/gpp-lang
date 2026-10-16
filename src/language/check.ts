@@ -18,7 +18,6 @@
 // (Definitions in cognate.ts). Two that could always both fit are a mistake
 // in the Defines, so a use never has to guess.
 
-import path from 'node:path'
 import type { Env, Node, Param, Program } from './cognate.ts'
 import { notAKind, parse, SppError, specificity, unknownWord } from './cognate.ts'
 import type { Scenario, SppFile, Step, Vocabulary } from './load.ts'
@@ -48,8 +47,9 @@ export interface CheckOptions {
   words: Env
   // the end-of-step rule: what's wrong with leaving values of these types, if anything
   settle: (stack: { name: string; shown: string }[]) => string | null
-  // where paths in messages are relative to
-  cwd?: string
+  // how messages name a file, like relative to the project; by default, as
+  // it was loaded
+  name?: (file: string) => string
 }
 
 // ---------------------------------------------------------------- static values
@@ -304,7 +304,7 @@ export function analyze(files: SppFile[], options: CheckOptions): Analysis {
 
 class Checker {
   options: CheckOptions
-  cwd: string
+  name: (file: string) => string
   defs: Def[] = []
   report: Report = { vocabulary: [], scenarios: new Map() }
   vocabulary!: Scope
@@ -318,7 +318,7 @@ class Checker {
 
   constructor(options: CheckOptions) {
     this.options = options
-    this.cwd = options.cwd ?? process.cwd()
+    this.name = options.name ?? ((file) => file)
   }
 
   check(files: SppFile[]): Report {
@@ -613,7 +613,7 @@ class Checker {
   }
 
   where(d: Place): string {
-    return `${path.relative(this.cwd, d.file)}:${d.line}:${d.column}`
+    return `${this.name(d.file)}:${d.line}:${d.column}`
   }
 
   take(sim: Sim, word: string): Val {
@@ -834,15 +834,12 @@ function isPrefix(short: Want[], long: Want[]): boolean {
 // ---------------------------------------------------------------- output
 
 // A diagnostic as a person reads it: where, the line, and what's wrong.
-export function format(d: Diagnostic, source: string, cwd = process.cwd()): string {
+export function format(d: Diagnostic, source: string, name = (file: string) => file): string {
   const text = source.split('\n')[d.line - 1] ?? ''
   const indent = text.length - text.trimStart().length
   const caret = `${' '.repeat(Math.max(0, d.column - 1 - indent))}^`
   const where = d.define ? ` (in Define ${d.define})` : ''
-  return [
-    `${path.relative(cwd, d.file)}:${d.line}:${d.column}${where}`,
-    `    ${text.trim()}`,
-    `    ${caret}`,
-    `  ${d.message}`,
-  ].join('\n')
+  return [`${name(d.file)}:${d.line}:${d.column}${where}`, `    ${text.trim()}`, `    ${caret}`, `  ${d.message}`].join(
+    '\n',
+  )
 }

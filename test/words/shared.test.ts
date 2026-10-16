@@ -42,7 +42,11 @@ test('See takes some text only when the driver can find things by text', () => {
 test("the checker catches a word the driver can't do, before anything runs", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-words-'))
   fs.writeFileSync(path.join(dir, 'a.spp'), 'Feature: F\n  Scenario: S\n    When I Hover the Button "Add"')
-  const report = check(discover([dir]).map(load), { words: vocabularyOf(small), settle: leftovers, cwd: dir })
+  const report = check(discover([dir]).map(load), {
+    words: vocabularyOf(small),
+    settle: leftovers,
+    name: (file) => path.relative(dir, file),
+  })
   const [problem] = report.scenarios.values()
   assert.match(problem.message, /^Unknown word Hover\./)
 })

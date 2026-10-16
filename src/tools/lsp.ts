@@ -42,8 +42,9 @@ import type { Analysis, Line, Place, WordInfo } from '../language/check.ts'
 import { analyze } from '../language/check.ts'
 import type { Token } from '../language/cognate.ts'
 import { core, lex } from '../language/cognate.ts'
+import { discover } from '../language/files.ts'
 import type { SppFile, Step } from '../language/load.ts'
-import { discover, LoadError, loadSource } from '../language/load.ts'
+import { LoadError, loadSource } from '../language/load.ts'
 import { sppLines } from '../language/markdown.ts'
 import type { CodeLine } from '../language/sections.ts'
 import { codeLines } from '../language/sections.ts'
@@ -179,7 +180,7 @@ export function startServer(): void {
     for (const f of loaded) for (const p of projectsOf(f.file)) members.set(p, [...(members.get(p) ?? []), f])
     analyses = new Map()
     for (const [project, files] of members) {
-      const analysis = analyze(files, { words, settle: leftovers, cwd: roots[0] })
+      const analysis = analyze(files, { words, settle: leftovers, name: (file) => path.relative(roots[0], file) })
       analyses.set(project, analysis)
       for (const d of [...analysis.report.vocabulary, ...analysis.report.scenarios.values()])
         add(d.file, d.line, d.column, d.message)

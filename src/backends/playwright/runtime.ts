@@ -11,13 +11,15 @@
 // the .spp or Markdown file, so reports and failures point at the Gherkin, not
 // at Spec++'s own code.
 
+import path from 'node:path'
 import { expect, type PlaywrightTestArgs, test } from '@playwright/test'
 import type { Project } from '../../config.ts'
 import type { Diagnostic, Report } from '../../language/check.ts'
 import { check } from '../../language/check.ts'
 import { apply, Block, core, Env, run, SppError, Stack } from '../../language/cognate.ts'
+import { discover, load } from '../../language/files.ts'
 import type { Scenario, SppFile, Step, Vocabulary } from '../../language/load.ts'
-import { discover, LoadError, load } from '../../language/load.ts'
+import { LoadError } from '../../language/load.ts'
 import { keywordForms, keywords, StepBlock } from '../../language/steps.ts'
 import { leftovers } from '../../words/shared.ts'
 import type { BrowserContext } from './words.ts'
@@ -68,7 +70,11 @@ function loadProject(project: Project): Loaded {
     files,
     broken,
     vocabulary: files.flatMap((f) => f.vocabulary),
-    report: check(files, { words: browser(core()), settle: leftovers, cwd: project.root }),
+    report: check(files, {
+      words: browser(core()),
+      settle: leftovers,
+      name: (file) => path.relative(project.root, file),
+    }),
     scenarios,
   }
   projects.set(key, loaded)

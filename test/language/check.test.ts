@@ -10,7 +10,11 @@ import { browser, check, core, discover, leftovers, load } from '../../src/index
 function checkFiles(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-check-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)
-  const report = check(discover([dir]).map(load), { words: browser(core()), settle: leftovers, cwd: dir })
+  const report = check(discover([dir]).map(load), {
+    words: browser(core()),
+    settle: leftovers,
+    name: (file) => path.relative(dir, file),
+  })
   const brief = (d: Diagnostic) => `${path.basename(d.file)}:${d.line}:${d.column} ${d.message}`
   return {
     vocabulary: report.vocabulary.map(brief),
