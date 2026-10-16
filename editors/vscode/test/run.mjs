@@ -33,6 +33,11 @@ fs.writeFileSync(
   path.join(workspace, 'a.spp'),
   ['Feature: Groceries', '  Scenario: Adding', '    When I Add "Milk"', '    And I Click "Add"', ''].join('\n'),
 )
+// A Storybook play function with a mistake.
+fs.writeFileSync(
+  path.join(workspace, 'editor.stories.ts'),
+  ['export const Saving = {', '  play: spp`', '    When I Visit "/"', '  `,', '}', ''].join('\n'),
+)
 // Markdown, with two Features: one carried on across blocks, one with a mistake.
 fs.writeFileSync(
   path.join(workspace, 'guide.md'),

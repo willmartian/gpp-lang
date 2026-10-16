@@ -1,6 +1,8 @@
 // The language server, for any editor that speaks LSP: run it as `spp-lang lsp`.
 //
-// It works on .spp files, and on the ```spp blocks in Markdown files.
+// It works on .spp files, on the ```spp blocks in Markdown files, and on the
+// spp`…` templates in .js and .ts files, which are Storybook play functions,
+// checked with Storybook's words and the project's Defines.
 // It keeps every project checked as you type, since Defines are shared
 // between a project's files, and answers from that. The projects are what
 // the workspace's Playwright config says (see config.ts), each checked on its
@@ -17,7 +19,9 @@
 //     whatever is written at the cursor: after "Click the", something on the
 //     page.
 //   - semantic tokens: the capitalised words that are code, so an editor
-//     can pick them out of the prose without a grammar for Spec++
+//     can pick them out of the prose without a grammar for Spec++. Not in
+//     scripts, whose own language's tokens they'd replace: a client that can
+//     is told which documents to ask about.
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -36,6 +40,7 @@ import type {
 import server from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { browser } from '../backends/playwright/words.ts'
+import { storybookWords } from '../backends/storybook/vocabulary.ts'
 import type { Project } from '../config.ts'
 import { contains, everything, loadProjects } from '../config.ts'
 import type { Analysis, Line, Place, WordInfo } from '../language/check.ts'
@@ -48,6 +53,7 @@ import { LoadError, loadSource } from '../language/load.ts'
 import { sppLines } from '../language/markdown.ts'
 import type { CodeLine } from '../language/sections.ts'
 import { codeLines } from '../language/sections.ts'
+import { isScript } from '../language/templates.ts'
 import { leftovers } from '../words/shared.ts'
 
 const {
@@ -58,6 +64,7 @@ const {
   MarkupKind,
   ProposedFeatures,
   SemanticTokensBuilder,
+  SemanticTokensRegistrationType,
   SymbolKind,
   TextDocumentSyncKind,
   TextDocuments,
@@ -74,14 +81,18 @@ export function startServer(): void {
   const connection = createConnection(ProposedFeatures.all, process.stdin, process.stdout)
   const documents = new TextDocuments(TextDocument)
   const words = browser(core())
+  const storyWords = storybookWords(core())
 
   let roots: string[] = []
   // Every root's projects: every .spp file under it until its config is loaded.
   let projects: Project[] = []
   let trusted = true
   let onDisk: string[] = []
-  // Each project's checked files.
+  // Each project's checked files, and its scripts' templates.
   let analyses = new Map<Project, Analysis>()
+  let played = new Map<Project, Analysis>()
+  // Whether the client is told which documents have semantic tokens.
+  let registersTokens = false
   let steps = new Map<string, Step>()
   // Every file's text, open or not, and what it loaded as.
   let sources = new Map<string, string>()
@@ -97,6 +108,7 @@ export function startServer(): void {
     projects = roots.map(everything)
     // A client can say the workspace isn't trusted, so its config mustn't run.
     trusted = (params.initializationOptions as { trusted?: boolean } | undefined)?.trusted !== false
+    registersTokens = params.capabilities.textDocument?.semanticTokens?.dynamicRegistration === true
     return {
       capabilities: {
         textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -106,7 +118,7 @@ export function startServer(): void {
         documentSymbolProvider: true,
         workspaceSymbolProvider: true,
         completionProvider: {},
-        semanticTokensProvider: { legend, full: true },
+        ...(registersTokens ? {} : { semanticTokensProvider: { legend, full: true } }),
       },
     }
   })
@@ -114,7 +126,7 @@ export function startServer(): void {
   // ---------------------------------------------------------------- checking
 
   function rediscover() {
-    onDisk = [...new Set(projects.flatMap((p) => discover(p.features, p.root, p.ignore)))]
+    onDisk = [...new Set(projects.flatMap((p) => discover(p.features, p.root, p.ignore, true)))]
   }
 
   async function reloadProjects() {
@@ -140,13 +152,16 @@ export function startServer(): void {
   }
   const analysisOf = (file: string): Analysis | undefined => {
     const [project] = projectsOf(file)
-    return project && analyses.get(project)
+    return project && (isScript(file) ? played : analyses).get(project)
   }
 
   function refresh() {
     sources = new Map()
     for (const file of onDisk) if (fs.existsSync(file)) sources.set(file, fs.readFileSync(file, 'utf8'))
-    for (const doc of documents.all()) if (/\.(spp|md)$/.test(doc.uri)) sources.set(toPath(doc.uri), doc.getText())
+    for (const doc of documents.all()) {
+      const file = toPath(doc.uri)
+      if (/\.(spp|md)$/.test(file) || isScript(file)) sources.set(file, doc.getText())
+    }
 
     const problems = new Map<string, LspDiagnostic[]>()
     const add = (file: string, line: number, column: number, message: string) => {
@@ -179,11 +194,22 @@ export function startServer(): void {
     const members = new Map<Project, SppFile[]>()
     for (const f of loaded) for (const p of projectsOf(f.file)) members.set(p, [...(members.get(p) ?? []), f])
     analyses = new Map()
+    played = new Map()
+    const options = { settle: leftovers, name: (file: string) => path.relative(roots[0], file) }
     for (const [project, files] of members) {
-      const analysis = analyze(files, { words, settle: leftovers, name: (file) => path.relative(roots[0], file) })
+      const pages = files.filter((f) => !isScript(f.file))
+      const analysis = analyze(pages, { words, ...options })
       analyses.set(project, analysis)
       for (const d of [...analysis.report.vocabulary, ...analysis.report.scenarios.values()])
         add(d.file, d.line, d.column, d.message)
+      // Templates play in Storybook, with its words and the Defines, which
+      // were checked above.
+      const scripts = files.filter((f) => isScript(f.file))
+      if (!scripts.length) continue
+      const defines = pages.map((f) => ({ ...f, features: [] }))
+      const stories = analyze([...defines, ...scripts], { words: storyWords, ...options })
+      played.set(project, stories)
+      for (const d of stories.report.scenarios.values()) add(d.file, d.line, d.column, d.message)
     }
     steps = new Map()
     for (const { features } of loaded) {
@@ -206,6 +232,10 @@ export function startServer(): void {
   }
 
   connection.onInitialized(async () => {
+    if (registersTokens) {
+      const documentSelector = [{ language: 'spp' }, { language: 'markdown' }]
+      await connection.client.register(SemanticTokensRegistrationType.type, { documentSelector, legend, full: true })
+    }
     await reloadProjects()
     rediscover()
     refresh()
@@ -350,6 +380,8 @@ export function startServer(): void {
   // are one scenario each to the checker, but one symbol here.
   function symbolsIn(file: string): FileSymbol[] {
     const symbols: FileSymbol[] = []
+    // A script's outline is its own language's.
+    if (isScript(file)) return symbols
     for (const w of analysisOf(file)?.words() ?? []) {
       for (const p of w.places ?? [])
         if (p.file === file) symbols.push({ name: w.name, kind: SymbolKind.Function, line: p.line })
@@ -456,8 +488,8 @@ export function startServer(): void {
   connection.languages.semanticTokens.on(({ textDocument }) => {
     const builder = new SemanticTokensBuilder()
     const doc = documents.get(textDocument.uri)
-    if (!doc) return builder.build()
     const file = toPath(textDocument.uri)
+    if (!doc || isScript(file)) return builder.build()
     const text = doc.getText()
     const lines = text.split('\n')
     const code = codeLines(text, file)

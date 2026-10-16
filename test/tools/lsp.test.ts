@@ -54,6 +54,21 @@ const shop = [
   '',
 ].join('\n')
 
+// Storybook play functions, which use the project's Defines too.
+const stories = [
+  "import { spp } from 'spp-lang/storybook'", //                0
+  '', //                                                         1
+  'export const Adding = {', //                                  2
+  '  play: spp`', //                                            3
+  '    When I Add "Milk"', //                                    4
+  '    Then I should See the Status "Added"', //                 5  a mistake
+  '    And I Click the ', //                                     6  for completion
+  '  `,', //                                                    7
+  '}', //                                                        8
+  'export const Visiting = { play: spp`Given I Visit "/"` }', // 9  a mistake
+  '',
+].join('\n')
+
 type Published = {
   uri: string
   diagnostics: { message: string; range: { start: { line: number; character: number } } }[]
@@ -65,6 +80,7 @@ test('the language server', async (t) => {
   fs.writeFileSync(path.join(dir, 'a.spp'), feature)
   fs.writeFileSync(path.join(dir, 'README.md'), readme)
   fs.writeFileSync(path.join(dir, 'shop.spp'), shop)
+  fs.writeFileSync(path.join(dir, 'editor.stories.ts'), stories)
   // Left out by the config: its mistake should never be reported.
   fs.mkdirSync(path.join(dir, 'drafts'))
   fs.writeFileSync(path.join(dir, 'drafts', 'b.spp'), 'Feature: Draft\n  Scenario: S\n    When I Clik\n')
@@ -88,6 +104,7 @@ test('the language server', async (t) => {
   const wordsUri = pathToFileURL(path.join(dir, 'words.spp')).href
   const readmeUri = pathToFileURL(path.join(dir, 'README.md')).href
   const shopUri = pathToFileURL(path.join(dir, 'shop.spp')).href
+  const storiesUri = pathToFileURL(path.join(dir, 'editor.stories.ts')).href
 
   // As an editor's language client starts it.
   const child = spawn(process.execPath, ['bin/spp-lang.ts', 'lsp', '--stdio', `--clientProcessId=${process.pid}`], {
@@ -213,8 +230,13 @@ test('the language server', async (t) => {
         position: { line: 2, character: 12 },
         context: { includeDeclaration },
       })
-    assert.deepEqual((await references(false)).map(where), ['a.spp:2:11'])
-    assert.deepEqual((await references(true)).map(where).sort(), ['a.spp:2:11', 'words.spp:0:8'])
+    // A template's uses too, since it shares the project's Defines.
+    assert.deepEqual((await references(false)).map(where), ['a.spp:2:11', 'editor.stories.ts:4:11'])
+    assert.deepEqual((await references(true)).map(where).sort(), [
+      'a.spp:2:11',
+      'editor.stories.ts:4:11',
+      'words.spp:0:8',
+    ])
   })
 
   await t.test("finds a built-in word's uses, in steps and Defines", async () => {
@@ -223,7 +245,7 @@ test('the language server', async (t) => {
       position: { line: 3, character: 12 },
       context: { includeDeclaration: true },
     })
-    assert.deepEqual(found.map(where).sort(), ['a.spp:3:10', 'a.spp:4:10', 'words.spp:2:2'])
+    assert.deepEqual(found.map(where).sort(), ['a.spp:3:10', 'a.spp:4:10', 'editor.stories.ts:6:10', 'words.spp:2:2'])
   })
 
   await t.test("lists a file's Defines, and its Feature's scenarios", async () => {
@@ -364,6 +386,52 @@ test('the language server', async (t) => {
       lines.add(line)
     }
     assert.deepEqual([...lines], [5, 6, 7, 8])
+  })
+
+  await t.test("checks Storybook's templates, with its words and the project's Defines", async () => {
+    const found = await diagnostics((p) => p.diagnostics.length > 0, storiesUri)
+    const visiting = stories.split('\n')[9]
+    assert.deepEqual(
+      found.map((d) => [d.range.start, d.message]),
+      [
+        [
+          { line: 5, character: 26 },
+          'Status expected Containing "some text" (a Status has no name to match exactly), but got "Added"',
+        ],
+        [
+          { line: 9, character: visiting.indexOf('Visit "/"') },
+          'A story is one page, already open, so a play function has no Visit',
+        ],
+      ],
+    )
+  })
+
+  await t.test('answers for words in a template, and nowhere else in a script', async () => {
+    const hover = (line: number, character: number) =>
+      connection.sendRequest<{ contents: { value: string } } | null>('textDocument/hover', {
+        textDocument: { uri: storiesUri },
+        position: { line, character },
+      })
+    assert.match((await hover(4, 12))?.contents.value ?? '', /Add : Text \(Item\) ->[\s\S]*Defined at words\.spp:1/)
+    assert.equal(await hover(2, 14), null)
+    connection.sendNotification('textDocument/didOpen', {
+      textDocument: { uri: storiesUri, languageId: 'typescript', version: 1, text: stories },
+    })
+    const items = await connection.sendRequest<{ label: string; sortText: string }[]>('textDocument/completion', {
+      textDocument: { uri: storiesUri },
+      position: { line: 6, character: 20 },
+      context: { triggerKind: 1 },
+    })
+    assert.ok(items.find((i) => i.label === 'Button')?.sortText.startsWith('0'))
+  })
+
+  await t.test("leaves a script's outline and highlighting to its own language", async () => {
+    const symbols = await connection.sendRequest('textDocument/documentSymbol', { textDocument: { uri: storiesUri } })
+    assert.deepEqual(symbols, [])
+    const tokens = await connection.sendRequest<{ data: number[] }>('textDocument/semanticTokens/full', {
+      textDocument: { uri: storiesUri },
+    })
+    assert.deepEqual(tokens.data, [])
   })
 
   await connection.sendRequest('shutdown')

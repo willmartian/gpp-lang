@@ -18,6 +18,7 @@ import path from 'node:path'
 import { styleText } from 'node:util'
 import { Command, Option } from 'commander'
 import { browser } from '../src/backends/playwright/words.ts'
+import { storybookWords } from '../src/backends/storybook/vocabulary.ts'
 import type { Project } from '../src/config.ts'
 import { findConfig, loadProjects } from '../src/config.ts'
 import type { Diagnostic } from '../src/language/check.ts'
@@ -103,7 +104,7 @@ it finds a mistake. The rest of the project is still loaded, for its Defines.
 The spp\`…\` templates in .js and .ts files are checked too, as Storybook play
 functions, with the project's Defines.`,
   )
-  .action(async (paths: string[]) => process.exit(await checkOnly(await loadProjects(), paths)))
+  .action(async (paths: string[]) => process.exit(checkOnly(await loadProjects(), paths)))
 
 program
   .command('dictionary')
@@ -159,7 +160,7 @@ function loadAll(project: Project, scripts = false): { files: SppFile[]; broken:
   return { files, broken }
 }
 
-async function checkOnly(projects: Project[], paths: string[]): Promise<number> {
+function checkOnly(projects: Project[], paths: string[]): number {
   const cwd = process.cwd()
   const relative = (file: string) => path.relative(cwd, file)
   const shown = named(paths, cwd)
@@ -185,9 +186,12 @@ async function checkOnly(projects: Project[], paths: string[]): Promise<number> 
     // Templates play in Storybook, so they're checked with its words, and the
     // Defines, which useWords gives them. Those were checked above.
     if (stories.length) {
-      const { storybook } = await import('../src/backends/storybook/words.ts')
       const defines = pages.map((f) => ({ ...f, features: [] }))
-      const played = check([...defines, ...stories], { words: storybook(core()), settle: leftovers, name: relative })
+      const played = check([...defines, ...stories], {
+        words: storybookWords(core()),
+        settle: leftovers,
+        name: relative,
+      })
       found.push(...played.scenarios.values())
     }
     // An Outline's rows share their steps, and so their mistakes.

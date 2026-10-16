@@ -64,5 +64,6 @@ words above and the project's Defines, and says where each mistake is in the sto
 The project is every file under where you run it, or what a `defineSppConfig`'s `features`
 say.
 
-[VS Code's extension](editors.md) highlights templates as Spec++. The language server doesn't
-read them yet, so their mistakes show when you run `spp-lang check` or the story plays.
+The [language server](editors.md) does the same as you type, and hover, completion, go to
+definition and references work inside templates. VS Code's extension also highlights them as
+Spec++.

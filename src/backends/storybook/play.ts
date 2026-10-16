@@ -29,7 +29,7 @@ import { LoadError, loadSource } from '../../language/load.ts'
 import { INTERPOLATION } from '../../language/sections.ts'
 import { runSteps } from '../../language/steps.ts'
 import { leftovers } from '../../words/shared.ts'
-import type { StoryContext } from './words.ts'
+import type { StoryContext } from './vocabulary.ts'
 import { settle, storybook } from './words.ts'
 
 // What a play function is given, as far as Spec++ needs it. Storybook's own

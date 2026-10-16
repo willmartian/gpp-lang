@@ -119,6 +119,26 @@ test("a Markdown file's ```spp blocks are checked", async () => {
   )
 })
 
+test("a stories file's spp templates are checked", async () => {
+  const uri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'editor.stories.ts')
+  await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(uri))
+  const found = await eventually('diagnostics', () => {
+    const d = vscode.languages.getDiagnostics(uri).filter((d) => d.source === 'spp')
+    return d.length ? d : null
+  })
+  assert.deepEqual(
+    found.map((d) => [d.range.start.line, d.range.start.character, d.message]),
+    [[2, 11, 'A story is one page, already open, so a play function has no Visit']],
+  )
+})
+
+test("a stories file's semantic tokens are left to TypeScript", async () => {
+  const spp = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokensLegend', uri)
+  const stories = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'editor.stories.ts')
+  const legend = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokensLegend', stories)
+  assert.notDeepEqual(legend?.tokenTypes, spp.tokenTypes)
+})
+
 exports.run = async () => {
   const failures = []
   for (const { name, fn } of tests) {

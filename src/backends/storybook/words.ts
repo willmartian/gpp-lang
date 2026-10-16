@@ -20,15 +20,12 @@ import {
   queryAllByTitle,
   userEvent,
 } from 'storybook/test'
-import { Env, SppError } from '../../language/cognate.ts'
-import type { Context } from '../../language/types.ts'
-import { mistake } from '../../language/types.ts'
+import type { Env } from '../../language/cognate.ts'
+import { SppError } from '../../language/cognate.ts'
 import type { Action, Driver, Name, Query, State } from '../../words/driver.ts'
-import { ARIA_ROLES, actions, checks, queries, settler } from '../../words/shared.ts'
-
-export interface StoryContext extends Context {
-  canvasElement: HTMLElement
-}
+import { settler } from '../../words/shared.ts'
+import type { StoryContext } from './vocabulary.ts'
+import { capabilities, storyWords } from './vocabulary.ts'
 
 // ---------------------------------------------------------------- handles
 
@@ -243,23 +240,7 @@ const typed = (text: string) => text.replace(/[{[]/g, '$&$&')
 // ---------------------------------------------------------------- the driver
 
 export const testingLibrary: Driver<StoryContext, Target> = {
-  roles: ARIA_ROLES,
-  queries: ['label', 'text', 'placeholder', 'alt', 'title', 'testId'],
-  actions: ['click', 'double-click', 'hover', 'focus', 'check', 'uncheck', 'clear', 'fill', 'type', 'select', 'press'],
-  states: [
-    'visible',
-    'hidden',
-    'checked',
-    'enabled',
-    'disabled',
-    'focused',
-    'empty',
-    'value',
-    'text',
-    'containing',
-    'texts',
-    'count',
-  ],
+  ...capabilities,
 
   find(_, root, query) {
     const { label, search: find } = search(query)
@@ -329,15 +310,5 @@ export const settle = settler(testingLibrary)
 
 // The words a play function can use.
 export function storybook(parent: Env | null = null): Env {
-  const env = queries(new Env(parent), testingLibrary)
-  actions(env, testingLibrary)
-  checks(env, testingLibrary)
-  // The browser's words for the page, which say why they aren't here
-  // rather than being unknown.
-  for (const word of ['Visit', 'Reload', 'Back', 'At', 'Titled'])
-    env.word(
-      word,
-      mistake([], () => `A story is one page, already open, so a play function has no ${word}`),
-    )
-  return env
+  return storyWords(testingLibrary, parent)
 }

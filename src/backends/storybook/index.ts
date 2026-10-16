@@ -2,5 +2,6 @@
 
 export type { Play, PlayContext } from './play.ts'
 export { spp, useWords } from './play.ts'
-export type { StoryContext } from './words.ts'
+export type { StoryContext } from './vocabulary.ts'
+export { storybookWords } from './vocabulary.ts'
 export { settle, storybook, testingLibrary } from './words.ts'

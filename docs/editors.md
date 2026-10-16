@@ -1,7 +1,8 @@
 # Editors
 
 `spp-lang lsp` is a language server. Everything it does also works in Markdown ` ```spp `
-blocks.
+blocks, and all but symbols and semantic tokens in [`spp` templates](storybook.md) in
+JavaScript and TypeScript.
 
 | Feature | Does |
 | --- | --- |
@@ -16,8 +17,8 @@ blocks.
 ## VS Code
 
 Install [the Spec++ extension](https://marketplace.visualstudio.com/items?itemName=spp-lang.spp-vscode).
-It uses your project's `node_modules/spp-lang` if there is one. It also highlights
-[`spp` templates](storybook.md) in JavaScript and TypeScript as Spec++.
+It uses your project's `node_modules/spp-lang` if there is one, and highlights
+[`spp` templates](storybook.md) as Spec++.
 
 For run and debug buttons beside every scenario, add
 [Playwright's extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).

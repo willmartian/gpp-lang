@@ -176,12 +176,17 @@ export interface CodeLine {
 }
 
 export function codeLines(src: string, file = ''): (CodeLine | null)[] {
-  const lines = src.split('\n')
   const { preambles, documents } = sections(file, src)
+  // Each line as its part has it: a template's line without the code around it.
+  const lines = src.split('\n').map(() => '')
   const kept = (views: string[]) => {
     const keep = lines.map(() => false)
     for (const view of views) {
-      for (const [i, l] of view.split('\n').entries()) if (l) keep[i] = true
+      for (const [i, l] of view.split('\n').entries()) {
+        if (!l) continue
+        keep[i] = true
+        lines[i] = l
+      }
     }
     return keep
   }

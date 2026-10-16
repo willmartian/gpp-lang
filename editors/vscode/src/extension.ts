@@ -1,5 +1,6 @@
-// Starts Spec++'s language server for .spp files and the ```spp blocks in
-// Markdown files. Running and debugging scenarios is Playwright's VS Code
+// Starts Spec++'s language server for .spp files, the ```spp blocks in
+// Markdown files, and the spp`…` templates, Storybook play functions, in
+// JavaScript and TypeScript. Running and debugging scenarios is Playwright's VS Code
 // extension's job: Spec++'s generated tests map back to the .spp files, so
 // it puts its run and debug buttons beside each scenario.
 //
@@ -31,9 +32,17 @@ export async function activate(context: ExtensionContext): Promise<void> {
     documentSelector: [
       { scheme: 'file', language: 'spp' },
       { scheme: 'file', language: 'markdown' },
+      ...['javascript', 'javascriptreact', 'typescript', 'typescriptreact'].map((language) => ({
+        scheme: 'file',
+        language,
+      })),
     ],
     // The Playwright config says which files make up each project.
-    synchronize: { fileEvents: workspace.createFileSystemWatcher('**/{*.spp,*.md,playwright.config.*}') },
+    synchronize: {
+      fileEvents: workspace.createFileSystemWatcher(
+        '**/{*.spp,*.md,*.{js,jsx,ts,tsx,mjs,cjs,mts,cts},playwright.config.*}',
+      ),
+    },
     // Loading the Playwright config runs it, so not in an untrusted workspace.
     initializationOptions: { trusted: workspace.isTrusted },
   }
