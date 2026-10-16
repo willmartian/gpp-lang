@@ -7,12 +7,14 @@ import path from 'node:path'
 import type { Scenario, SppFile } from './load.ts'
 import { loadSource } from './load.ts'
 import { isMarkdown, sppFences } from './markdown.ts'
+import { isScript, templates } from './templates.ts'
 
 const SKIP = new Set(['node_modules', 'test-results', 'playwright-report'])
 
 // Every .spp file under the paths, and every Markdown file with an ```spp
-// block, except under those in ignore (absolute).
-export function discover(paths: string[], cwd = process.cwd(), ignore: string[] = []): string[] {
+// block, except under those in ignore (absolute). With scripts, every script
+// with an spp`…` template too, for the tools that check Storybook's.
+export function discover(paths: string[], cwd = process.cwd(), ignore: string[] = [], scripts = false): string[] {
   const found: string[] = []
   const ignored = (p: string) => ignore.some((i) => p === i || p.startsWith(i + path.sep))
   const visit = (p: string) => {
@@ -23,6 +25,7 @@ export function discover(paths: string[], cwd = process.cwd(), ignore: string[] 
         if (!entry.startsWith('.') && !SKIP.has(entry)) visit(path.join(p, entry))
       }
     } else if (p.endsWith('.spp') || (isMarkdown(p) && sppFences(fs.readFileSync(p, 'utf8')).length)) found.push(p)
+    else if (scripts && isScript(p) && templates(fs.readFileSync(p, 'utf8')).length) found.push(p)
   }
   for (const p of paths) visit(path.resolve(cwd, p))
   return found

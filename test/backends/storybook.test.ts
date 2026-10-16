@@ -55,12 +55,17 @@ test("a browser's words for the page say why a story has none", () => {
 test('a line that is not a step says so', () => {
   assert.equal(
     problem('Click the Button "Save"'),
-    'Each line of an spp template is a step, starting with Given, When, Then, And, But or *, but this isn\'t:\n    Click the Button "Save"',
+    [
+      'Each line of an spp template is a step, starting with Given, When, Then, And, But or *',
+      '',
+      '    Click the Button "Save"',
+      '    ^',
+    ].join('\n'),
   )
 })
 
 test('a template of nothing is a mistake', () => {
-  assert.equal(problem('\n  # just a comment\n'), 'An spp template needs at least one step')
+  assert.match(problem('\n  # just a comment\n') ?? '', /^An spp template needs at least one step/)
 })
 
 test('a template can use the Defines from useWords', () => {

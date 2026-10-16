@@ -86,12 +86,8 @@ export class LoadError extends Error {
 
 // Loads a file as it is right now, which in an editor may not be saved.
 export function loadSource(file: string, src: string): SppFile {
-  const { preambles, documents, orphan } = sections(file, src)
-  if (orphan) {
-    throw new LoadError(file, [
-      { line: orphan, column: 1, message: 'This block carries on a Feature, but there is none above it' },
-    ])
-  }
+  const { preambles, documents, problems } = sections(file, src)
+  if (problems.length) throw new LoadError(file, problems)
   return {
     file,
     vocabulary: preambles.flatMap((p) => loadVocabulary(file, p) ?? []),

@@ -4,20 +4,27 @@
 
 import { dialects } from '@cucumber/gherkin'
 import { isMarkdown, sppFences } from './markdown.ts'
+import { isScript, templates } from './templates.ts'
 
-// A file's parts: its Defines, and its Gherkin, a Feature each. orphan is
-// the line of a Markdown block that carries on a Feature when there's none
-// above it.
+// Something about how a file divides that makes it a mistake, and where.
+export interface Problem {
+  line: number
+  column: number
+  message: string
+}
+
+// A file's parts: its Defines, and its Gherkin, a Feature each.
 export interface Sections {
   preambles: string[]
   documents: string[]
-  orphan?: number
+  problems: Problem[]
 }
 
 export function sections(file: string, src: string): Sections {
   if (isMarkdown(file)) return markdownSections(src)
+  if (isScript(file)) return scriptSections(src)
   const { preamble, gherkin } = split(src)
-  return { preambles: [preamble], documents: gherkin === null ? [] : [gherkin] }
+  return { preambles: [preamble], documents: gherkin === null ? [] : [gherkin], problems: [] }
 }
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -59,7 +66,7 @@ function markdownSections(src: string): Sections {
   const language = /^\s*#\s*language:\s*(\S+)/m.exec(src)?.[1] ?? 'en'
   const preambles: Set<number>[] = []
   const documents: Set<number>[] = []
-  let orphan: number | undefined
+  const problems: Problem[] = []
   // A block's lines that a view of it keeps, as lines of the whole file.
   const kept = (view: string, start: number) => new Set(view.split('\n').flatMap((l, i) => (l ? [start + i] : [])))
 
@@ -73,7 +80,8 @@ function markdownSections(src: string): Sections {
     } else if (first !== undefined && carriesOn(first, language)) {
       let last = documents.at(-1)
       if (!last) {
-        orphan ??= fence.start + 1
+        const message = 'This block carries on a Feature, but there is none above it'
+        problems.push({ line: fence.start + 1, column: 1, message })
         last = new Set()
         documents.push(last)
       }
@@ -83,8 +91,79 @@ function markdownSections(src: string): Sections {
     }
   }
   const view = (keep: Set<number>) => lines.map((l, i) => (keep.has(i) ? l : '')).join('\n')
-  return { preambles: preambles.filter((p) => p.size).map(view), documents: documents.map(view), orphan }
+  return { preambles: preambles.filter((p) => p.size).map(view), documents: documents.map(view), problems }
 }
+
+// A script's spp templates, each a Feature of one Scenario, named for the
+// story it's in. A template's view keeps its text where it is, with the
+// Feature and Scenario lines on the two lines above its first step, which the
+// view has blanked.
+function scriptSections(src: string): Sections {
+  const lines = src.split('\n')
+  const starts: number[] = []
+  for (let i = 0, at = 0; i < lines.length; at += lines[i].length + 1, i++) starts.push(at)
+  const lineOf = (offset: number) => starts.findLastIndex((s) => s <= offset)
+  const place = (offset: number) => ({ line: lineOf(offset) + 1, column: offset - starts[lineOf(offset)] + 1 })
+
+  const documents: string[] = []
+  const problems: Problem[] = []
+  for (const t of templates(src)) {
+    const [interpolation] = t.interpolations
+    if (interpolation !== undefined) {
+      problems.push({ ...place(interpolation), message: INTERPOLATION })
+      continue
+    }
+    const first = lineOf(t.start)
+    const last = lineOf(t.end)
+    const view = lines.map(() => '')
+    for (let i = first; i <= last; i++) {
+      const from = i === first ? t.start - starts[i] : 0
+      const to = i === last ? t.end - starts[i] : lines[i].length
+      view[i] = ' '.repeat(from) + lines[i].slice(from, to)
+    }
+    const top = view.findIndex((l, i) => i >= first && l.trim())
+    const wrong = notAStep(view, first, last)
+    if (wrong) problems.push(wrong)
+    else if (!view.some((l) => STEP.test(l.trim())))
+      problems.push({ ...place(t.start), message: 'An spp template needs at least one step' })
+    else if (top < 2)
+      problems.push({ ...place(t.start), message: 'An spp template needs two lines above its first step' })
+    else {
+      const name = storyName(src.slice(0, t.start))
+      view[top - 2] = `Feature: ${name}`
+      view[top - 1] = `Scenario: ${name}`
+      documents.push(view.join('\n'))
+    }
+  }
+  return { preambles: [], documents, problems }
+}
+
+export const INTERPOLATION = `An spp template can't have \${…} in it. Write what it checks out in full, so it reads as it runs.`
+
+const STEP = /^(?:Given|When|Then|And|But|\*)\s/
+const DOC_STRING = /^(?:"""|```)/
+
+// The first line of a template that isn't a step, a table or DocString under
+// one, or a comment, as a Scenario's lines are. Gherkin's own message for one
+// lists its grammar.
+function notAStep(view: string[], first: number, last: number): Problem | null {
+  let inDocString = false
+  for (let i = first; i <= last; i++) {
+    const line = view[i].trim()
+    const fence = DOC_STRING.test(line)
+    if (fence) inDocString = !inDocString
+    if (fence || inDocString || !line || line.startsWith('|') || line.startsWith('#') || STEP.test(line)) continue
+    return {
+      line: i + 1,
+      column: view[i].length - view[i].trimStart().length + 1,
+      message: 'Each line of an spp template is a step, starting with Given, When, Then, And, But or *',
+    }
+  }
+  return null
+}
+
+// The story a template is in: the last export above it.
+const storyName = (before: string) => [...before.matchAll(/export\s+const\s+([\w$]+)/g)].at(-1)?.[1] ?? 'Story'
 
 // ---------------------------------------------------------------- editors
 

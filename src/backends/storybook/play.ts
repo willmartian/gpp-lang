@@ -21,12 +21,12 @@
 // (words.ts) and any Defines from useWords, so a mistake fails its own story
 // before anything is clicked.
 
-import type { Diagnostic } from '../../language/check.ts'
 import { check, format } from '../../language/check.ts'
 import type { Env } from '../../language/cognate.ts'
 import { core, SppError } from '../../language/cognate.ts'
 import type { Scenario, SppFile, Step } from '../../language/load.ts'
 import { LoadError, loadSource } from '../../language/load.ts'
+import { INTERPOLATION } from '../../language/sections.ts'
 import { runSteps } from '../../language/steps.ts'
 import { leftovers } from '../../words/shared.ts'
 import type { StoryContext } from './words.ts'
@@ -65,64 +65,45 @@ const words = () => {
   return builtins
 }
 
-// Where a template is, for messages. Its own lines come after these.
-const FILE = 'spp template'
-const HEADER = 'Feature: Story\nScenario: Story\n'
-
-const KEYWORD = /^(?:Given|When|Then|And|But|\*)\s/
-const DOC_STRING = /^(?:"""|```)/
+// A template as a script of its own, as spp-lang check reads it in a stories
+// file (templates.ts), with room above it for the Gherkin around it, and on
+// lines of its own, so a message shows only what's in it.
+const FILE = 'spp template.js'
+const script = (src: string) => `\n\nspp\`\n${src}\n\``
 
 // What a template means, or the first thing wrong with it.
 export type Prepared = { scenario: Scenario; problem: null } | { scenario: null; problem: string }
 
 // Reads and checks a template, as written, with the Defines from useWords.
 export function prepare(src: string): Prepared {
-  const wrong = notSteps(src)
-  if (wrong) return { scenario: null, problem: wrong }
+  const source = script(src)
   let file: SppFile
   try {
-    file = loadSource(FILE, HEADER + src)
+    file = loadSource(FILE, source)
   } catch (err) {
     if (!(err instanceof LoadError)) throw err
-    return { scenario: null, problem: err.problems.map((p) => p.message).join('\n') }
+    return { scenario: null, problem: err.problems.map((p) => framed(source, p)).join('\n\n') }
   }
   const scenario = file.features[0]?.scenarios[0]
-  if (!scenario?.steps.length) return { scenario: null, problem: 'An spp template needs at least one step' }
+  if (!scenario) throw new Error('A template that loads has a scenario')
   const report = check([...defines, file], { words: words(), settle: leftovers })
   const vocabulary = report.vocabulary[0]
   if (vocabulary) return { scenario: null, problem: vocabulary.message }
   const mistake = report.scenarios.get(scenario)
-  return mistake ? { scenario: null, problem: framed(mistake, scenario) } : { scenario, problem: null }
+  return mistake ? { scenario: null, problem: framed(source, mistake) } : { scenario, problem: null }
 }
 
-// Each line is a step, a table or DocString under one, or a comment, as in a
-// Scenario. Gherkin's own message for a line that isn't lists its grammar.
-function notSteps(src: string): string | null {
-  let inDocString = false
-  for (const raw of src.split('\n')) {
-    const line = raw.trim()
-    if (DOC_STRING.test(line)) inDocString = !inDocString
-    if (inDocString || DOC_STRING.test(line) || !line || line.startsWith('|') || line.startsWith('#')) continue
-    if (!KEYWORD.test(line))
-      return `Each line of an spp template is a step, starting with Given, When, Then, And, But or *, but this isn't:\n    ${line}`
-  }
-  return null
+// What's wrong, then the line it's on, with a caret under where.
+function framed(source: string, { line, column, message }: { line: number; column: number; message: string }): string {
+  const text = source.split('\n')[line - 1] ?? ''
+  const indent = text.length - text.trimStart().length
+  return `${message}\n\n${frame(text.trim(), column - 1 - indent)}`
 }
 
-// A step, with a caret under where it went wrong: index, from its keyword.
-const frame = (step: Step, index: number) => `    ${step.keyword}${step.text}\n    ${' '.repeat(Math.max(0, index))}^`
-
-function framed(d: Diagnostic, scenario: Scenario): string {
-  const step = scenario.steps.find((s) => s.line === d.line)
-  if (!step) return d.message
-  return `${d.message}\n\n${frame(step, d.column - step.column + step.keyword.length)}`
-}
+const frame = (text: string, index: number) => `    ${text}\n    ${' '.repeat(Math.max(0, index))}^`
 
 export function spp(strings: TemplateStringsArray, ...values: never[]): Play {
-  if (values.length)
-    throw new SppError(
-      `An spp template can't have \${…} in it. Write what it checks out in full, so it reads as it runs.`,
-    )
+  if (values.length) throw new SppError(INTERPOLATION)
   // Raw, so a string's \" reaches Spec++ as it was written.
   const src = strings.raw.join('')
   let prepared: { for: SppFile[]; as: Prepared } | undefined
@@ -150,6 +131,6 @@ export function spp(strings: TemplateStringsArray, ...values: never[]): Play {
 function pointAt(err: unknown, step: Step): unknown {
   if (!(err instanceof Error)) return err
   const pos = (err as { pos?: number }).pos ?? 0
-  err.message = `${err.message}\n\n${frame(step, step.keyword.length + pos)}`
+  err.message = `${err.message}\n\n${frame(`${step.keyword}${step.text}`, step.keyword.length + pos)}`
   return err
 }

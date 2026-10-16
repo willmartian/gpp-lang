@@ -26,6 +26,7 @@ import { core } from '../src/language/cognate.ts'
 import { discover, load } from '../src/language/files.ts'
 import type { SppFile } from '../src/language/load.ts'
 import { LoadError } from '../src/language/load.ts'
+import { isScript } from '../src/language/templates.ts'
 import { dictionary } from '../src/tools/dictionary.ts'
 import { leftovers } from '../src/words/shared.ts'
 
@@ -97,9 +98,12 @@ program
     'after',
     `
 Checks every file under each path, or the whole project, and exits non-zero if
-it finds a mistake. The rest of the project is still loaded, for its Defines.`,
+it finds a mistake. The rest of the project is still loaded, for its Defines.
+
+The spp\`…\` templates in .js and .ts files are checked too, as Storybook play
+functions, with the project's Defines.`,
   )
-  .action(async (paths: string[]) => process.exit(checkOnly(await loadProjects(), paths)))
+  .action(async (paths: string[]) => process.exit(await checkOnly(await loadProjects(), paths)))
 
 program
   .command('dictionary')
@@ -140,10 +144,11 @@ function named(paths: string[], cwd: string) {
 }
 
 // A project's files, and why those that don't load don't.
-function loadAll(project: Project): { files: SppFile[]; broken: LoadError[] } {
+// With scripts, its stories' spp templates too.
+function loadAll(project: Project, scripts = false): { files: SppFile[]; broken: LoadError[] } {
   const files: SppFile[] = []
   const broken: LoadError[] = []
-  for (const file of discover(project.features, project.root, project.ignore)) {
+  for (const file of discover(project.features, project.root, project.ignore, scripts)) {
     try {
       files.push(load(file))
     } catch (err) {
@@ -154,7 +159,7 @@ function loadAll(project: Project): { files: SppFile[]; broken: LoadError[] } {
   return { files, broken }
 }
 
-function checkOnly(projects: Project[], paths: string[]): number {
+async function checkOnly(projects: Project[], paths: string[]): Promise<number> {
   const cwd = process.cwd()
   const relative = (file: string) => path.relative(cwd, file)
   const shown = named(paths, cwd)
@@ -164,7 +169,7 @@ function checkOnly(projects: Project[], paths: string[]): number {
   const checked = new Set<string>()
   let problems = 0
   for (const project of projects) {
-    const { files, broken } = loadAll(project)
+    const { files, broken } = loadAll(project, true)
     for (const err of broken) {
       if (!shown(err.file) || seen.has(err.file)) continue
       seen.add(err.file)
@@ -173,9 +178,20 @@ function checkOnly(projects: Project[], paths: string[]): number {
       console.log(`${relative(err.file)}\n  ${err.message}\n`)
       problems++
     }
-    const report = check(files, { words: browser(core()), settle: leftovers, name: relative })
+    const pages = files.filter((f) => !isScript(f.file))
+    const stories = files.filter((f) => isScript(f.file))
+    const report = check(pages, { words: browser(core()), settle: leftovers, name: relative })
+    const found = [...report.vocabulary, ...report.scenarios.values()]
+    // Templates play in Storybook, so they're checked with its words, and the
+    // Defines, which useWords gives them. Those were checked above.
+    if (stories.length) {
+      const { storybook } = await import('../src/backends/storybook/words.ts')
+      const defines = pages.map((f) => ({ ...f, features: [] }))
+      const played = check([...defines, ...stories], { words: storybook(core()), settle: leftovers, name: relative })
+      found.push(...played.scenarios.values())
+    }
     // An Outline's rows share their steps, and so their mistakes.
-    const diagnostics = [...report.vocabulary, ...report.scenarios.values()].filter((d: Diagnostic) => {
+    const diagnostics = found.filter((d: Diagnostic) => {
       const key = `${d.file}:${d.line}:${d.column}:${d.message}`
       return shown(d.file) && !seen.has(key) && seen.add(key)
     })

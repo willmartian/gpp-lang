@@ -102,3 +102,42 @@ test('check checks each project with its own words', () => {
   assert.equal(run.stdout.trim(), 'No mistakes in 4 files')
   assert.equal(run.status, 0)
 })
+
+test("check checks Storybook's spp templates with its words and the project's Defines", () => {
+  const dir = project({
+    'words.spp': 'Define: Retitle Text (New)\n  Fill the Field "Title" with New\n',
+    'visiting.spp': 'Feature: F\n  Scenario: S\n    Given I Visit "/"\n',
+    'editor.stories.ts': [
+      "import { spp } from 'spp-lang/storybook'",
+      '',
+      'export const Retitling = {',
+      '  play: spp`',
+      '    When I Retitle the post "Hello"',
+      '    Then I should See the Status "Saved"',
+      '  `,',
+      '}',
+      '',
+      'export const Visiting = { play: spp`Given I Visit "/"` }',
+      'export const Plain = "spp`When I Clik`"',
+    ].join('\n'),
+    'plain.ts': 'export const nothing = 1\n',
+  })
+  const run = spawnSync(process.execPath, [bin, 'check'], { cwd: dir, encoding: 'utf8' })
+  assert.equal(
+    run.stdout.trim(),
+    [
+      'editor.stories.ts:6:27',
+      '    Then I should See the Status "Saved"',
+      '                          ^',
+      '  Status expected Containing "some text" (a Status has no name to match exactly), but got "Saved"',
+      '',
+      'editor.stories.ts:10:45',
+      '    export const Visiting = { play: spp`Given I Visit "/"` }',
+      '                                                ^',
+      '  A story is one page, already open, so a play function has no Visit',
+      '',
+      '2 mistakes in 3 files',
+    ].join('\n'),
+  )
+  assert.equal(run.status, 1)
+})
