@@ -8,32 +8,36 @@ on:
 
 jobs:
   check:
-    name: Lint, typecheck, unit tests and docs
+    name: Lint, typecheck, unit tests, build and docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # The version is package.json's packageManager.
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run docs:build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm docs:build
 
   e2e:
     name: Browser tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -45,31 +49,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:storybook
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:storybook
 
   vscode:
     name: VS Code extension
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            editors/vscode/package-lock.json
-      # The extension runs the language server from this repo's source.
-      - run: npm ci
-      - run: npm ci
+          cache: pnpm
+      # The extension's tests run the language server from this repo's source.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
         working-directory: editors/vscode
-      - run: npm run typecheck
-        working-directory: editors/vscode
-      - run: xvfb-run -a npm test
+      - run: xvfb-run -a pnpm test
         working-directory: editors/vscode
