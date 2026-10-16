@@ -1,7 +1,9 @@
 # Spec++ for VS Code
 
 Support for Spec++'s `.spp` files: Gherkin you can run, with no step definitions. The
-` ```spp ` blocks in Markdown files get the same, and are highlighted as Spec++.
+` ```spp ` blocks in Markdown files get the same, and are highlighted as Spec++, as are
+`spp` templates, [Storybook play functions](https://github.com/willmartian/spp-lang/blob/master/docs/storybook.md),
+in JavaScript and TypeScript.
 
 The language, how to run it with Playwright, and this extension's source are in the
 [spp-lang repository](https://github.com/willmartian/spp-lang).

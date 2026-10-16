@@ -6,8 +6,8 @@ Things that came up while building Spec++ and haven't been done.
 
 - [ ] **The rest of Storybook.** An `spp` template is a story's play function
       ([Storybook](storybook.md)). Still to do:
-  - [ ] `spp-lang check` and the language server reading templates in `*.stories.*` files
-  - [ ] an editor grammar for templates, as Markdown's ```` ```spp ```` blocks have
+  - [ ] the language server reading templates, as `spp-lang check` does. Its semantic tokens
+        would compete with TypeScript's, so likely diagnostics, hover and completion only
   - [ ] a `Story` word for the Playwright backend, which visits a story's iframe
   - [ ] checking spies, the `fn()` in a story's args. Then may only check what a user can see,
         so it may want to be a side-effect check (see below)

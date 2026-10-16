@@ -57,8 +57,12 @@ useWords(import.meta.glob('../words/*.spp', { query: '?raw', import: 'default', 
 
 A file with a `Feature:` in it is a mistake: scenarios are templates.
 
-## Not yet
+## Checking
 
-- `spp-lang check` and the language server don't read templates yet, so their mistakes show
-  when the story plays.
-- Editors show a template as a plain string.
+`spp-lang check` checks every template in the project's `.js` and `.ts` files, with the
+words above and the project's Defines, and says where each mistake is in the stories file.
+The project is every file under where you run it, or what a `defineSppConfig`'s `features`
+say.
+
+[VS Code's extension](editors.md) highlights templates as Spec++. The language server doesn't
+read them yet, so their mistakes show when you run `spp-lang check` or the story plays.

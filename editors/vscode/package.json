@@ -1,7 +1,7 @@
 {
   "name": "spp-vscode",
   "displayName": "Spec++",
-  "description": "Specs that run. Written by agents, read by people. Checking, hover, completion and highlighting for Spec++, in .spp files and Markdown.",
+  "description": "Specs that run. Written by agents, read by people. Checking, hover, completion and highlighting for Spec++, in .spp files and Markdown, and highlighting for spp`…` templates, Storybook play functions, in JavaScript and TypeScript.",
   "version": "0.1.0",
   "publisher": "spp-lang",
   "license": "MIT",
@@ -51,6 +51,19 @@
         "path": "./syntaxes/spp.markdown.tmLanguage.json",
         "injectTo": [
           "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.spp": "spp"
+        }
+      },
+      {
+        "scopeName": "inline.spp.template",
+        "path": "./syntaxes/spp.template.tmLanguage.json",
+        "injectTo": [
+          "source.js",
+          "source.js.jsx",
+          "source.ts",
+          "source.tsx"
         ],
         "embeddedLanguages": {
           "meta.embedded.block.spp": "spp"

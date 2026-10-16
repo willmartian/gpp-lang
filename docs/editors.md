@@ -16,7 +16,8 @@ blocks.
 ## VS Code
 
 Install [the Spec++ extension](https://marketplace.visualstudio.com/items?itemName=spp-lang.spp-vscode).
-It uses your project's `node_modules/spp-lang` if there is one.
+It uses your project's `node_modules/spp-lang` if there is one. It also highlights
+[`spp` templates](storybook.md) in JavaScript and TypeScript as Spec++.
 
 For run and debug buttons beside every scenario, add
 [Playwright's extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
