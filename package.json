@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
+    },
+    "./storybook": {
+      "types": "./dist/src/backends/storybook/index.d.ts",
+      "default": "./dist/src/backends/storybook/index.js"
     }
   },
   "bin": {
@@ -25,6 +29,7 @@
     "format": "biome check --write",
     "test": "node --test 'test/**/*.test.ts'",
     "test:e2e": "playwright test",
+    "test:storybook": "vitest run",
     "demo": "node examples/demo/serve.ts",
     "prepack": "npm run build",
     "prepare": "husky",
@@ -37,6 +42,7 @@
     "bdd",
     "playwright",
     "testing-library",
+    "storybook",
     "cognate"
   ],
   "license": "MIT",
@@ -55,7 +61,13 @@
     "vscode-languageserver-textdocument": "^1.0.15"
   },
   "peerDependencies": {
-    "@playwright/test": "^1.63.0"
+    "@playwright/test": "^1.63.0",
+    "storybook": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "storybook": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.6",
@@ -65,10 +77,16 @@
     "@fontsource/iosevka": "^5.3.0",
     "@fontsource/iosevka-aile": "^5.3.0",
     "@playwright/test": "^1.63.0",
+    "@storybook/addon-vitest": "^10.6.2",
+    "@storybook/html-vite": "^10.6.2",
     "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.6.3",
+    "@vitest/browser-playwright": "^4.1.12",
     "husky": "^9.1.7",
     "shiki": "^4.5.0",
-    "typescript": "^7.0.2"
+    "storybook": "^10.6.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.12"
   }
 }

@@ -65,6 +65,7 @@ npx spp-lang dictionary                     # every word you can use
 | [Defines](docs/defines.md) | your own words |
 | [Running](docs/running.md) | config, projects, the CLI, tags |
 | [Markdown](docs/markdown.md) | ` ```spp ` blocks that run as tests |
+| [Storybook](docs/storybook.md) | templates as stories' play functions |
 | [Editors](docs/editors.md) | the language server, VS Code, Claude Code, Neovim |
 
 ## Why

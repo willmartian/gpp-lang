@@ -4,8 +4,13 @@ Things that came up while building Spec++ and haven't been done.
 
 ## Planned
 
-- [ ] **Storybook.** Test stories with Spec++: a `Story` word first, then Spec++ as a story's
-      `play` function, Spec++'s first non-Playwright backend.
+- [ ] **The rest of Storybook.** An `spp` template is a story's play function
+      ([Storybook](storybook.md)). Still to do:
+  - [ ] `spp-lang check` and the language server reading templates in `*.stories.*` files
+  - [ ] an editor grammar for templates, as Markdown's ```` ```spp ```` blocks have
+  - [ ] a `Story` word for the Playwright backend, which visits a story's iframe
+  - [ ] checking spies, the `fn()` in a story's args. Then may only check what a user can see,
+        so it may want to be a side-effect check (see below)
 - [ ] **Enforce Given / When / Then.** Agreed: Given may take shortcuts, like setup words and
       API calls. When may only do what a user does. Then may only check what a user can see,
       except words marked as side-effect checks (an email was sent). Needs words to say which

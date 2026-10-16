@@ -13,8 +13,9 @@ nix develop
 npm install
 npx playwright install chromium
 npm run typecheck
-npm test             # the language, no browser
-npm run test:e2e     # examples/demo and examples/todomvc against their apps, plus test/fixtures, which must all fail
+npm test               # the language, no browser
+npm run test:e2e       # examples/demo and examples/todomvc against their apps, plus test/fixtures, which must all fail
+npm run test:storybook # examples/storybook's play functions, plus test/fixtures/storybook, which must fail
 ```
 
 ## The VS Code extension
