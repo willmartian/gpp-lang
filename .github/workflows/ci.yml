@@ -40,6 +40,19 @@ jobs:
           name: playwright-report
           path: playwright-report/
 
+  storybook:
+    name: Storybook play functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:storybook
+
   vscode:
     name: VS Code extension
     runs-on: ubuntu-latest
