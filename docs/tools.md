@@ -1,8 +1,5 @@
 # CLI and editors
 
-`gpp-lang` checks specs before they run, for both backends, and gives your editor its
-support.
-
 ## CLI
 
 | Command | Does |
@@ -11,14 +8,13 @@ support.
 | `gpp-lang dictionary` | lists every word, and the project's own Defines |
 | `gpp-lang lsp` | starts the language server |
 
-`check` checks `.gpp` files, Markdown's ` ```gpp ` blocks and the `gpp` templates in `.js`
-and `.ts` files, with each [project](defines.md#where-they-work)'s Defines.
+`check` covers `.gpp` files, Markdown's ` ```gpp ` blocks and `gpp` templates in `.js` and
+`.ts` files.
 
 ## Language server
 
-`gpp-lang lsp` is a language server. Everything it does also works in Markdown ` ```gpp `
-blocks, and all but symbols and semantic tokens in [`gpp` templates](storybook.md) in
-JavaScript and TypeScript.
+Works in `.gpp` files and Markdown. [`gpp` templates](storybook.md) get everything but
+symbols and semantic tokens.
 
 | Feature | Does |
 | --- | --- |
@@ -33,15 +29,12 @@ JavaScript and TypeScript.
 ## VS Code
 
 Install [the Gherkin++ extension](https://marketplace.visualstudio.com/items?itemName=gpp-lang.gpp-vscode).
-It uses your project's `node_modules/gpp-lang` if there is one, and highlights
-[`gpp` templates](storybook.md) as Gherkin++.
-
-For run and debug buttons beside every scenario, add
-[Playwright's extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
+It uses your project's `node_modules/gpp-lang` when there is one. For run and debug buttons,
+add [Playwright's extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
 
 ## Claude Code
 
-The plugin teaches Claude the language and runs the language server.
+Teaches Claude the language and runs the language server.
 
 ```sh
 claude plugin marketplace add willmartian/gpp-lang

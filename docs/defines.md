@@ -1,6 +1,6 @@
 # Your own words
 
-A Define makes a word of your own, written in Gherkin++.
+A Define is a word written in Gherkin++.
 
 ```gherkin
 Define: Add Text (Item)
@@ -24,14 +24,13 @@ Feature: The grocery list
 | the body | indented lines of code, without step keywords |
 
 - A Define goes above a file's `Feature:` line, or in a file with no Feature.
-- Every file in the project can use it: see [Where they work](#where-they-work).
+- Every file in the project can use it ([Where they work](#where-they-work)).
 - Lowercase words are prose here too.
 - Two of the same type need names: `Define: Move Element (Source) to Element (Target)`.
 
 ## Types
 
-A Define can take `Text`, `Number`, `Element` or `Table`, as in
-[How words work](words.md#types), `Any`, which is anything, or a noun.
+A Define can take `Text`, `Number`, `Element`, `Table`, `Any` or a [noun](#nouns).
 
 ## Nouns
 
@@ -80,8 +79,7 @@ Two Defines that could always both fit are a mistake, reported where they're def
 
 ## Where they work
 
-A project is the files under the nearest `package.json`, and every Define in it can be used by
-all of its files: Features, Markdown and Storybook templates alike. A package inside another
-is a project of its own, with words of its own. `gpp-lang check`, the editor and
-Storybook see a project's Defines that way. Playwright uses the Defines in its config's
-[`features`](playwright.md#config).
+- A project is the files under the nearest `package.json`. Its Defines work in all of them:
+  `.gpp` files, Markdown and Storybook templates.
+- A nested package is a separate project.
+- Playwright only sees the Defines in its config's [`features`](playwright.md#config).

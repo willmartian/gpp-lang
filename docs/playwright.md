@@ -1,8 +1,7 @@
 # Playwright
 
-`@gpp-lang/playwright` runs Features as Playwright tests, against your running app. Each
-Scenario is a test, in a browser of its own. For steps that run against one component, see
-[Storybook](storybook.md); a project can use both.
+Runs Features against your app, one Playwright test per Scenario. For component tests, see
+[Storybook](storybook.md).
 
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/playwright @playwright/test
@@ -29,11 +28,10 @@ export default defineConfig({
 | `outputDir` | `.gpp-tests` | where the generated tests go |
 | `root` | the config's directory | what the paths are relative to |
 
-- Each time Playwright loads its config, `defineGppConfig` writes a small test per `.gpp`
-  file to `outputDir`. They only list the scenarios, so they can't go out of date. Add
-  `outputDir` to `.gitignore`.
-- The rest of Playwright works as usual: projects, retries, sharding, UI mode and the trace
-  viewer. Failures point at the word in the `.gpp` file that failed.
+- `defineGppConfig` writes a stub test per `.gpp` file to `outputDir` when Playwright loads
+  its config. Stubs only list scenarios, so they never go stale. Gitignore `outputDir`.
+- Projects, retries, sharding, UI mode and the trace viewer all work. Failures point at the
+  word that failed.
 - For sets of features with words of their own, give each Playwright project its own
   `defineGppConfig` and `outputDir`.
 
@@ -45,8 +43,6 @@ npx playwright test features/sign-in.gpp:12 # the scenario on line 12
 npx playwright test --grep @smoke           # the scenarios tagged @smoke
 ```
 
-Playwright runs a `defineGppConfig`'s `features`, with the [Defines](defines.md) in them.
-
 ## Tags
 
 | Tag | Does |
@@ -56,8 +52,7 @@ Playwright runs a `defineGppConfig`'s `features`, with the [Defines](defines.md)
 
 ## Markdown
 
-` ```gpp ` blocks in Markdown files run as tests, like Rust's doctests, so your docs' examples
-stay true. See [`examples/demo/features/README.md`](../examples/demo/features/README.md).
+` ```gpp ` blocks in Markdown run as tests, like Rust's doctests. See [`examples/demo/features/README.md`](../examples/demo/features/README.md).
 
 | Block | Is |
 | --- | --- |

@@ -32,8 +32,8 @@ pnpm install
 pnpm exec playwright install chromium
 pnpm typecheck
 pnpm test             # each package's tests, then test/: no browser
-pnpm test:e2e         # examples/demo and examples/todomvc against their apps, plus packages/playwright/test/fixtures, which must all fail
-pnpm test:storybook   # examples/storybook's play functions, plus packages/storybook/test/fixtures, which must fail
+pnpm test:e2e         # the Playwright examples, plus fixtures that must fail
+pnpm test:storybook   # the Storybook example, plus fixtures that must fail
 pnpm build            # each package's dist/
 pnpm storybook        # examples/storybook's stories, opened in a browser
 ```
@@ -47,18 +47,16 @@ xvfb-run -a pnpm test # opens VS Code on a scratch workspace and uses the extens
 pnpm run package      # builds gpp-vscode-0.1.0.vsix
 ```
 
-To try it by hand, use Run and Debug → **Run Gherkin++ extension**, which opens a second window
-on this repo with the extension loaded. Its language server runs from source on Node, through
-`scripts/nix-node`. For Playwright's extension to run scenarios on NixOS, start VS Code from
-the dev shell (`nix develop -c code .`) so Chromium finds its libraries.
+To try it by hand, use Run and Debug → **Run Gherkin++ extension**. Its language server runs
+from source through `scripts/nix-node`. For Playwright's extension to run scenarios on NixOS,
+start VS Code from the dev shell (`nix develop -c code .`).
 
 ## The docs site
 
-`site/` builds the README and `docs/` into a site with [Eleventy](https://www.11ty.dev/). The
-Built-in words page is generated from each built-in word's doc: its `.doc()` in
-`packages/core/src/words/shared.ts` and
-`packages/core/src/language/steps.ts`. `gpp-lang dictionary` and hover show the same docs,
-and `packages/core/test/docs.test.ts` checks every word has one and every example checks.
+`site/` builds the README and `docs/` with [Eleventy](https://www.11ty.dev/). Built-in words
+comes from each word's `.doc()` in `packages/core/src/words/shared.ts` and
+`packages/core/src/language/steps.ts`, as do `gpp-lang dictionary` and hover.
+`packages/core/test/docs.test.ts` checks every word has docs and every example checks.
 
 ```sh
 pnpm docs         # serves it on localhost:8080, rebuilding as you edit

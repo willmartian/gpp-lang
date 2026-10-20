@@ -12,11 +12,4 @@ Playwright's demo TodoMVC spec, in Gherkin++, as a test of the language's design
   with React, director and the rest under their own MIT licenses, as noted in the bundles.
 - [`todo.md`](todo.md): what Gherkin++ couldn't say, and what the features do instead.
 
-It's a project of its own, with its own [`playwright.config.ts`](playwright.config.ts), so run it
-from here:
-
-```sh
-pnpm test:e2e
-```
-
-`pnpm test:e2e` from the repo's root runs it too.
+Run it with `pnpm test:e2e`, here or from the repo's root.

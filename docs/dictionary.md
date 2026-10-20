@@ -1,6 +1,4 @@
 # Built-in words
 
-Every word Gherkin++ has, by what it's for. Each line under a word is one way to use it: what it
-takes and what it leaves, as [How words work](words.md#types) explains.
-`npx gpp-lang dictionary` lists the same in a terminal, with your project's
-[own words](defines.md).
+Each line under a word is one way to use it ([signatures](words.md#types)).
+`npx gpp-lang dictionary` prints the same, plus your [own words](defines.md).

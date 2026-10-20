@@ -25,5 +25,4 @@ export const SavingADraft: Story = {
 }
 ```
 
-The project's `.gpp` files of Defines work in every template. See
-[Storybook](https://github.com/willmartian/gpp-lang/blob/master/docs/storybook.md).
+[Docs](https://github.com/willmartian/gpp-lang/blob/master/docs/storybook.md).

@@ -13,29 +13,17 @@ Feature: Signing in
     Then I should See the Heading "Welcome back"
 ```
 
-Gherkin without step definitions. Scenarios run as Playwright tests, and steps run as
-Storybook stories' play functions: the same words, in either or both.
-
-- **Capitalised words are code.** Lowercase words are prose, for people.
-- **Code runs right to left.** In `Click the Button "Sign in"`, `Button` finds the button
-  named "Sign in", then `Click` clicks it.
-- **Elements are found as a user finds them:** by role, label and text, as in
-  [Testing Library](https://testing-library.com/docs/queries/about). There are no CSS
-  selectors.
-- **A scenario does the same thing every run.** There are no sleeps, conditionals or loops.
-- **Mistakes are caught before a browser starts.** Every word has a type.
-- **The rest is Gherkin.** Backgrounds, Scenario Outlines, Rules, data tables and tags work as
-  in Cucumber.
+Gherkin without step definitions: capitalised words are code, the rest is prose.
+Runs as Playwright tests, Storybook play functions, or both. [How words work](docs/words.md)
 
 ## Install
 
-Needs Node.js 22.13 or later. `gpp-lang` checks your specs and gives your editor its support.
-A backend runs them: pick either, or both.
+Needs Node.js 22.13 or later. Install `gpp-lang` and one or both backends.
 
 ### Playwright
 
-Runs Features in `.gpp` files, and in Markdown's ` ```gpp ` blocks, against your running
-app. See [Playwright](docs/playwright.md).
+Runs `.gpp` files and Markdown's ` ```gpp ` blocks against your app.
+[Docs](docs/playwright.md).
 
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/playwright @playwright/test
@@ -57,8 +45,7 @@ Add `.gpp-tests/` to `.gitignore`, then `npx playwright test`.
 
 ### Storybook
 
-Runs steps as a story's play function, against one component. See
-[Storybook](docs/storybook.md).
+Runs steps as a story's play function. [Docs](docs/storybook.md).
 
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/storybook
@@ -84,8 +71,7 @@ export const SavingADraft: Story = {
 
 ## Check
 
-Both backends use the same words and the same [Defines](docs/defines.md), your own words, and `gpp-lang`
-checks both before anything runs.
+Both backends share the same words and [Defines](docs/defines.md).
 
 ```sh
 npx gpp-lang check        # check every spec, without running it
@@ -108,11 +94,12 @@ npx gpp-lang dictionary   # every word you can use
 
 ## Why
 
-- **Agents writing tests reach for sleeps, conditionals and CSS selectors** until a test
-  passes. Gherkin++ has none of them, so a reviewer only has to ask whether a spec tests the
-  right thing.
-- **A spec is written in the words of whoever uses what it tests.** A web app's users click
-  buttons and read headings, so those are Gherkin++'s words. A library's users write code, so
-  its specs are best written as code.
+- **Agents reach for sleeps, conditionals and CSS selectors** until a test passes. Gherkin++
+  has none, so review is only about whether a spec tests the right thing.
+- **Mistakes are caught before anything runs.** Every word has a type.
+- **Specs use the words of whoever uses the thing tested.** Web app users click buttons and
+  read headings. Library users write code, so a library's specs should be code.
+- **The rest is Gherkin.** Backgrounds, Scenario Outlines, Rules, data tables and tags work as
+  in Cucumber.
 
 [Contributing](CONTRIBUTING.md)

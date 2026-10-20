@@ -1,7 +1,7 @@
 # How words work
 
-A step is prose with code in it. The code is a few words, each of which takes what's written
-after it and leaves something for the word before it.
+A step is prose with code in it. Each word of code takes what comes after it and leaves
+something for the word before it.
 
 ```gherkin
 When I Fill the Field "Email" with "will@example.com"
@@ -14,27 +14,24 @@ When I Fill the Field "Email" with "will@example.com"
 - **`"Quoted text"` and numbers are values.**
 - **Given, When, Then, And and But** start a step, as in Gherkin.
 
-So a capitalised word in a sentence, like a person's name, is read as code. Put it in quotes if
-it's a value, or write it in lowercase.
+A capitalised name in prose is code too: quote it or lowercase it.
 
 ## Right to left
 
-Code runs from the end of the step to its start. In `Click the Button "Sign in"`, `"Sign in"`
-comes first, `Button` turns it into the button named "Sign in", and `Click` clicks it. So a
-word comes before what it acts on, as in English.
+Code runs from the end of a step to its start. In `Click the Button "Sign in"`, `Button`
+finds the button named "Sign in", then `Click` clicks it. Verbs come first, as in English.
 
 - **Things are found as a user finds them:** by role, label and text, as in
   [Testing Library](https://testing-library.com/docs/queries/about). There are no CSS
   selectors.
 - **`Within` looks inside something else:**
   `Click the Button "Remove" Within the Row Containing "Kale"`.
-- **A step's data table or DocString acts as if it were written at its end:**
+- **A data table or DocString counts as the step's last word:**
   `When I Fill the Field "Notes" with:`, then a DocString.
 
 ## Types
 
-Every word has a signature: what it takes, and what it leaves. Your editor shows it on hover,
-and `npx gpp-lang dictionary` lists them all.
+Every word has a signature. Hover shows it; `npx gpp-lang dictionary` lists them all.
 
 ```
 Button : Text | Pattern, Scope -> Element
@@ -57,12 +54,11 @@ Button : Text | Pattern, Scope -> Element
 | `Check` | a check, like `See the Button "Save"` |
 | `Step`, `Mode` | a step, and the Given, When or Then above it |
 
-Every step is checked before anything runs, so a word given the wrong thing is a mistake in
-your editor, not a failed test.
+Steps are type-checked before anything runs.
 
 ## Using everything
 
-A step has to use everything it makes. Anything left at its end has to be a check:
+A step must use everything it makes. Anything left at the end must be a check.
 
 | Step | |
 | --- | --- |
@@ -73,10 +69,10 @@ A step has to use everything it makes. Anything left at its end has to be a chec
 
 ## On one page
 
-Every backend runs the same words, except that a Storybook template plays on one page, already
-open. It has no `Visit`, `Reload`, `Back`, `At` or `Titled`.
+Storybook templates run on one page that's already open, so they have no `Visit`, `Reload`,
+`Back`, `At` or `Titled`.
 
 ## More words
 
-- [Built-in words](dictionary.md): every word Gherkin++ has.
-- [Your own words](defines.md): Defines, written in Gherkin++.
+- [Built-in words](dictionary.md)
+- [Your own words](defines.md)
