@@ -1,11 +1,11 @@
 ---
-name: writing-spp
-description: Write, fix or review Spec++ (.spp) files, the runnable Gherkin where capitalised words are code and there are no step definitions. Use when creating or editing a .spp file or a Markdown file's ```spp blocks, adding scenarios or Defines, or when `spp-lang check` reports a mistake.
+name: writing-gpp
+description: Write, fix or review Gherkin++ (.gpp) files, the runnable Gherkin where capitalised words are code and there are no step definitions. Use when creating or editing a .gpp file or a Markdown file's ```gpp blocks, adding scenarios or Defines, or when `gpp-lang check` reports a mistake.
 ---
 
-# Writing Spec++
+# Writing Gherkin++
 
-A `.spp` file is Gherkin whose steps run as they're written. There are no step definitions:
+A `.gpp` file is Gherkin whose steps run as they're written. There are no step definitions:
 every step is code in a small stack language, and the prose around the code is ignored.
 
 ```gherkin
@@ -23,10 +23,10 @@ Feature: Signing in
 Run this from the project root before writing any steps:
 
 ```sh
-npx spp-lang dictionary
+npx gpp-lang dictionary
 ```
 
-It's the reference for every word the project's `.spp` files can use. Each built-in word is
+It's the reference for every word the project's `.gpp` files can use. Each built-in word is
 listed by group (Finding, Doing, Checking, Lists, Steps) with what it does, what it takes
 and leaves, and an example step. The project's own `Define`s are listed after them, with
 where they are. It comes from the same declarations the checker uses, so it's always
@@ -59,8 +59,8 @@ current.
 
 ## Your own words
 
-`Define` makes a new word. Write it above the `Feature:` line, or in a `.spp` file with no
-Feature at all, such as `features/words.spp`. Every file can use it. Like `Feature:`, the
+`Define` makes a new word. Write it above the `Feature:` line, or in a `.gpp` file with no
+Feature at all, such as `features/words.gpp`. Every file can use it. Like `Feature:`, the
 name goes after the colon, and the body is indented under it, one statement per line:
 
 ```gherkin
@@ -118,7 +118,7 @@ value: `Fill the Field "<field>" with "something"`.
 ## After every edit: check
 
 ```sh
-npx spp-lang check
+npx gpp-lang check
 ```
 
 It checks every step, types included, without starting a browser, and exits non-zero on a
@@ -129,5 +129,5 @@ since the server's report can arrive late.
 
 Before changing or renaming a `Define`, use the `LSP` tool's find references on it to see
 everywhere it's used. To run the scenarios in
-a browser, use `npx playwright test`, where `features/cart.spp:12` runs the scenario on line 12.
-Storybook runs `spp` templates as play functions, with its own test runner.
+a browser, use `npx playwright test`, where `features/cart.gpp:12` runs the scenario on line 12.
+Storybook runs `gpp` templates as play functions, with its own test runner.

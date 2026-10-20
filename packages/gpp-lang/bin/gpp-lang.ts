@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-// spp-lang check [paths...]
-// spp-lang dictionary
-// spp-lang lsp
+// gpp-lang check [paths...]
+// gpp-lang dictionary
+// gpp-lang lsp
 //
 // Checks the scenarios without running them, lists the words they can use, or
 // answers an editor. A project is the files under the nearest package.json,
@@ -12,9 +12,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { styleText } from 'node:util'
-import type { Diagnostic, SppFile } from '@spp-lang/core'
-import { checkFiles, format, LoadError, words } from '@spp-lang/core'
-import { discover, load, projectFiles, projectRoot } from '@spp-lang/core/node'
+import type { Diagnostic, GppFile } from '@gpp-lang/core'
+import { checkFiles, format, LoadError, words } from '@gpp-lang/core'
+import { discover, load, projectFiles, projectRoot } from '@gpp-lang/core/node'
 import { Command, Option } from 'commander'
 import { dictionary } from '../src/tools/dictionary.ts'
 
@@ -29,7 +29,7 @@ const packageJson = ['../package.json', '../../package.json']
 if (!packageJson) throw new Error(`No package.json above ${import.meta.dirname}`)
 const { version } = JSON.parse(fs.readFileSync(packageJson, 'utf8'))
 
-const program = new Command('spp-lang')
+const program = new Command('gpp-lang')
   .usage('<command> [options]')
   .version(version, '-V, --version', 'Show the version')
   .helpOption('-h, --help', 'Show help')
@@ -41,16 +41,16 @@ const program = new Command('spp-lang')
     styleSubcommandText: (s) => style('cyan', s),
     styleOptionText: (s) => style('cyan', s),
   })
-  .addHelpText('beforeAll', `${style(['green', 'bold'], 'Spec++')} ${style('dim', version)}\n`)
+  .addHelpText('beforeAll', `${style(['green', 'bold'], 'Gherkin++')} ${style('dim', version)}\n`)
   .addHelpText('before', 'Specs that run. Written by agents, read by people.\n')
   .addHelpText(
     'after',
     `
 ${style('bold', 'Examples:')}
-  ${style('dim', '$')} spp-lang check
-  ${style('dim', '$')} spp-lang check features/cart.spp
+  ${style('dim', '$')} gpp-lang check
+  ${style('dim', '$')} gpp-lang check features/cart.gpp
 
-A project is the .spp files, Markdown with \`\`\`spp blocks and spp templates under
+A project is the .gpp files, Markdown with \`\`\`gpp blocks and gpp templates under
 the nearest package.json, and every Define in a project can be used by all of
 its files.`,
   )
@@ -108,7 +108,7 @@ function named(paths: string[], cwd: string) {
 
 // A project's files, and why those that don't load don't.
 function loadProject(root: string) {
-  const files: SppFile[] = []
+  const files: GppFile[] = []
   const broken: LoadError[] = []
   for (const file of projectFiles(root)) {
     try {

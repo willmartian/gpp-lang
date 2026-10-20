@@ -34,7 +34,7 @@ word comes before what it acts on, as in English.
 ## Types
 
 Every word has a signature: what it takes, and what it leaves. Your editor shows it on hover,
-and `npx spp-lang dictionary` lists them all.
+and `npx gpp-lang dictionary` lists them all.
 
 ```
 Button : Text | Pattern, Scope -> Element
@@ -78,5 +78,5 @@ open. It has no `Visit`, `Reload`, `Back`, `At` or `Titled`.
 
 ## More words
 
-- [Built-in words](dictionary.md): every word Spec++ has.
-- [Your own words](defines.md): Defines, written in Spec++.
+- [Built-in words](dictionary.md): every word Gherkin++ has.
+- [Your own words](defines.md): Defines, written in Gherkin++.

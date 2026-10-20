@@ -1,10 +1,10 @@
-// A project as a Playwright run sees it: the files defineSppConfig names,
+// A project as a Playwright run sees it: the files defineGppConfig names,
 // loaded, and what the checker found in them.
 
 import path from 'node:path'
-import type { Report, Scenario, SppFile, Vocabulary } from '@spp-lang/core'
-import { check, LoadError, leftovers, words } from '@spp-lang/core'
-import { discover, load } from '@spp-lang/core/node'
+import type { GppFile, Report, Scenario, Vocabulary } from '@gpp-lang/core'
+import { check, LoadError, leftovers, words } from '@gpp-lang/core'
+import { discover, load } from '@gpp-lang/core/node'
 
 // What a generated test file is told about its project.
 export interface Project {
@@ -15,7 +15,7 @@ export interface Project {
 }
 
 export interface Loaded {
-  files: SppFile[]
+  files: GppFile[]
   broken: Map<string, LoadError>
   vocabulary: Vocabulary[]
   report: Report
@@ -25,7 +25,7 @@ export interface Loaded {
 export const where = (file: string, line: number) => `${file}:${line}`
 
 export function loadProject(project: Project): Loaded {
-  const files: SppFile[] = []
+  const files: GppFile[] = []
   const broken = new Map<string, LoadError>()
   for (const file of discover(project.features, project.root, project.ignore)) {
     try {

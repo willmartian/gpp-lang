@@ -3,7 +3,7 @@
 // the other lines blanked, so line numbers in errors stay true.
 
 import { dialects } from '@cucumber/gherkin'
-import { isMarkdown, sppFences } from './markdown.ts'
+import { gppFences, isMarkdown } from './markdown.ts'
 import { isScript, templates } from './templates.ts'
 
 // Something about how a file divides that makes it a mistake, and where.
@@ -56,11 +56,11 @@ function carriesOn(first: string, language: string): boolean {
   return /^[@|]/.test(trimmed) || [...sections, ...steps].some((k) => trimmed.startsWith(k))
 }
 
-// A Markdown file's ```spp blocks, in order. A block with a Feature line
+// A Markdown file's ```gpp blocks, in order. A block with a Feature line
 // starts a new Feature, and anything above that line in it is Defines. A
 // block that starts like Gherkin carries on the Feature before it, so prose
 // can sit between the scenarios of one Feature. Any other block is Defines,
-// and every file shares them, as it does a .spp file's.
+// and every file shares them, as it does a .gpp file's.
 function markdownSections(src: string): Sections {
   const lines = src.split('\n')
   const language = /^\s*#\s*language:\s*(\S+)/m.exec(src)?.[1] ?? 'en'
@@ -70,7 +70,7 @@ function markdownSections(src: string): Sections {
   // A block's lines that a view of it keeps, as lines of the whole file.
   const kept = (view: string, start: number) => new Set(view.split('\n').flatMap((l, i) => (l ? [start + i] : [])))
 
-  for (const fence of sppFences(src)) {
+  for (const fence of gppFences(src)) {
     const block = lines.slice(fence.start, fence.end)
     const { preamble, gherkin } = split(block.join('\n'))
     const first = block.find((l) => l.trim() && !/^\s*#/.test(l))
@@ -94,7 +94,7 @@ function markdownSections(src: string): Sections {
   return { preambles: preambles.filter((p) => p.size).map(view), documents: documents.map(view), problems }
 }
 
-// A script's spp templates, each a Feature of one Scenario, named for the
+// A script's gpp templates, each a Feature of one Scenario, named for the
 // story it's in. A template's view keeps its text where it is, with the
 // Feature and Scenario lines on the two lines above its first step, which the
 // view has blanked.
@@ -125,9 +125,9 @@ function scriptSections(src: string): Sections {
     const wrong = notAStep(view, first, last)
     if (wrong) problems.push(wrong)
     else if (!view.some((l) => STEP.test(l.trim())))
-      problems.push({ ...place(t.start), message: 'An spp template needs at least one step' })
+      problems.push({ ...place(t.start), message: 'A gpp template needs at least one step' })
     else if (top < 2)
-      problems.push({ ...place(t.start), message: 'An spp template needs two lines above its first step' })
+      problems.push({ ...place(t.start), message: 'A gpp template needs two lines above its first step' })
     else {
       const name = storyName(src.slice(0, t.start))
       view[top - 2] = `Feature: ${name}`
@@ -138,7 +138,7 @@ function scriptSections(src: string): Sections {
   return { preambles: [], documents, problems }
 }
 
-export const INTERPOLATION = `An spp template can't have \${…} in it. Write what it checks out in full, so it reads as it runs.`
+export const INTERPOLATION = `A gpp template can't have \${…} in it. Write what it checks out in full, so it reads as it runs.`
 
 const STEP = /^(?:Given|When|Then|And|But|\*)\s/
 const DOC_STRING = /^(?:"""|```)/
@@ -156,7 +156,7 @@ function notAStep(view: string[], first: number, last: number): Problem | null {
     return {
       line: i + 1,
       column: view[i].length - view[i].trimStart().length + 1,
-      message: 'Each line of an spp template is a step, starting with Given, When, Then, And, But or *',
+      message: 'Each line of a gpp template is a step, starting with Given, When, Then, And, But or *',
     }
   }
   return null

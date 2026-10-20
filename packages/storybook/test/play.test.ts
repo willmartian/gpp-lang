@@ -1,10 +1,10 @@
-// Reading and checking spp templates, without a browser. What they do in one
+// Reading and checking gpp templates, without a browser. What they do in one
 // is tested through Storybook itself: examples/storybook, and the fixtures in
 // test/fixtures, which must fail.
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { prepare, spp, useWords } from '../src/play.ts'
+import { gpp, prepare, useWords } from '../src/play.ts'
 
 const problem = (src: string) => prepare(src).problem
 
@@ -56,7 +56,7 @@ test('a line that is not a step says so', () => {
   assert.equal(
     problem('Click the Button "Save"'),
     [
-      'Each line of an spp template is a step, starting with Given, When, Then, And, But or *',
+      'Each line of a gpp template is a step, starting with Given, When, Then, And, But or *',
       '',
       '    Click the Button "Save"',
       '    ^',
@@ -65,11 +65,11 @@ test('a line that is not a step says so', () => {
 })
 
 test('a template of nothing is a mistake', () => {
-  assert.match(problem('\n  # just a comment\n') ?? '', /^An spp template needs at least one step/)
+  assert.match(problem('\n  # just a comment\n') ?? '', /^A gpp template needs at least one step/)
 })
 
 test('a template can use the Defines from useWords', () => {
-  useWords({ 'words.spp': 'Define: Retitle Text (New)\n  Fill the Field "Title" with New\n' })
+  useWords({ 'words.gpp': 'Define: Retitle Text (New)\n  Fill the Field "Title" with New\n' })
   try {
     assert.equal(problem('When I Retitle the post "Hello"'), null)
   } finally {
@@ -78,8 +78,8 @@ test('a template can use the Defines from useWords', () => {
   assert.match(problem('When I Retitle the post "Hello"') ?? '', /^Unknown word Retitle/)
 })
 
-test('a mistake in a Define fails only the templates that use it, as spp-lang check reports it', () => {
-  useWords({ 'words.spp': 'Define: Retitle Text (New)\n  Fil the Field "Title" with New\n' })
+test('a mistake in a Define fails only the templates that use it, as gpp-lang check reports it', () => {
+  useWords({ 'words.gpp': 'Define: Retitle Text (New)\n  Fil the Field "Title" with New\n' })
   try {
     assert.equal(problem('When I Click the Button "Save"'), null)
   } finally {
@@ -89,7 +89,7 @@ test('a mistake in a Define fails only the templates that use it, as spp-lang ch
 
 test("useWords takes a file's Defines, and leaves its scenarios to another backend", () => {
   const words = 'Define: Retitle Text (New)\n  Fill the Field "Title" with New\n'
-  useWords({ 'a.spp': `${words}\nFeature: F\n  Scenario: S\n    When I Clik the Button "Save"\n` })
+  useWords({ 'a.gpp': `${words}\nFeature: F\n  Scenario: S\n    When I Clik the Button "Save"\n` })
   try {
     assert.equal(problem('When I Retitle the post "Hello"'), null)
   } finally {
@@ -100,5 +100,5 @@ test("useWords takes a file's Defines, and leaves its scenarios to another backe
 test('a template with a value put in it is a mistake', () => {
   const title = 'Hello'
   // @ts-expect-error: its type says so too
-  assert.throws(() => spp`When I Fill the Field "Title" with "${title}"`, /can't have \$\{…\} in it/)
+  assert.throws(() => gpp`When I Fill the Field "Title" with "${title}"`, /can't have \$\{…\} in it/)
 })

@@ -9,10 +9,10 @@ A [pnpm](https://pnpm.io) workspace:
 
 | Directory | Is |
 | --- | --- |
-| `packages/core` | `@spp-lang/core`: the language, its words, the checker, and the driver contract |
-| `packages/spp-lang` | the CLI and the language server |
-| `packages/playwright` | `@spp-lang/playwright`, which runs `.spp` files and Markdown as Playwright tests |
-| `packages/storybook` | `@spp-lang/storybook`, which runs `spp` templates as play functions |
+| `packages/core` | `@gpp-lang/core`: the language, its words, the checker, and the driver contract |
+| `packages/gpp-lang` | the CLI and the language server |
+| `packages/playwright` | `@gpp-lang/playwright`, which runs `.gpp` files and Markdown as Playwright tests |
+| `packages/storybook` | `@gpp-lang/storybook`, which runs `gpp` templates as play functions |
 | `editors/vscode` | the VS Code extension |
 | `examples/*` | projects that use the packages, as a user's would |
 | `site` | the docs site |
@@ -44,10 +44,10 @@ In `editors/vscode`:
 
 ```sh
 xvfb-run -a pnpm test # opens VS Code on a scratch workspace and uses the extension
-pnpm run package      # builds spp-vscode-0.1.0.vsix
+pnpm run package      # builds gpp-vscode-0.1.0.vsix
 ```
 
-To try it by hand, use Run and Debug → **Run Spec++ extension**, which opens a second window
+To try it by hand, use Run and Debug → **Run Gherkin++ extension**, which opens a second window
 on this repo with the extension loaded. Its language server runs from source on Node, through
 `scripts/nix-node`. For Playwright's extension to run scenarios on NixOS, start VS Code from
 the dev shell (`nix develop -c code .`) so Chromium finds its libraries.
@@ -57,7 +57,7 @@ the dev shell (`nix develop -c code .`) so Chromium finds its libraries.
 `site/` builds the README and `docs/` into a site with [Eleventy](https://www.11ty.dev/). The
 Built-in words page is generated from each built-in word's doc: its `.doc()` in
 `packages/core/src/words/shared.ts` and
-`packages/core/src/language/steps.ts`. `spp-lang dictionary` and hover show the same docs,
+`packages/core/src/language/steps.ts`. `gpp-lang dictionary` and hover show the same docs,
 and `packages/core/test/docs.test.ts` checks every word has one and every example checks.
 
 ```sh

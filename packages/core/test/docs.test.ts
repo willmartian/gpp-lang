@@ -15,7 +15,7 @@ test("every doc's examples check", () => {
     for (const name of new Set(env.names())) {
       for (const example of env.docOf(name)?.examples ?? []) {
         const src = ['Feature: F', '  Scenario: S', ...example.split('\n').map((line) => `    ${line}`)].join('\n')
-        const report = check([loadSource('example.spp', src)], { words, settle: leftovers })
+        const report = check([loadSource('example.gpp', src)], { words, settle: leftovers })
         const mistakes = [...report.scenarios.values()].map((d) => d.message)
         assert.deepEqual(mistakes, [], `${name}: ${example}`)
       }

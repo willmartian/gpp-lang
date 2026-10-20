@@ -10,10 +10,10 @@
     "@11ty/eleventy": "^3.1.6",
     "@fontsource/iosevka": "^5.3.0",
     "@fontsource/iosevka-aile": "^5.3.0",
-    "@spp-lang/core": "workspace:*",
-    "@spp-lang/playwright": "workspace:*",
+    "@gpp-lang/core": "workspace:*",
+    "@gpp-lang/playwright": "workspace:*",
     "@types/markdown-it": "^14.2.0",
     "shiki": "^4.5.0",
-    "spp-lang": "workspace:*"
+    "gpp-lang": "workspace:*"
   }
 }

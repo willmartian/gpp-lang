@@ -1,6 +1,6 @@
 # Your own words
 
-A Define makes a word of your own, written in Spec++.
+A Define makes a word of your own, written in Gherkin++.
 
 ```gherkin
 Define: Add Text (Item)
@@ -82,6 +82,6 @@ Two Defines that could always both fit are a mistake, reported where they're def
 
 A project is the files under the nearest `package.json`, and every Define in it can be used by
 all of its files: Features, Markdown and Storybook templates alike. A package inside another
-is a project of its own, with words of its own. `spp-lang check`, the editor and
+is a project of its own, with words of its own. `gpp-lang check`, the editor and
 Storybook see a project's Defines that way. Playwright uses the Defines in its config's
 [`features`](playwright.md#config).

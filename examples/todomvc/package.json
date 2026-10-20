@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@spp-lang/playwright": "workspace:*",
-    "spp-lang": "workspace:*"
+    "@gpp-lang/playwright": "workspace:*",
+    "gpp-lang": "workspace:*"
   }
 }

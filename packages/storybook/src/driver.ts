@@ -9,8 +9,8 @@
 // Only userEvent is instrumented, so the Interactions panel shows each step
 // and what it did, and not every query made while retrying.
 
-import type { Action, Context, Driver, Name, Query, State } from '@spp-lang/core'
-import { SppError } from '@spp-lang/core'
+import type { Action, Context, Driver, Name, Query, State } from '@gpp-lang/core'
+import { GppError } from '@gpp-lang/core'
 import {
   getConfig,
   queryAllByAltText,
@@ -209,11 +209,11 @@ async function one(ctx: StoryContext, target: Target, enabled: boolean): Promise
     const found = target.in(page(ctx))
     if (found.length !== 1) {
       const saw = found.length ? `found ${found.length}, and only one should match` : 'found nothing'
-      throw new SppError(`Looked for the ${target.label}, but ${saw}`)
+      throw new GppError(`Looked for the ${target.label}, but ${saw}`)
     }
     const [el] = found
-    if (!visible(el)) throw new SppError(`The ${target.label} is hidden`)
-    if (enabled && isDisabled(el)) throw new SppError(`The ${target.label} is disabled`)
+    if (!visible(el)) throw new GppError(`The ${target.label} is hidden`)
+    if (enabled && isDisabled(el)) throw new GppError(`The ${target.label} is disabled`)
     element = el
   })
   if (!element) throw new Error(`No element for the ${target.label}`)
@@ -261,7 +261,7 @@ export const testingLibrary: Driver<StoryContext, Target> = {
       case 'uncheck': {
         const want = action.do === 'check'
         if (isChecked(el) !== want) await userEvent.click(el)
-        if (isChecked(el) !== want) throw new SppError(`Clicked the ${target.label}, but it didn't ${action.do}`)
+        if (isChecked(el) !== want) throw new GppError(`Clicked the ${target.label}, but it didn't ${action.do}`)
         return
       }
       case 'clear':
@@ -290,7 +290,7 @@ export const testingLibrary: Driver<StoryContext, Target> = {
     const attempt = () => {
       const { holds, saw } = observe(ctx, target, state)
       if (holds !== null && holds !== not) return
-      throw new SppError(`Expected the ${target.label} ${not ? 'not ' : ''}to ${phrase(state)}, but ${saw}`)
+      throw new GppError(`Expected the ${target.label} ${not ? 'not ' : ''}to ${phrase(state)}, but ${saw}`)
     }
     if (once) attempt()
     else await retry(attempt)
@@ -312,5 +312,5 @@ export const testingLibrary: Driver<StoryContext, Target> = {
 }
 
 async function onePage(): Promise<never> {
-  throw new SppError('A template plays on one page, already open')
+  throw new GppError('A template plays on one page, already open')
 }

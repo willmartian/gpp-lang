@@ -2,7 +2,7 @@
 
 What came up converting Playwright's
 [`demo-todo-app.spec.ts`](demo-todo-app.spec.ts) to [`features`](features). Each gap has
-the closest thing Spec++ can say today, which is what the features use. All 24 scenarios
+the closest thing Gherkin++ can say today, which is what the features use. All 24 scenarios
 run.
 
 ## Coverage the features lose

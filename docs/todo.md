@@ -1,10 +1,10 @@
 # To do
 
-Things that came up while building Spec++ and haven't been done.
+Things that came up while building Gherkin++ and haven't been done.
 
 ## Planned
 
-- [ ] **The rest of Storybook.** An `spp` template is a story's play function
+- [ ] **The rest of Storybook.** A `gpp` template is a story's play function
       ([Storybook](storybook.md)). Still to do:
   - [ ] a `Story` word for the Playwright backend, which visits a story's iframe
   - [ ] checking spies, the `fn()` in a story's args. Then may only check what a user can see,
@@ -29,9 +29,9 @@ Things that came up while building Spec++ and haven't been done.
 
 ## Other interfaces
 
-Interfaces with users of their own, and their own words, are where Spec++ could grow
+Interfaces with users of their own, and their own words, are where Gherkin++ could grow
 instead. They also reach apps in any language, as the browser already does, without
-porting Spec++.
+porting Gherkin++.
 
 - [ ] **Mobile apps.** Their users tap buttons and read headings too, so the shared words
       fit as they are, given a driver that finds things by role and accessible name. Which
@@ -99,15 +99,15 @@ porting Spec++.
       Think about the cost in large repos.
 - [ ] **A new scenario may not show up in an editor until it reloads the config.** The
       generated tests are written when Playwright loads its config. Playwright's VS Code
-      extension and UI mode reload it when test files change, but a `.spp` file isn't one
+      extension and UI mode reload it when test files change, but a `.gpp` file isn't one
       to them. Untested: try adding a scenario with each open.
-- [ ] **Playwright's VS Code extension finds the `.spp` file through a `.map` file** beside
+- [ ] **Playwright's VS Code extension finds the `.gpp` file through a `.map` file** beside
       each generated test, which it reads itself (checked with 1.1.19). That's its own
       detail, not an API, so it wants a test: `editors/vscode` could run the extension on a
       scenario, as was done by hand.
 - [ ] **`@playwright/test` is a peer dependency at `^1.63.0`,** the only version tried. Find
       the oldest that works (`test.step`'s `location` is the likely floor) and widen it.
-- [ ] **`defineSppConfig` reads which file called it from the stack,** for the directory
+- [ ] **`defineGppConfig` reads which file called it from the stack,** for the directory
       its paths are relative to. Called from a helper in another file, it needs `root`.
 - [ ] **A way for a project to name a vocabulary** other than the language's, once a backend
       for an interface without roles and names, like a command line, needs one.
@@ -122,17 +122,17 @@ porting Spec++.
 
 ## Markdown
 
-Open questions about ` ```spp ` blocks in Markdown files.
+Open questions about ` ```gpp ` blocks in Markdown files.
 
-- [ ] **GitHub won't colour ` ```spp ` blocks** until Spec++ is in linguist's languages. That's
-      why Spec++'s own README uses ` ```gherkin ` blocks, on purpose, though it means its
+- [ ] **GitHub won't colour ` ```gpp ` blocks** until Gherkin++ is in linguist's languages. That's
+      why Gherkin++'s own README uses ` ```gherkin ` blocks, on purpose, though it means its
       examples aren't tested.
 - [ ] **The VS Code grammar injection is untested.** The integration test covers checking
       Markdown, not how its blocks are highlighted.
 - [ ] **Run buttons in Markdown are untested.** Playwright's VS Code extension put run and
-      debug buttons beside scenarios in a `.spp` file when tried by hand. A Markdown file's
+      debug buttons beside scenarios in a `.gpp` file when tried by hand. A Markdown file's
       generated test maps back to it the same way, but nobody has tried it.
-- [ ] **Every Markdown file is read** to see whether it has an ` ```spp ` block, on every
+- [ ] **Every Markdown file is read** to see whether it has an ` ```gpp ` block, on every
       rescan. Fine now; see the notes on large repos above.
 - [ ] **The extension doesn't start for a project with only Markdown:** it starts on a
-      `.spp` file.
+      `.gpp` file.

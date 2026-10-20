@@ -3,9 +3,9 @@
 // Playwright's getBy* locators implement Testing Library's queries, and its
 // expect retries until a check passes, which is what the words ask of a driver.
 
+import type { Context, Driver } from '@gpp-lang/core'
+import { escapeRegExp } from '@gpp-lang/core'
 import type { expect, Locator, Page } from '@playwright/test'
-import type { Context, Driver } from '@spp-lang/core'
-import { escapeRegExp } from '@spp-lang/core'
 
 export interface BrowserContext extends Context {
   page: Page

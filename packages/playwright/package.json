@@ -1,7 +1,7 @@
 {
-  "name": "@spp-lang/playwright",
+  "name": "@gpp-lang/playwright",
   "version": "0.1.0",
-  "description": "Spec++ scenarios, in .spp files and Markdown, as Playwright tests.",
+  "description": "Gherkin++ scenarios, in .gpp files and Markdown, as Playwright tests.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -28,7 +28,7 @@
     "gherkin",
     "bdd",
     "playwright",
-    "spp-lang"
+    "gpp-lang"
   ],
   "license": "MIT",
   "engines": {
@@ -36,15 +36,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/willmartian/spp-lang.git",
+    "url": "git+https://github.com/willmartian/gpp-lang.git",
     "directory": "packages/playwright"
   },
   "peerDependencies": {
     "@playwright/test": "^1.63.0",
-    "@spp-lang/core": "^0.1.0"
+    "@gpp-lang/core": "^0.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@spp-lang/core": "workspace:*"
+    "@gpp-lang/core": "workspace:*"
   }
 }

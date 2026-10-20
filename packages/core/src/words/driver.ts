@@ -1,6 +1,6 @@
 // What a backend does for the language's words: find things, act on them,
 // check them, and go places on the page. Playwright is one backend
-// (@spp-lang/playwright), Storybook another (@spp-lang/storybook); anything
+// (@gpp-lang/playwright), Storybook another (@gpp-lang/storybook); anything
 // that can find things by role and accessible name, the way Testing Library
 // does, can be one more. A backend implements all of it, so the words are the
 // same everywhere, and the checker knows them without asking which runs.

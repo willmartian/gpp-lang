@@ -7,7 +7,7 @@
 //     Click the Button "Sign in"
 //
 // pushes "Sign in", Button turns it into a locator, Click clicks it. That is
-// the whole trick Spec++ is built on.
+// the whole trick Gherkin++ is built on.
 //
 // Lexical rules follow CognaC (cognate-lang/cognate, src/lexer.l), except:
 //
@@ -22,12 +22,12 @@
 import type { Context, Doc, Form, Type } from './types.ts'
 import { AnyType, article, formsFor, NumberType, signature, TableType, TextType, type } from './types.ts'
 
-export class SppError extends Error {
+export class GppError extends Error {
   pos?: number
 
   constructor(message: string, pos?: number) {
     super(message)
-    this.name = 'SppError'
+    this.name = 'GppError'
     this.pos = pos
   }
 }
@@ -122,7 +122,7 @@ export function lex(src: string): Token[] {
     }
     if (c === ';') {
       // Silently skipping it would run "A; B" as one statement, right to left.
-      throw new SppError('One statement per line: put what comes after the ; on a line of its own', i)
+      throw new GppError('One statement per line: put what comes after the ; on a line of its own', i)
     }
     if (c === '(' || c === ')') {
       // Only a Define's header has them; the parser says so anywhere else.
@@ -176,8 +176,8 @@ export function lex(src: string): Token[] {
       }
       continue
     }
-    if (c === '"') throw new SppError('Unclosed string', i)
-    throw new SppError(`Unexpected character ${JSON.stringify(c)}`, i)
+    if (c === '"') throw new GppError('Unclosed string', i)
+    throw new GppError(`Unexpected character ${JSON.stringify(c)}`, i)
   }
   return tokens
 }
@@ -206,7 +206,7 @@ export function parse(src: string): Program {
     const statements: Program = []
     while (i < lines.length && lines[i].indent >= indent) {
       const line = lines[i++]
-      if (line.indent > indent) throw new SppError('Unexpected indentation', line.tokens[0].pos)
+      if (line.indent > indent) throw new GppError('Unexpected indentation', line.tokens[0].pos)
       const last = line.tokens.at(-1)
       const define = isDefine(line.tokens) ? line.tokens[1] : null
       const colon = define ?? (last?.type === ':' ? last : null)
@@ -217,7 +217,7 @@ export function parse(src: string): Program {
       if (colon && next && next.indent > indent) {
         statement.push({ type: 'block', body: body(next.indent), pos: colon.pos })
       } else if (define) {
-        throw new SppError(
+        throw new GppError(
           `Define: ${statement[0].type === 'define' ? statement[0].name : ''} needs an indented body under it`,
           line.tokens[0].pos,
         )
@@ -228,7 +228,7 @@ export function parse(src: string): Program {
   }
 
   const program = body(lines[0]?.indent ?? 0)
-  if (i < lines.length) throw new SppError('Unexpected indentation', lines[i].tokens[0].pos)
+  if (i < lines.length) throw new GppError('Unexpected indentation', lines[i].tokens[0].pos)
   return program
 }
 
@@ -240,7 +240,7 @@ function statementOf(tokens: Token[]): Statement {
   const first = tokens[0]
   if (isDefine(tokens)) {
     const name = tokens[2]
-    if (name?.type !== 'word') throw new SppError('Define: needs a Capitalised name after it', first.pos)
+    if (name?.type !== 'word') throw new GppError('Define: needs a Capitalised name after it', first.pos)
     return [{ type: 'define', name: name.name, params: paramsOf(tokens.slice(3)), pos: first.pos }]
   }
   const statement: Statement = []
@@ -248,7 +248,7 @@ function statementOf(tokens: Token[]): Statement {
     const t = tokens[n]
     if (t.type === ':') continue
     if (t.type === '(' || t.type === ')') {
-      throw new SppError(
+      throw new GppError(
         '( ) only name what a Define takes, as in "Define: Move Cart (Source)"; blocks are indented under a colon',
         t.pos,
       )
@@ -256,9 +256,9 @@ function statementOf(tokens: Token[]): Statement {
     if (t.type === 'word' && /^define$/i.test(t.name)) {
       const next = tokens[n + 1]
       if (n > 0 || next?.type === ':')
-        throw new SppError('Define: starts a line of its own, with its body indented under it', t.pos)
+        throw new GppError('Define: starts a line of its own, with its body indented under it', t.pos)
       // The old way, "Define Add:".
-      throw new SppError(
+      throw new GppError(
         `Write Define: ${next?.type === 'word' ? next.name : 'Name'}, with the colon after Define, as in Feature:`,
         t.pos,
       )
@@ -273,7 +273,7 @@ function statementOf(tokens: Token[]): Statement {
 function paramsOf(tokens: Token[]): Param[] {
   const params: Param[] = []
   const wrong = (t: Token) =>
-    new SppError("After a Define's name come the types it takes, like Text or Element, each maybe named in ( )", t.pos)
+    new GppError("After a Define's name come the types it takes, like Text or Element, each maybe named in ( )", t.pos)
   for (let n = 0; n < tokens.length; n++) {
     const t = tokens[n]
     // a trailing colon, as in the old way, is prose
@@ -283,7 +283,7 @@ function paramsOf(tokens: Token[]): Param[] {
     if (tokens[n + 1]?.type === '(') {
       const [, name, close] = tokens.slice(n + 1, n + 4)
       if (name?.type !== 'word' || close?.type !== ')') {
-        throw new SppError(
+        throw new GppError(
           `( ) after ${t.name} holds one Capitalised name for it, as in ${t.name} (Source)`,
           tokens[n + 1].pos,
         )
@@ -493,9 +493,9 @@ export class Stack extends Array<unknown> {
   // Pops one value of the given type, for Define, which is syntax, not a
   // word; words say what they take in their forms instead.
   take<T>(word: string, t: Type<T>): T {
-    if (!this.length) throw new SppError(`${word} expected ${t.phrase}, but there was nothing left`)
+    if (!this.length) throw new GppError(`${word} expected ${t.phrase}, but there was nothing left`)
     const v = this.pop()
-    if (!t.test(v)) throw new SppError(`${word} expected ${t.phrase}, but got ${describe(v)}`)
+    if (!t.test(v)) throw new GppError(`${word} expected ${t.phrase}, but got ${describe(v)}`)
     return v
   }
 }
@@ -555,7 +555,7 @@ function isNoun(left: unknown[], env: Env): boolean {
 export function resolve(params: Param[], env: Env): { name: string; type: Type }[] {
   return params.map((p) => {
     const t = env.kindOf(p.kind)
-    if (!t) throw Object.assign(new SppError(notAKind(p.kind, env.builtinKinds())), { pos: p.pos })
+    if (!t) throw Object.assign(new GppError(notAKind(p.kind, env.builtinKinds())), { pos: p.pos })
     return { name: p.name, type: t }
   })
 }
@@ -578,16 +578,16 @@ export async function apply(name: string, forms: readonly Form[], stack: Stack, 
   const fits = (f: Form) => f.inputs.every((t, i) => i < stack.length && accepts(t, stack[stack.length - 1 - i]))
   const form = forms.find(fits)
   if (!form) throw mismatch(name, forms, stack)
-  if (form.mistake) throw new SppError(form.mistake(form.inputs.map((_, i) => describe(stack[stack.length - 1 - i]))))
+  if (form.mistake) throw new GppError(form.mistake(form.inputs.map((_, i) => describe(stack[stack.length - 1 - i]))))
   const args = form.inputs.map((t) => given(t, stack.pop()))
   const result = await form.impl(ctx, ...args)
   if (!form.output) return
-  // A vocabulary bug, not a mistake in the .spp file.
+  // A vocabulary bug, not a mistake in the .gpp file.
   if (!form.output.test(result)) throw new Error(`${signature(name, form)} left ${describe(result)}`)
   stack.push(result)
 }
 
-function mismatch(name: string, forms: readonly Form[], stack: Stack): SppError {
+function mismatch(name: string, forms: readonly Form[], stack: Stack): GppError {
   let live = forms
   for (let i = 0; ; i++) {
     const here = live.filter((f) => f.inputs.length > i)
@@ -596,7 +596,7 @@ function mismatch(name: string, forms: readonly Form[], stack: Stack): SppError 
     if (!ok.length) {
       const wanted = [...new Set(here.map((f) => f.inputs[i].phrase))].join(', or ')
       const got = i < stack.length ? `got ${describe(v)}` : 'there was nothing left'
-      return new SppError(`${name} expected ${wanted}, but ${got}`)
+      return new GppError(`${name} expected ${wanted}, but ${got}`)
     }
     live = ok
   }
@@ -632,10 +632,10 @@ async function evaluate(node: Node, env: Env, stack: Stack, ctx: Context): Promi
   }
 }
 
-export function unknownWord(name: string, known: Iterable<string>): SppError {
+export function unknownWord(name: string, known: Iterable<string>): GppError {
   const near = closest(name.toLowerCase(), new Set(known))
   const guess = near ? `Did you mean ${near[0].toUpperCase() + near.slice(1)}? ` : ''
-  return new SppError(`Unknown word ${name}. ${guess}Capitalised words are code; if it's prose, write it in lowercase.`)
+  return new GppError(`Unknown word ${name}. ${guess}Capitalised words are code; if it's prose, write it in lowercase.`)
 }
 
 function closest(word: string, names: Iterable<string>): string | undefined {

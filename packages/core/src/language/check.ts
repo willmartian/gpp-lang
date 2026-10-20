@@ -19,8 +19,8 @@
 // in the Defines, so a use never has to guess.
 
 import type { Env, Node, Param, Program } from './cognate.ts'
-import { notAKind, parse, SppError, specificity, unknownWord } from './cognate.ts'
-import type { Scenario, SppFile, Step, Vocabulary } from './load.ts'
+import { GppError, notAKind, parse, specificity, unknownWord } from './cognate.ts'
+import type { GppFile, Scenario, Step, Vocabulary } from './load.ts'
 import { lineCol } from './load.ts'
 import { keywordForms, keywords, StepType } from './steps.ts'
 import type { Doc, Form, Type } from './types.ts'
@@ -231,7 +231,7 @@ class Sim {
 
 // ---------------------------------------------------------------- checking
 
-export function check(files: SppFile[], options: CheckOptions): Report {
+export function check(files: GppFile[], options: CheckOptions): Report {
   return analyze(files, options).report
 }
 
@@ -296,7 +296,7 @@ export class Analysis {
 
 const placeKey = (p: Place) => `${p.file}:${p.line}:${p.column}`
 
-export function analyze(files: SppFile[], options: CheckOptions): Analysis {
+export function analyze(files: GppFile[], options: CheckOptions): Analysis {
   const checker = new Checker(options)
   checker.check(files)
   return new Analysis(checker)
@@ -321,7 +321,7 @@ class Checker {
     this.name = options.name ?? ((file) => file)
   }
 
-  check(files: SppFile[]): Report {
+  check(files: GppFile[]): Report {
     // Every file's Defines share one scope, as they do when the tests run.
     const vocabulary = new Scope(new Scope(null, this.options.words))
     this.vocabulary = vocabulary
@@ -463,8 +463,8 @@ class Checker {
 
   diagnose(err: unknown, origin: Origin, define?: string): Diagnostic {
     if (!(err instanceof Error)) throw err
-    // Anything but a mistake in the .spp file is a bug in Spec++.
-    if (!(err instanceof Mistake) && err.name !== 'SppError') throw err
+    // Anything but a mistake in the .gpp file is a bug in Gherkin++.
+    if (!(err instanceof Mistake) && err.name !== 'GppError') throw err
     const { line, column } = origin.at((err as Mistake).pos ?? 0)
     return { file: origin.file, line, column, message: err.message, define }
   }
@@ -535,7 +535,7 @@ class Checker {
   params(def: Def): { name: string; type: Type<unknown> }[] {
     const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
     return def.header.map((p, i) => {
-      const at = (message: string) => Object.assign(new SppError(message), { pos: p.pos })
+      const at = (message: string) => Object.assign(new GppError(message), { pos: p.pos })
       if (def.header.findIndex((q) => same(q.name, p.name)) < i) {
         throw at(`Two things are called ${p.name}. Name them, as in ${p.kind} (Source) and ${p.kind} (Target)`)
       }

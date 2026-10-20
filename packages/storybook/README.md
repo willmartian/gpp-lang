@@ -1,23 +1,23 @@
-# @spp-lang/storybook
+# @gpp-lang/storybook
 
-Runs [Spec++](https://github.com/willmartian/spp-lang) `spp` templates as Storybook play
+Runs [Gherkin++](https://github.com/willmartian/gpp-lang) `gpp` templates as Storybook play
 functions. Needs Storybook 10, with Vite.
 
 ```sh
-npm install --save-dev spp-lang @spp-lang/storybook
+npm install --save-dev gpp-lang @gpp-lang/storybook
 ```
 
 ```ts
 // .storybook/main.ts
-addons: ['@spp-lang/storybook']
+addons: ['@gpp-lang/storybook']
 ```
 
 ```ts
 // a story
-import { spp } from '@spp-lang/storybook'
+import { gpp } from '@gpp-lang/storybook'
 
 export const SavingADraft: Story = {
-  play: spp`
+  play: gpp`
     When I Fill the Field "Title" with "Hello"
     And I Click the Button "Save"
     Then the Status should Read "Draft saved"
@@ -25,5 +25,5 @@ export const SavingADraft: Story = {
 }
 ```
 
-The project's `.spp` files of Defines work in every template. See
-[Storybook](https://github.com/willmartian/spp-lang/blob/master/docs/storybook.md).
+The project's `.gpp` files of Defines work in every template. See
+[Storybook](https://github.com/willmartian/gpp-lang/blob/master/docs/storybook.md).

@@ -1,6 +1,6 @@
 {
-  // This repo is spp-lang, so there's no node_modules/spp-lang: use it from source.
-  "spp.path": "packages/spp-lang/bin/spp-lang.ts",
+  // This repo is gpp-lang, so there's no node_modules/gpp-lang: use it from source.
+  "gpp.path": "packages/gpp-lang/bin/gpp-lang.ts",
   // A Node that runs TypeScript, from the dev shell.
-  "spp.node": "scripts/nix-node"
+  "gpp.node": "scripts/nix-node"
 }

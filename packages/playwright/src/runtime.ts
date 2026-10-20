@@ -1,19 +1,19 @@
 // What the generated tests run (see generate.ts). Each generated file declares
 // its scenarios as Playwright tests and hands each one a body from here, so a
 // generated file says only which tests there are, and everything they do is
-// read from the .spp files when they run.
+// read from the .gpp files when they run.
 //
 // The project is loaded and checked once per worker, the first time a test
 // needs it. A scenario with a mistake the checker can see fails straight away,
 // without starting a browser, and so does a broken Define, as a test of its own.
 //
 // Each Gherkin step becomes a test.step whose location is the step's line in
-// the .spp or Markdown file, so reports and failures point at the Gherkin, not
-// at Spec++'s own code.
+// the .gpp or Markdown file, so reports and failures point at the Gherkin, not
+// at Gherkin++'s own code.
 
+import type { Diagnostic, Scenario, Step, Vocabulary } from '@gpp-lang/core'
+import { GppError, runSteps, settle, words } from '@gpp-lang/core'
 import { expect, type PlaywrightTestArgs, test } from '@playwright/test'
-import type { Diagnostic, Scenario, Step, Vocabulary } from '@spp-lang/core'
-import { runSteps, SppError, settle, words } from '@spp-lang/core'
 import type { BrowserContext } from './driver.ts'
 import { playwright } from './driver.ts'
 import type { Loaded, Project } from './project.ts'
@@ -43,7 +43,7 @@ function loaded(project: Project): Loaded {
 // The tests a generated file can declare, for a project. Called as the file
 // loads, so a base URL from the command line applies to its tests.
 export function project(p: Project) {
-  if (process.env.SPP_BASE_URL) test.use({ baseURL: process.env.SPP_BASE_URL })
+  if (process.env.GPP_BASE_URL) test.use({ baseURL: process.env.GPP_BASE_URL })
 
   const stale = (what: string) =>
     new Error(`${what} isn't where the generated tests say. They're out of date: run Playwright again.`)
@@ -85,7 +85,7 @@ export function project(p: Project) {
       }
     },
 
-    // A file that can't be read as Spec++, as a test that fails with why.
+    // A file that can't be read as Gherkin++, as a test that fails with why.
     broken(file: string): Body {
       return async () => {
         const err = loaded(p).broken.get(file)
@@ -115,7 +115,7 @@ export function runScenario(scenario: Scenario, vocabulary: Vocabulary[], ctx: B
   })
 }
 
-// Makes the error's top frame the offending word in the .spp file, which
+// Makes the error's top frame the offending word in the .gpp file, which
 // is where Playwright's reporters look for a code frame to show.
 function pointAt(err: unknown, step: Step): unknown {
   if (!(err instanceof Error)) return err
@@ -126,8 +126,8 @@ function pointAt(err: unknown, step: Step): unknown {
   return err
 }
 
-function located(d: Pick<Diagnostic, 'file' | 'line' | 'column' | 'message'>): SppError {
-  const err = new SppError(d.message)
-  err.stack = `SppError: ${d.message}\n    at ${d.file}:${d.line}:${d.column}`
+function located(d: Pick<Diagnostic, 'file' | 'line' | 'column' | 'message'>): GppError {
+  const err = new GppError(d.message)
+  err.stack = `GppError: ${d.message}\n    at ${d.file}:${d.line}:${d.column}`
   return err
 }

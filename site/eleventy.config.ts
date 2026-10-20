@@ -8,19 +8,19 @@
 //
 // It runs in site/, so paths here are relative to it.
 //
-// GitHub Pages serves it under /spp-lang/, which CI passes as --pathprefix;
+// GitHub Pages serves it under /gpp-lang/, which CI passes as --pathprefix;
 // HtmlBasePlugin adds it to every absolute URL in the HTML.
 
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { HtmlBasePlugin } from '@11ty/eleventy'
-import { fences, GROUPS, words as vocabulary } from '@spp-lang/core'
+import { fences, GROUPS, words as vocabulary } from '@gpp-lang/core'
+import { entries, shape, takes } from 'gpp-lang'
 import type MarkdownIt from 'markdown-it'
-import { entries, shape, takes } from 'spp-lang'
 import { highlight } from './highlight.ts'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const REPO = 'https://github.com/willmartian/spp-lang'
+const REPO = 'https://github.com/willmartian/gpp-lang'
 
 const PAGES = [
   { file: 'README.md', url: '/', nav: 'Overview' },
@@ -119,7 +119,7 @@ function words() {
         names,
         summary: doc.summary,
         forms: forms.map((f) => ({ shape: shape(f), takes: takes(f) })),
-        examples: highlight(doc.examples.join('\n'), 'spp'),
+        examples: highlight(doc.examples.join('\n'), 'gpp'),
       })),
   })).filter((g) => g.entries.length)
 }

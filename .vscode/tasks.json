@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build Spec++ extension",
+      "label": "build Gherkin++ extension",
       "type": "shell",
       "command": "pnpm install && pnpm run build",
       "options": { "cwd": "${workspaceFolder}/editors/vscode" },

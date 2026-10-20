@@ -1,13 +1,13 @@
-// Turning .spp files into vocabulary and scenarios.
+// Turning .gpp files into vocabulary and scenarios.
 //
 // Reading them from disk is files.ts's job; this works on sources already
 // read, so it runs in a browser too.
 //
-// A .spp file is Gherkin with an optional preamble: Defines above the
+// A .gpp file is Gherkin with an optional preamble: Defines above the
 // Feature line. Either half may be missing, so a file of nothing but Defines
 // is shared vocabulary. Every Define is visible to every scenario.
 //
-// A Markdown file's ```spp blocks are Spec++ too, so a README's examples
+// A Markdown file's ```gpp blocks are Gherkin++ too, so a README's examples
 // can be tests (see markdown.ts, and sections.ts for how a file divides).
 //
 // Gherkin does the Gherkin: Backgrounds, Rules and Scenario Outlines are
@@ -18,7 +18,7 @@ import { AstBuilder, compile, Errors, GherkinClassicTokenMatcher, Parser } from 
 import type { Step as AstStep, FeatureChild, PickleStepArgument, RuleChild } from '@cucumber/messages'
 import { IdGenerator } from '@cucumber/messages'
 import type { Program } from './cognate.ts'
-import { parse, SppError } from './cognate.ts'
+import { GppError, parse } from './cognate.ts'
 import { sections } from './sections.ts'
 
 export interface Step {
@@ -63,15 +63,15 @@ export interface Vocabulary {
   program: Program
 }
 
-export interface SppFile {
+export interface GppFile {
   file: string
-  // a .spp file's preamble; in Markdown, each block's Defines
+  // a .gpp file's preamble; in Markdown, each block's Defines
   vocabulary: Vocabulary[]
-  // a .spp file's Feature; in Markdown, any number
+  // a .gpp file's Feature; in Markdown, any number
   features: Feature[]
 }
 
-// A file that can't be read as Spec++ at all, and where.
+// A file that can't be read as Gherkin++ at all, and where.
 export class LoadError extends Error {
   file: string
   problems: { line: number; column: number; message: string }[]
@@ -85,7 +85,7 @@ export class LoadError extends Error {
 }
 
 // Loads a file as it is right now, which in an editor may not be saved.
-export function loadSource(file: string, src: string): SppFile {
+export function loadSource(file: string, src: string): GppFile {
   const { preambles, documents, problems } = sections(file, src)
   if (problems.length) throw new LoadError(file, problems)
   return {
@@ -100,7 +100,7 @@ function loadVocabulary(file: string, src: string): Vocabulary | null {
     const program = parse(src)
     return program.length ? { file, src, program } : null
   } catch (err) {
-    if (!(err instanceof SppError)) throw err
+    if (!(err instanceof GppError)) throw err
     throw new LoadError(file, [{ ...lineCol(src, err.pos ?? 0), message: err.message }])
   }
 }

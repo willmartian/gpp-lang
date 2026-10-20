@@ -1,14 +1,14 @@
-// Code blocks for the site, coloured by Shiki. Spec++ blocks use the VS Code
-// extension's grammar for the Gherkin around the code, and Spec++'s own lexer
+// Code blocks for the site, coloured by Shiki. Gherkin++ blocks use the VS Code
+// extension's grammar for the Gherkin around the code, and Gherkin++'s own lexer
 // for which words are code, as the language server's semantic tokens do. So
 // the site and the editor agree on what runs.
 
 import { readFileSync } from 'node:fs'
-import { lex } from '@spp-lang/core'
+import { lex } from '@gpp-lang/core'
 import { createCssVariablesTheme, createHighlighter, type DecorationItem, type LanguageRegistration } from 'shiki'
 
 const grammar: LanguageRegistration = JSON.parse(
-  readFileSync(new URL('../editors/vscode/syntaxes/spp.tmLanguage.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../editors/vscode/syntaxes/gpp.tmLanguage.json', import.meta.url), 'utf8'),
 )
 
 // Every colour is a CSS variable, set in style.css for light and dark.
@@ -16,10 +16,10 @@ const theme = createCssVariablesTheme({ name: 'site', variablePrefix: '--code-',
 
 const LANGS = ['typescript', 'shellscript', 'lua', 'markdown']
 
-// Spec++'s README uses ```gherkin blocks so GitHub colours them; here they're Spec++.
-const ALIASES: Record<string, string> = { gherkin: 'spp', ts: 'typescript', sh: 'shellscript' }
+// Gherkin++'s README uses ```gherkin blocks so GitHub colours them; here they're Gherkin++.
+const ALIASES: Record<string, string> = { gherkin: 'gpp', ts: 'typescript', sh: 'shellscript' }
 
-const highlighter = await createHighlighter({ themes: [theme], langs: [{ ...grammar, name: 'spp' }, ...LANGS] })
+const highlighter = await createHighlighter({ themes: [theme], langs: [{ ...grammar, name: 'gpp' }, ...LANGS] })
 
 export function highlight(code: string, info: string): string {
   const name = info.split(/[\s,]+/)[0] ?? ''
@@ -27,7 +27,7 @@ export function highlight(code: string, info: string): string {
   return highlighter.codeToHtml(code.replace(/\n$/, ''), {
     lang,
     theme: 'site',
-    decorations: lang === 'spp' ? words(code) : [],
+    decorations: lang === 'gpp' ? words(code) : [],
     transformers: [
       {
         pre(node) {
@@ -65,7 +65,7 @@ function words(code: string): DecorationItem[] {
       found.push({
         start: { line, character: start },
         end: { line, character: start + t.length },
-        properties: { style: `color:var(--spp-${kind})` },
+        properties: { style: `color:var(--gpp-${kind})` },
       })
     }
   }

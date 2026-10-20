@@ -1,9 +1,9 @@
-// The JavaScript Spec++ reads: spp`…` templates, Storybook play functions, in
+// The JavaScript Gherkin++ reads: gpp`…` templates, Storybook play functions, in
 // .js and .ts files and their kin. It knows nothing of Gherkin; how a
 // template becomes a scenario is in sections.ts.
 //
 // It reads just enough JavaScript to find them: comments, strings and
-// templates, with what's in a template's ${…}, so spp` in a string or a
+// templates, with what's in a template's ${…}, so gpp` in a string or a
 // comment isn't one. A regular expression with a quote or a backtick in it can
 // still fool it.
 
@@ -17,7 +17,7 @@ export interface Template {
   interpolations: number[]
 }
 
-// Every spp`…` template, in order.
+// Every gpp`…` template, in order.
 export function templates(src: string): Template[] {
   const found: Template[] = []
   code(src, 0, false, found)
@@ -49,8 +49,8 @@ function code(src: string, i: number, nested: boolean, found: Template[]): numbe
   return i
 }
 
-// Whether the backtick at i is spp's: spp`, or x.spp`, but not, say, myspp`.
-const isTag = (src: string, i: number) => src.slice(i - 3, i) === 'spp' && !IDENTIFIER.test(src[i - 4] ?? '')
+// Whether the backtick at i is gpp's: gpp`, or x.gpp`, but not, say, mygpp`.
+const isTag = (src: string, i: number) => src.slice(i - 3, i) === 'gpp' && !IDENTIFIER.test(src[i - 4] ?? '')
 
 const lineEnd = (src: string, i: number) => {
   const nl = src.indexOf('\n', i)
@@ -72,8 +72,8 @@ function stringEnd(src: string, i: number): number {
   return src.length
 }
 
-// Past the backtick that closes the template at i, noting it if it's spp's.
-function template(src: string, i: number, spp: boolean, found: Template[]): number {
+// Past the backtick that closes the template at i, noting it if it's gpp's.
+function template(src: string, i: number, gpp: boolean, found: Template[]): number {
   const interpolations: number[] = []
   let j = i + 1
   while (j < src.length && src[j] !== '`') {
@@ -83,6 +83,6 @@ function template(src: string, i: number, spp: boolean, found: Template[]): numb
       j = code(src, j + 2, true, found) + 1
     } else j++
   }
-  if (spp) found.push({ start: i + 1, end: j, interpolations })
+  if (gpp) found.push({ start: i + 1, end: j, interpolations })
   return j + 1
 }

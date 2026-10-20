@@ -4,7 +4,7 @@
 //
 // Queries are Testing Library's, spelled as Cognate words: a role name
 // (Button, Heading, Checkbox…) takes the accessible name to its right and
-// leaves an Element. Spec++ asks for exact names, as Testing Library does,
+// leaves an Element. Gherkin++ asks for exact names, as Testing Library does,
 // unless you say Containing. Roles with no name, like Listitem, take only
 // Containing, and look at the text inside them instead.
 //
@@ -19,7 +19,7 @@
 // Reload, Back, At or Titled, and say why when used.
 
 import type { Stack } from '../language/cognate.ts'
-import { core, describe, Env, SppError, unwrap } from '../language/cognate.ts'
+import { core, describe, Env, GppError, unwrap } from '../language/cognate.ts'
 import type { Context, Doc, Form } from '../language/types.ts'
 import { article, called, formsFor, mistake, NumberType, oneOf, TableType, TextType, type } from '../language/types.ts'
 import type { Action, AnyDriver, Name, Query, QueryKind, State } from './driver.ts'
@@ -543,7 +543,7 @@ function checks(env: Env): Env {
         form([called(TableType, 'a table of one column')], MatcherType, (_, rows) => {
           const texts = rows.map((row) => {
             if (row.length !== 1)
-              throw new SppError(`${word} expected a table of one column, but a row has ${row.length}`)
+              throw new GppError(`${word} expected a table of one column, but a row has ${row.length}`)
             return row[0]
           })
           return new Matcher(`${word} ${texts.map((t) => JSON.stringify(t)).join(', ')}`, { is: 'texts', texts })
@@ -625,7 +625,7 @@ function quantify(quantifier: Quantifier, word: string, found: Found, matcher: M
   const label = `${word} ${found.label.replace(/^the /, '')} ${matcher.describe()}`
   if (TOGETHER.includes(matcher.state.is)) {
     if (quantifier === 'each') return matcher.against(found, ctx)
-    throw new SppError(`${word} checks each thing found, but ${matcher.describe()} checks them all together`)
+    throw new GppError(`${word} checks each thing found, but ${matcher.describe()} checks them all together`)
   }
   const each = quantifier === 'each'
   return new Expectation(label, (not) =>
@@ -643,14 +643,14 @@ function quantify(quantifier: Quantifier, word: string, found: Found, matcher: M
       const wrong = passes.findIndex((p) => p !== each)
       const of = `number ${wrong + 1} of ${all.length}`
       if (!not) {
-        if (each && !all.length) throw new SppError(`${label}, but there was nothing to check`)
+        if (each && !all.length) throw new GppError(`${label}, but there was nothing to check`)
         // The one that's wrong is the opposite of the matcher, for Each.
-        if (wrong >= 0) throw new SppError(`${label}, but ${of} is ${(each ? matcher.negate() : matcher).describe()}`)
+        if (wrong >= 0) throw new GppError(`${label}, but ${of} is ${(each ? matcher.negate() : matcher).describe()}`)
       } else if (wrong < 0) {
         const n = all.length
         const which = each ? 'every one' : 'none'
         const but = n ? `${which} of the ${n} found is ${matcher.describe()}` : 'there was nothing to check'
-        throw new SppError(`Not ${label}, but ${but}`)
+        throw new GppError(`Not ${label}, but ${but}`)
       }
     }),
   )
@@ -693,9 +693,9 @@ export async function settle(stack: Stack, ctx: Context): Promise<void> {
       stack.pop()
       pending.push(under.against(v, ctx))
     } else if (v instanceof Matcher) {
-      throw new SppError(unchecked(v.describe()))
+      throw new GppError(unchecked(v.describe()))
     } else {
-      throw new SppError(unused([v, ...stack.reverse()].map(describe)))
+      throw new GppError(unused([v, ...stack.reverse()].map(describe)))
     }
   }
   // Checked in reading order: the stack holds them right to left.
@@ -775,7 +775,7 @@ function pageChecks(env: Env): Env {
 
 const vocabularies = new Map<boolean, Env>()
 
-// Every word, as .spp files and Markdown have them, or as a template does,
+// Every word, as .gpp files and Markdown have them, or as a template does,
 // where the page's words say why there are none. Made once, since they're the
 // same wherever they run.
 export function words({ template = false }: { template?: boolean } = {}): Env {

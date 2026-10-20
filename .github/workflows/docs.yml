@@ -30,7 +30,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - id: pages
         uses: actions/configure-pages@v6
-      # Pages serves the site under its base path, /spp-lang/.
+      # Pages serves the site under its base path, /gpp-lang/.
       - run: pnpm docs:build --pathprefix=${{ steps.pages.outputs.base_path }}/
       - uses: actions/upload-pages-artifact@v5
         with:

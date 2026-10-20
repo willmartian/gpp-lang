@@ -1,11 +1,11 @@
 {
-  "$comment": "Highlights ```spp blocks in Markdown as Spec++, by injecting into VS Code's Markdown grammar.",
-  "scopeName": "markdown.spp.codeblock",
+  "$comment": "Highlights ```gpp blocks in Markdown as Gherkin++, by injecting into VS Code's Markdown grammar.",
+  "scopeName": "markdown.gpp.codeblock",
   "injectionSelector": "L:text.html.markdown",
-  "patterns": [{ "include": "#sppBlock" }],
+  "patterns": [{ "include": "#gppBlock" }],
   "repository": {
-    "sppBlock": {
-      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(spp)((?:[\\s,][^`]*)?)$",
+    "gppBlock": {
+      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(gpp)((?:[\\s,][^`]*)?)$",
       "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
       "name": "markup.fenced_code.block.markdown",
       "beginCaptures": {
@@ -20,8 +20,8 @@
         {
           "begin": "(^|\\G)(\\s*)(.*)",
           "while": "(^|\\G)(?!\\s*([`~]{3,})\\s*$)",
-          "contentName": "meta.embedded.block.spp",
-          "patterns": [{ "include": "source.spp" }]
+          "contentName": "meta.embedded.block.gpp",
+          "patterns": [{ "include": "source.gpp" }]
         }
       ]
     }

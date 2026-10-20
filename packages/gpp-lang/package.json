@@ -1,5 +1,5 @@
 {
-  "name": "spp-lang",
+  "name": "gpp-lang",
   "version": "0.1.0",
   "description": "Specs that run. Written by agents, read by people.",
   "type": "module",
@@ -8,7 +8,7 @@
     "./lsp": "./src/tools/lsp.ts"
   },
   "bin": {
-    "spp-lang": "./bin/spp-lang.ts"
+    "gpp-lang": "./bin/gpp-lang.ts"
   },
   "files": [
     "dist",
@@ -26,7 +26,7 @@
       }
     },
     "bin": {
-      "spp-lang": "./dist/bin/spp-lang.js"
+      "gpp-lang": "./dist/bin/gpp-lang.js"
     }
   },
   "scripts": {
@@ -45,11 +45,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/willmartian/spp-lang.git",
-    "directory": "packages/spp-lang"
+    "url": "git+https://github.com/willmartian/gpp-lang.git",
+    "directory": "packages/gpp-lang"
   },
   "dependencies": {
-    "@spp-lang/core": "workspace:^",
+    "@gpp-lang/core": "workspace:^",
     "commander": "^15.0.0",
     "vscode-languageserver": "^10.1.2",
     "vscode-languageserver-textdocument": "^1.0.15"

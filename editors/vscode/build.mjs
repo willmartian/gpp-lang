@@ -1,4 +1,4 @@
-// Bundles the extension and Spec++'s language server, each into one file, so
+// Bundles the extension and Gherkin++'s language server, each into one file, so
 // the extension needs nothing installed to work.
 import { build } from 'esbuild'
 

@@ -3,7 +3,7 @@
 // of the way), run it under xvfb-run -a.
 //
 // It uses the VS Code on PATH when it can find its Electron binary, which is
-// how NixOS lays it out, or $SPP_VSCODE; otherwise it downloads one.
+// how NixOS lays it out, or $GPP_VSCODE; otherwise it downloads one.
 
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -14,7 +14,7 @@ import { runTests } from '@vscode/test-electron'
 const here = import.meta.dirname
 
 function installedVSCode() {
-  if (process.env.SPP_VSCODE) return process.env.SPP_VSCODE
+  if (process.env.GPP_VSCODE) return process.env.GPP_VSCODE
   try {
     const launcher = fs.realpathSync(execFileSync('which', ['code'], { encoding: 'utf8' }).trim())
     const electron = path.join(path.dirname(launcher), '..', 'lib', 'vscode', 'code')
@@ -24,19 +24,19 @@ function installedVSCode() {
   }
 }
 
-const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-vscode-'))
+const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-vscode-'))
 fs.writeFileSync(
-  path.join(workspace, 'words.spp'),
+  path.join(workspace, 'words.gpp'),
   ['Define: Add Text (Item)', '  Fill the Field "Item" with Item', '  Click the Button "Add"', ''].join('\n'),
 )
 fs.writeFileSync(
-  path.join(workspace, 'a.spp'),
+  path.join(workspace, 'a.gpp'),
   ['Feature: Groceries', '  Scenario: Adding', '    When I Add "Milk"', '    And I Click "Add"', ''].join('\n'),
 )
 // A Storybook play function with a mistake.
 fs.writeFileSync(
   path.join(workspace, 'editor.stories.ts'),
-  ['export const Saving = {', '  play: spp`', '    When I Visit "/"', '  `,', '}', ''].join('\n'),
+  ['export const Saving = {', '  play: gpp`', '    When I Visit "/"', '  `,', '}', ''].join('\n'),
 )
 // Markdown, with two Features: one carried on across blocks, one with a mistake.
 fs.writeFileSync(
@@ -44,7 +44,7 @@ fs.writeFileSync(
   [
     '# A guide', //                                     1
     '', //                                              2
-    '```spp', //                                        3
+    '```gpp', //                                        3
     'Feature: Guide', //                                4
     '  Scenario: Passes', //                            5
     '    Given I Visit "data:text/html,<h1>Hi</h1>"', // 6
@@ -53,12 +53,12 @@ fs.writeFileSync(
     '', //                                              9
     'Some prose.', //                                   10
     '', //                                              11
-    '```spp', //                                        12
+    '```gpp', //                                        12
     '  Scenario: Also passes', //                       13
     '    Given I Visit "data:text/html,<h1>Hi</h1>"', // 14
     '```', //                                           15
     '', //                                              16
-    '```spp', //                                        17
+    '```gpp', //                                        17
     'Feature: Another', //                              18
     '  Scenario: A mistake', //                         19
     '    When I Click "Add"', //                        20
@@ -66,11 +66,11 @@ fs.writeFileSync(
     '',
   ].join('\n'),
 )
-// This repo's spp-lang, from source, since there's no node_modules/spp-lang here.
+// This repo's gpp-lang, from source, since there's no node_modules/gpp-lang here.
 fs.mkdirSync(path.join(workspace, '.vscode'))
 fs.writeFileSync(
   path.join(workspace, '.vscode', 'settings.json'),
-  JSON.stringify({ 'spp.path': path.join(here, '..', '..', '..', 'packages', 'spp-lang', 'bin', 'spp-lang.ts') }),
+  JSON.stringify({ 'gpp.path': path.join(here, '..', '..', '..', 'packages', 'gpp-lang', 'bin', 'gpp-lang.ts') }),
 )
 
 try {

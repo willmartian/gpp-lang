@@ -22,11 +22,11 @@ const test = (name, fn) => tests.push({ name, fn })
 let uri
 let doc
 
-test('.spp files are Spec++', async () => {
-  uri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'a.spp')
+test('.gpp files are Gherkin++', async () => {
+  uri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'a.gpp')
   doc = await vscode.workspace.openTextDocument(uri)
   await vscode.window.showTextDocument(doc)
-  assert.equal(doc.languageId, 'spp')
+  assert.equal(doc.languageId, 'gpp')
 })
 
 test('mistakes show up, where they are', async () => {
@@ -52,7 +52,7 @@ test("go to definition finds a word's Define", async () => {
     uri,
     new vscode.Position(2, 12),
   )
-  assert.equal(path.basename((target.targetUri ?? target.uri).fsPath), 'words.spp')
+  assert.equal(path.basename((target.targetUri ?? target.uri).fsPath), 'words.gpp')
 })
 
 test('mistakes clear once fixed, before saving', async () => {
@@ -95,7 +95,7 @@ test('the code is picked out of the prose', async () => {
 
 test('Enter after a Define: line indents', async () => {
   const words = await vscode.workspace.openTextDocument(
-    vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'words.spp'),
+    vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'words.gpp'),
   )
   const editor = await vscode.window.showTextDocument(words)
   const end = words.lineAt(0).text.length
@@ -106,7 +106,7 @@ test('Enter after a Define: line indents', async () => {
 
 const guide = () => vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'guide.md').fsPath
 
-test("a Markdown file's ```spp blocks are checked", async () => {
+test("a Markdown file's ```gpp blocks are checked", async () => {
   const uri = vscode.Uri.file(guide())
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(uri))
   const found = await eventually('diagnostics', () => {
@@ -119,11 +119,11 @@ test("a Markdown file's ```spp blocks are checked", async () => {
   )
 })
 
-test("a stories file's spp templates are checked", async () => {
+test("a stories file's gpp templates are checked", async () => {
   const uri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'editor.stories.ts')
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(uri))
   const found = await eventually('diagnostics', () => {
-    const d = vscode.languages.getDiagnostics(uri).filter((d) => d.source === 'spp')
+    const d = vscode.languages.getDiagnostics(uri).filter((d) => d.source === 'gpp')
     return d.length ? d : null
   })
   assert.deepEqual(
@@ -133,10 +133,10 @@ test("a stories file's spp templates are checked", async () => {
 })
 
 test("a stories file's semantic tokens are left to TypeScript", async () => {
-  const spp = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokensLegend', uri)
+  const gpp = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokensLegend', uri)
   const stories = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'editor.stories.ts')
   const legend = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokensLegend', stories)
-  assert.notDeepEqual(legend?.tokenTypes, spp.tokenTypes)
+  assert.notDeepEqual(legend?.tokenTypes, gpp.tokenTypes)
 })
 
 exports.run = async () => {

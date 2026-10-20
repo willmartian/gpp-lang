@@ -1,7 +1,7 @@
 {
-  "$comment": "Gherkin, with Spec++'s code in steps and Defines: capitalised words, numbers, symbols and strings, as the lexer finds them (cognate.ts). In .spp files and Markdown, the language server's semantic tokens refine it, telling what a Define is given apart from a word. Rules start at a line's start or, in an spp`…` template, just after its backtick, and a step or a table ends at a backtick, which closes a template.",
-  "name": "Spec++",
-  "scopeName": "source.spp",
+  "$comment": "Gherkin, with Gherkin++'s code in steps and Defines: capitalised words, numbers, symbols and strings, as the lexer finds them (cognate.ts). In .gpp files and Markdown, the language server's semantic tokens refine it, telling what a Define is given apart from a word. Rules start at a line's start or, in a gpp`…` template, just after its backtick, and a step or a table ends at a backtick, which closes a template.",
+  "name": "Gherkin++",
+  "scopeName": "source.gpp",
   "patterns": [
     { "include": "#comment" },
     { "include": "#docString" },
@@ -16,40 +16,40 @@
   "repository": {
     "comment": {
       "match": "(?:^|\\G)\\s*#.*$",
-      "name": "comment.line.number-sign.spp"
+      "name": "comment.line.number-sign.gpp"
     },
     "docString": {
       "begin": "(?:^|\\G)\\s*(\"\"\"|```)",
       "end": "^\\s*\\1",
-      "name": "string.quoted.docstring.spp"
+      "name": "string.quoted.docstring.gpp"
     },
     "structure": {
       "match": "(?:^|\\G)\\s*(Feature|Background|Scenario Outline|Scenario Template|Scenario|Example|Examples|Scenarios|Rule):(.*)$",
       "captures": {
-        "1": { "name": "keyword.control.spp" },
-        "2": { "name": "entity.name.section.spp" }
+        "1": { "name": "keyword.control.gpp" },
+        "2": { "name": "entity.name.section.gpp" }
       }
     },
     "tags": {
       "match": "(?<=^|\\s)@\\S+",
-      "name": "entity.name.tag.spp"
+      "name": "entity.name.tag.gpp"
     },
     "table": {
       "begin": "(?:^|\\G)\\s*\\|",
       "end": "$|(?<!\\\\)(?=`)",
-      "beginCaptures": { "0": { "name": "punctuation.separator.table.spp" } },
-      "patterns": [{ "match": "\\|", "name": "punctuation.separator.table.spp" }]
+      "beginCaptures": { "0": { "name": "punctuation.separator.table.gpp" } },
+      "patterns": [{ "match": "\\|", "name": "punctuation.separator.table.gpp" }]
     },
     "step": {
       "begin": "(?:^|\\G)\\s*(Given|When|Then|And|But|\\*)\\s",
       "end": "$|(?<!\\\\)(?=`)",
-      "beginCaptures": { "1": { "name": "keyword.other.step.spp" } },
+      "beginCaptures": { "1": { "name": "keyword.other.step.gpp" } },
       "patterns": [{ "include": "#code" }]
     },
     "defineBlock": {
       "begin": "(?:^|\\G)(\\s*)(Define)(?=:)",
       "while": "(?:^|\\G)(?=\\1\\s+\\S|\\s*$)",
-      "beginCaptures": { "2": { "name": "keyword.other.spp" } },
+      "beginCaptures": { "2": { "name": "keyword.other.gpp" } },
       "patterns": [{ "include": "#comment" }, { "include": "#code" }]
     },
     "code": {
@@ -57,23 +57,23 @@
     },
     "word": {
       "match": "(?<![\\w'\\-?!+/*>=<^.])[A-Z](?:[A-Za-z0-9\\-?!'+/*>=<^.]*[A-Za-z0-9\\-?!'+/*>=<^])?",
-      "name": "entity.name.function.spp"
+      "name": "entity.name.function.gpp"
     },
     "number": {
       "match": "(?<![\\w.])-?(?:[1-9][0-9]*|[0-9])(?:\\.[0-9]+)?(?:e-?[0-9]+)?(?![\\w.])",
-      "name": "constant.numeric.spp"
+      "name": "constant.numeric.gpp"
     },
     "symbol": {
       "match": "\\\\[A-Za-z0-9\\-?!'+/*>=<^.]+",
-      "name": "string.other.symbol.spp"
+      "name": "string.other.symbol.gpp"
     },
     "define": {
       "match": "\\bDefine\\b",
-      "name": "keyword.other.spp"
+      "name": "keyword.other.gpp"
     },
     "string": {
       "match": "\"(?:[^\"\\\\]|\\\\.)*\"",
-      "name": "string.quoted.double.spp"
+      "name": "string.quoted.double.gpp"
     }
   }
 }

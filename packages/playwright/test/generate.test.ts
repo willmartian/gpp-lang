@@ -1,4 +1,4 @@
-// Generating Playwright tests from .spp files, checked through Playwright
+// Generating Playwright tests from .gpp files, checked through Playwright
 // itself: where it says each test is, and how the ones that fail without a
 // browser fail.
 
@@ -16,7 +16,7 @@ const packages = path.join(import.meta.dirname, '..', '..')
 // Installs this package in a scratch project, as a link to this repo's, so its
 // config imports it as any project's would.
 function install(dir: string) {
-  const scope = path.join(dir, 'node_modules', '@spp-lang')
+  const scope = path.join(dir, 'node_modules', '@gpp-lang')
   fs.mkdirSync(scope, { recursive: true })
   fs.symlinkSync(path.join(packages, 'playwright'), path.join(scope, 'playwright'))
 }
@@ -50,16 +50,16 @@ const unreadable =
   'Feature: Broken\n  Scenario: S\n    Given I Fill in the form:\n      | Email |\n      | Email | a@b |\n'
 
 function scratch(): string {
-  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'spp-generate-')))
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-generate-')))
   install(dir)
   const files: Record<string, string> = {
     'playwright.config.mjs': [
-      "import { defineSppConfig } from '@spp-lang/playwright'",
-      "export default { ...defineSppConfig({ features: ['features'] }) }",
+      "import { defineGppConfig } from '@gpp-lang/playwright'",
+      "export default { ...defineGppConfig({ features: ['features'] }) }",
     ].join('\n'),
-    'features/cart.spp': cart,
-    'features/words.spp': brokenDefine,
-    'features/unreadable.spp': unreadable,
+    'features/cart.gpp': cart,
+    'features/words.gpp': brokenDefine,
+    'features/unreadable.gpp': unreadable,
   }
   for (const [name, src] of Object.entries(files)) {
     fs.mkdirSync(path.dirname(path.join(dir, name)), { recursive: true })
@@ -98,7 +98,7 @@ function specs(json: string): Map<string, Spec> {
   return found
 }
 
-test('each scenario is a Playwright test, on its line in the .spp file', () => {
+test('each scenario is a Playwright test, on its line in the .gpp file', () => {
   const dir = scratch()
   const run = playwright(dir, ['--list', '--reporter=json'])
   assert.equal(run.status, 0, run.stderr)
@@ -107,19 +107,19 @@ test('each scenario is a Playwright test, on its line in the .spp file', () => {
     const spec = found.get(title)
     return spec && `${spec.file}:${spec.line}`
   }
-  assert.equal(at('Cart › Adding'), 'features/cart.spp:7')
+  assert.equal(at('Cart › Adding'), 'features/cart.gpp:7')
   assert.equal(found.get('Cart › Adding')?.tags.join(), 'smoke')
-  assert.equal(at('Cart › A mistake'), 'features/cart.spp:10')
-  assert.equal(at('Cart › Rows › item: Tea'), 'features/cart.spp:18')
-  assert.equal(at('Cart › Rows › item: Jam'), 'features/cart.spp:19')
-  assert.equal(at('Define Wipe'), 'features/words.spp:2')
-  assert.equal(at('unreadable.spp'), 'features/unreadable.spp:5')
+  assert.equal(at('Cart › A mistake'), 'features/cart.gpp:10')
+  assert.equal(at('Cart › Rows › item: Tea'), 'features/cart.gpp:18')
+  assert.equal(at('Cart › Rows › item: Jam'), 'features/cart.gpp:19')
+  assert.equal(at('Define Wipe'), 'features/words.gpp:2')
+  assert.equal(at('unreadable.gpp'), 'features/unreadable.gpp:5')
 })
 
 test('mistakes the checker finds fail where they are, without a browser', () => {
   const dir = scratch()
   // Browsers are looked for where there are none, so any test that started one would fail to.
-  const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-no-browsers-'))
+  const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-no-browsers-'))
   const run = playwright(dir, ['--reporter=json', '--grep-invert', 'Adding|Rows'], {
     PLAYWRIGHT_BROWSERS_PATH: nowhere,
   })
@@ -131,22 +131,22 @@ test('mistakes the checker finds fail where they are, without a browser', () => 
   }
   assert.match(failure('Cart › A mistake') ?? '', /^failed 11:12 .*Click expected something on the page/)
   assert.match(failure('Define Wipe') ?? '', /^failed 2:3 .*Unknown word Clik/)
-  assert.match(failure('unreadable.spp') ?? '', /^failed 5:7 .*inconsistent cell count/)
+  assert.match(failure('unreadable.gpp') ?? '', /^failed 5:7 .*inconsistent cell count/)
 })
 
-test("generated files go when their .spp file does, and nothing else's does", () => {
+test("generated files go when their .gpp file does, and nothing else's does", () => {
   const dir = scratch()
   assert.equal(playwright(dir, ['--list']).status, 0)
-  const generated = path.join(dir, '.spp-tests', 'features')
-  assert.ok(fs.existsSync(path.join(generated, 'unreadable.spp.spec.js')))
+  const generated = path.join(dir, '.gpp-tests', 'features')
+  assert.ok(fs.existsSync(path.join(generated, 'unreadable.gpp.spec.js')))
   fs.writeFileSync(path.join(generated, 'mine.spec.js'), "// someone else's\n")
-  fs.rmSync(path.join(dir, 'features', 'unreadable.spp'))
+  fs.rmSync(path.join(dir, 'features', 'unreadable.gpp'))
   assert.equal(playwright(dir, ['--list']).status, 0)
   assert.deepEqual(fs.readdirSync(generated).sort(), [
-    'cart.spp.spec.js',
-    'cart.spp.spec.js.map',
+    'cart.gpp.spec.js',
+    'cart.gpp.spec.js.map',
     'mine.spec.js',
-    'words.spp.spec.js',
-    'words.spp.spec.js.map',
+    'words.gpp.spec.js',
+    'words.gpp.spec.js.map',
   ])
 })

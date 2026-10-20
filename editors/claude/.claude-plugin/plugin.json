@@ -1,8 +1,8 @@
 {
-  "name": "spp-lang",
-  "displayName": "Spec++",
+  "name": "gpp-lang",
+  "displayName": "Gherkin++",
   "version": "0.1.0",
-  "description": "Helps Claude write Spec++ (.spp) files: the language's rules, the project's own words from `spp-lang dictionary`, and checking with `spp-lang check` after every edit.",
+  "description": "Helps Claude write Gherkin++ (.gpp) files: the language's rules, the project's own words from `gpp-lang dictionary`, and checking with `gpp-lang check` after every edit.",
   "author": { "name": "Will Martin" },
-  "keywords": ["gherkin", "spec++", "bdd", "playwright", "testing"]
+  "keywords": ["gherkin", "gherkin++", "bdd", "playwright", "testing"]
 }

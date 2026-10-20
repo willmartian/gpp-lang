@@ -3,13 +3,13 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { analyze, leftovers, words as vocabulary } from '@spp-lang/core'
-import { discover, load } from '@spp-lang/core/node'
-import { dictionary } from 'spp-lang'
+import { analyze, leftovers, words as vocabulary } from '@gpp-lang/core'
+import { discover, load } from '@gpp-lang/core/node'
+import { dictionary } from 'gpp-lang'
 
-// The dictionary for some .spp files, given as name → contents.
+// The dictionary for some .gpp files, given as name → contents.
 function dictionaryOf(files: Record<string, string>) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-dictionary-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-dictionary-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)
   const words = vocabulary()
   return dictionary(words, analyze(discover([dir]).map(load), { words, settle: leftovers }), dir)
@@ -46,23 +46,23 @@ test('a word with several forms lists each, with what it takes', () => {
 })
 
 test("a project's Defines are listed with their forms and where they are", () => {
-  const out = dictionaryOf({ 'words.spp': 'Define: Add Text (Item)\n  Fill the Field "Item" with Item' })
-  assert.match(out, /Defined in this project\n\nAdd\n {2}Text \(Item\) -> {4}words\.spp:1$/)
+  const out = dictionaryOf({ 'words.gpp': 'Define: Add Text (Item)\n  Fill the Field "Item" with Item' })
+  assert.match(out, /Defined in this project\n\nAdd\n {2}Text \(Item\) -> {4}words\.gpp:1$/)
 })
 
 test("a Define's header is listed with the names it gives", () => {
-  const out = dictionaryOf({ 'words.spp': 'Define: Move Text (Item) to Element\n  Fill Element with Item' })
-  assert.match(out, /\nMove\n {2}Text \(Item\), Element -> {4}words\.spp:1$/)
+  const out = dictionaryOf({ 'words.gpp': 'Define: Move Text (Item) to Element\n  Fill Element with Item' })
+  assert.match(out, /\nMove\n {2}Text \(Item\), Element -> {4}words\.gpp:1$/)
 })
 
 test('a noun is listed as leaving its type', () => {
-  const out = dictionaryOf({ 'words.spp': 'Define: Cart\n  the Region "Cart"' })
-  assert.match(out, /\nCart\n {2}-> Cart {4}words\.spp:1$/)
+  const out = dictionaryOf({ 'words.gpp': 'Define: Cart\n  the Region "Cart"' })
+  assert.match(out, /\nCart\n {2}-> Cart {4}words\.gpp:1$/)
 })
 
 test('a word with several Defines lists each, with where it is', () => {
-  const out = dictionaryOf({ 'words.spp': 'Define: Go\n  Visit "/"\nDefine: Go Text (Where)\n  Visit Where' })
-  assert.match(out, /\nGo\n {2}-> {4}words\.spp:1\n {2}Text \(Where\) -> {4}words\.spp:3$/)
+  const out = dictionaryOf({ 'words.gpp': 'Define: Go\n  Visit "/"\nDefine: Go Text (Where)\n  Visit Where' })
+  assert.match(out, /\nGo\n {2}-> {4}words\.gpp:1\n {2}Text \(Where\) -> {4}words\.gpp:3$/)
 })
 
 test('with no Defines, the dictionary says so', () => {

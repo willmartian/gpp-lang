@@ -1,5 +1,5 @@
 {
-  description = "Spec++: a superset of Gherkin that you can run without step definitions";
+  description = "Gherkin++: a superset of Gherkin that you can run without step definitions";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

@@ -1,4 +1,4 @@
-// Talks to `spp-lang lsp` over stdio, as an editor would.
+// Talks to `gpp-lang lsp` over stdio, as an editor would.
 
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
@@ -22,13 +22,13 @@ const feature = [
   '',
 ].join('\n')
 
-// Outside its ```spp block, Markdown is prose, whatever it says.
+// Outside its ```gpp block, Markdown is prose, whatever it says.
 const readme = [
   '# Groceries', //                    0
   '', //                               1
   'Visit "/" is not code here.', //    2
   '', //                               3
-  '```spp', //                         4
+  '```gpp', //                         4
   'Feature: In the docs', //           5
   '  Scenario: Visiting', //           6
   '    When I Visit "/"', //           7
@@ -56,20 +56,20 @@ const shop = [
 
 // Storybook play functions, which use the project's Defines too.
 const stories = [
-  "import { spp } from '@spp-lang/storybook'", //                0
+  "import { gpp } from '@gpp-lang/storybook'", //                0
   '', //                                                         1
   'export const Adding = {', //                                  2
-  '  play: spp`', //                                            3
+  '  play: gpp`', //                                            3
   '    When I Add "Milk"', //                                    4
   '    Then I should See the Status "Added"', //                 5  a mistake
   '    And I Click the ', //                                     6  for completion
   '  `,', //                                                    7
   '}', //                                                        8
-  'export const Visiting = { play: spp`Given I Visit "/"` }', // 9  a mistake
+  'export const Visiting = { play: gpp`Given I Visit "/"` }', // 9  a mistake
   '',
 ].join('\n')
 
-const bin = path.join(import.meta.dirname, '..', 'packages', 'spp-lang', 'bin', 'spp-lang.ts')
+const bin = path.join(import.meta.dirname, '..', 'packages', 'gpp-lang', 'bin', 'gpp-lang.ts')
 
 type Published = {
   uri: string
@@ -77,22 +77,22 @@ type Published = {
 }
 
 test('the language server', async (t) => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-lsp-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-lsp-'))
   fs.writeFileSync(path.join(dir, 'package.json'), '{}')
-  fs.writeFileSync(path.join(dir, 'words.spp'), words)
-  fs.writeFileSync(path.join(dir, 'a.spp'), feature)
+  fs.writeFileSync(path.join(dir, 'words.gpp'), words)
+  fs.writeFileSync(path.join(dir, 'a.gpp'), feature)
   fs.writeFileSync(path.join(dir, 'README.md'), readme)
-  fs.writeFileSync(path.join(dir, 'shop.spp'), shop)
+  fs.writeFileSync(path.join(dir, 'shop.gpp'), shop)
   fs.writeFileSync(path.join(dir, 'editor.stories.ts'), stories)
   // A package of its own, so a project of its own, which Defines Add too, its own way.
   fs.mkdirSync(path.join(dir, 'other'))
   fs.writeFileSync(path.join(dir, 'other', 'package.json'), '{}')
-  fs.writeFileSync(path.join(dir, 'other', 'words.spp'), 'Define: Add Text (Item)\n  Fill the Field "Name" with Item\n')
-  fs.writeFileSync(path.join(dir, 'other', 'c.spp'), 'Feature: Other\n  Scenario: S\n    When I Add "Tea"\n')
-  const uri = pathToFileURL(path.join(dir, 'a.spp')).href
-  const wordsUri = pathToFileURL(path.join(dir, 'words.spp')).href
+  fs.writeFileSync(path.join(dir, 'other', 'words.gpp'), 'Define: Add Text (Item)\n  Fill the Field "Name" with Item\n')
+  fs.writeFileSync(path.join(dir, 'other', 'c.gpp'), 'Feature: Other\n  Scenario: S\n    When I Add "Tea"\n')
+  const uri = pathToFileURL(path.join(dir, 'a.gpp')).href
+  const wordsUri = pathToFileURL(path.join(dir, 'words.gpp')).href
   const readmeUri = pathToFileURL(path.join(dir, 'README.md')).href
-  const shopUri = pathToFileURL(path.join(dir, 'shop.spp')).href
+  const shopUri = pathToFileURL(path.join(dir, 'shop.gpp')).href
   const storiesUri = pathToFileURL(path.join(dir, 'editor.stories.ts')).href
 
   // As an editor's language client starts it.
@@ -103,7 +103,7 @@ test('the language server', async (t) => {
     new rpc.StreamMessageReader(child.stdout),
     new rpc.StreamMessageWriter(child.stdin),
   )
-  // Every publish, and a way to wait for the next one about a.spp that passes a test.
+  // Every publish, and a way to wait for the next one about a.gpp that passes a test.
   const published: Published[] = []
   const waiters: (() => void)[] = []
   connection.onNotification('textDocument/publishDiagnostics', (p: Published) => {
@@ -137,7 +137,7 @@ test('the language server', async (t) => {
   })
   connection.sendNotification('initialized', {})
   connection.sendNotification('textDocument/didOpen', {
-    textDocument: { uri, languageId: 'spp', version: 1, text: feature },
+    textDocument: { uri, languageId: 'gpp', version: 1, text: feature },
   })
 
   await t.test('reports mistakes, where they are', async () => {
@@ -149,13 +149,13 @@ test('the language server', async (t) => {
   })
 
   await t.test('checks each package on its own, so two can Define the same word', async () => {
-    const clashes = published.filter((p) => /words\.spp$/.test(p.uri) && p.diagnostics.length)
+    const clashes = published.filter((p) => /words\.gpp$/.test(p.uri) && p.diagnostics.length)
     assert.deepEqual(clashes, [])
     const hover = await connection.sendRequest<{ contents: { value: string } }>('textDocument/hover', {
-      textDocument: { uri: pathToFileURL(path.join(dir, 'other', 'c.spp')).href },
+      textDocument: { uri: pathToFileURL(path.join(dir, 'other', 'c.gpp')).href },
       position: { line: 2, character: 12 },
     })
-    assert.match(hover.contents.value, /Defined at other\/words\.spp:1/)
+    assert.match(hover.contents.value, /Defined at other\/words\.gpp:1/)
   })
 
   await t.test("shows a word's signature, for a Define too", async () => {
@@ -164,7 +164,7 @@ test('the language server', async (t) => {
       position: { line: 2, character: 12 },
     })
     assert.match(hover.contents.value, /Add : Text \(Item\) ->/)
-    assert.match(hover.contents.value, /Defined at words\.spp:1/)
+    assert.match(hover.contents.value, /Defined at words\.gpp:1/)
   })
 
   await t.test('shows what a built-in word is for, and an example', async () => {
@@ -173,7 +173,7 @@ test('the language server', async (t) => {
       position: { line: 3, character: 11 },
     })
     assert.match(hover.contents.value, /Click : Element ->/)
-    assert.match(hover.contents.value, /Clicks an element\.\n\n```spp\nWhen I Click the Button "Sign in"\n```/)
+    assert.match(hover.contents.value, /Clicks an element\.\n\n```gpp\nWhen I Click the Button "Sign in"\n```/)
   })
 
   await t.test('in a Define, knows what its header takes', async () => {
@@ -184,7 +184,7 @@ test('the language server', async (t) => {
     assert.match(hover.contents.value, /Item : Text/)
     // Completion is for open files, when asked or after a capital.
     connection.sendNotification('textDocument/didOpen', {
-      textDocument: { uri: wordsUri, languageId: 'spp', version: 1, text: words },
+      textDocument: { uri: wordsUri, languageId: 'gpp', version: 1, text: words },
     })
     const items = await connection.sendRequest<{ label: string }[]>('textDocument/completion', {
       textDocument: { uri: wordsUri },
@@ -216,11 +216,11 @@ test('the language server', async (t) => {
         context: { includeDeclaration },
       })
     // A template's uses too, since it shares the project's Defines.
-    assert.deepEqual((await references(false)).map(where), ['a.spp:2:11', 'editor.stories.ts:4:11'])
+    assert.deepEqual((await references(false)).map(where), ['a.gpp:2:11', 'editor.stories.ts:4:11'])
     assert.deepEqual((await references(true)).map(where).sort(), [
-      'a.spp:2:11',
+      'a.gpp:2:11',
       'editor.stories.ts:4:11',
-      'words.spp:0:8',
+      'words.gpp:0:8',
     ])
   })
 
@@ -230,7 +230,7 @@ test('the language server', async (t) => {
       position: { line: 3, character: 12 },
       context: { includeDeclaration: true },
     })
-    assert.deepEqual(found.map(where).sort(), ['a.spp:3:10', 'a.spp:4:10', 'editor.stories.ts:6:10', 'words.spp:2:2'])
+    assert.deepEqual(found.map(where).sort(), ['a.gpp:3:10', 'a.gpp:4:10', 'editor.stories.ts:6:10', 'words.gpp:2:2'])
   })
 
   await t.test("lists a file's Defines, and its Feature's scenarios", async () => {
@@ -250,7 +250,7 @@ test('the language server', async (t) => {
     })
     assert.match(hover.contents.value, /Put : Text \(Item\), Shelf ->/)
     assert.doesNotMatch(hover.contents.value, /Cart/)
-    assert.match(hover.contents.value, /Defined at shop\.spp:7$/)
+    assert.match(hover.contents.value, /Defined at shop\.gpp:7$/)
     const location = await connection.sendRequest<{ range: { start: { line: number; character: number } } }>(
       'textDocument/definition',
       { textDocument: { uri: shopUri }, position: { line: 10, character: 12 } },
@@ -265,19 +265,19 @@ test('the language server', async (t) => {
         position: { line, character },
         context: { includeDeclaration: true },
       })
-    assert.deepEqual((await references(10, 12)).map(where).sort(), ['shop.spp:10:11', 'shop.spp:4:8'])
-    assert.deepEqual((await references(6, 9)).map(where).sort(), ['shop.spp:11:10', 'shop.spp:6:8'])
+    assert.deepEqual((await references(10, 12)).map(where).sort(), ['shop.gpp:10:11', 'shop.gpp:4:8'])
+    assert.deepEqual((await references(6, 9)).map(where).sort(), ['shop.gpp:11:10', 'shop.gpp:6:8'])
   })
 
   await t.test('searches the project for Defines and scenarios by name', async () => {
     const found = await connection.sendRequest<{ name: string; location: Found }[]>('workspace/symbol', {
       query: 'add',
     })
-    // Both projects' Adds: this one's, and other/words.spp's.
+    // Both projects' Adds: this one's, and other/words.gpp's.
     assert.deepEqual(found.map((s) => `${s.name} ${where(s.location)}`).sort(), [
-      'Add words.spp:0:0',
-      'Add words.spp:0:0',
-      'Adding a.spp:1:2',
+      'Add words.gpp:0:0',
+      'Add words.gpp:0:0',
+      'Adding a.gpp:1:2',
     ])
   })
 
@@ -338,7 +338,7 @@ test('the language server', async (t) => {
     assert.deepEqual(await diagnostics((p) => p.diagnostics.length === 0), [])
   })
 
-  await t.test("checks a Markdown file's ```spp blocks, and only those", async () => {
+  await t.test("checks a Markdown file's ```gpp blocks, and only those", async () => {
     const found = await diagnostics((p) => p.diagnostics.length > 0, readmeUri)
     assert.deepEqual(
       found.map((d) => d.range.start),
@@ -356,7 +356,7 @@ test('the language server', async (t) => {
     assert.equal(outside, null)
   })
 
-  await t.test('picks out code only inside ```spp blocks', async () => {
+  await t.test('picks out code only inside ```gpp blocks', async () => {
     connection.sendNotification('textDocument/didOpen', {
       textDocument: { uri: readmeUri, languageId: 'markdown', version: 1, text: readme },
     })
@@ -397,7 +397,7 @@ test('the language server', async (t) => {
         textDocument: { uri: storiesUri },
         position: { line, character },
       })
-    assert.match((await hover(4, 12))?.contents.value ?? '', /Add : Text \(Item\) ->[\s\S]*Defined at words\.spp:1/)
+    assert.match((await hover(4, 12))?.contents.value ?? '', /Add : Text \(Item\) ->[\s\S]*Defined at words\.gpp:1/)
     assert.equal(await hover(2, 14), null)
     connection.sendNotification('textDocument/didOpen', {
       textDocument: { uri: storiesUri, languageId: 'typescript', version: 1, text: stories },

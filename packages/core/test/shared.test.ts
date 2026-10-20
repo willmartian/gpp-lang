@@ -23,7 +23,7 @@ function recorder() {
 
 const scenario = (...steps: string[]) => {
   const src = ['Feature: F', '  Scenario: S', ...steps.map((s) => `    ${s}`)].join('\n')
-  const [found] = loadSource('a.spp', src).features[0].scenarios
+  const [found] = loadSource('a.gpp', src).features[0].scenarios
   return found
 }
 
@@ -41,7 +41,7 @@ test('the words, run with no driver, say so', async () => {
 })
 
 test("a template's words have none for the page, and say why", () => {
-  const src = '\n\nexport const S = { play: spp`Given I Visit "/"` }\n'
+  const src = '\n\nexport const S = { play: gpp`Given I Visit "/"` }\n'
   const [problem] = checkFiles([loadSource('a.stories.ts', src)]).diagnostics
   assert.equal(problem.message, 'A template plays on one page, already open, so it has no Visit')
 })

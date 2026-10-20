@@ -1,8 +1,8 @@
-// Spec++ as a Storybook play function.
+// Gherkin++ as a Storybook play function.
 //
 //     export const SavingADraft: Story = {
 //       args: { title: '' },
-//       play: spp`
+//       play: gpp`
 //         When I Fill the Field "Title" with "Hello"
 //         And I Click the Button "Save"
 //         Then I should See the Status "Draft saved"
@@ -21,22 +21,22 @@
 // template has them, with no page words, and the project's Defines, so a
 // mistake fails its own story before anything is clicked.
 
-import type { Scenario, SppFile, Step } from '@spp-lang/core'
+import type { GppFile, Scenario, Step } from '@gpp-lang/core'
 import {
   check,
+  GppError,
   INTERPOLATION,
   LoadError,
   leftovers,
   loadSource,
   runSteps,
-  SppError,
   settle,
   words,
-} from '@spp-lang/core'
+} from '@gpp-lang/core'
 import type { StoryContext } from './driver.ts'
 import { testingLibrary } from './driver.ts'
 
-// What a play function is given, as far as Spec++ needs it. Storybook's own
+// What a play function is given, as far as Gherkin++ needs it. Storybook's own
 // context has all of this, so a template's type fits any renderer's play.
 export interface PlayContext extends StoryContext {
   step(label: string, play: () => Promise<void>): Promise<void> | void
@@ -45,11 +45,11 @@ export interface PlayContext extends StoryContext {
 export type Play = (context: PlayContext) => Promise<void>
 
 // The Defines every template can use, from useWords.
-let defines: SppFile[] = []
+let defines: GppFile[] = []
 
-// The project's Defines, for every template, from its .spp files and
+// The project's Defines, for every template, from its .gpp files and
 // Markdown, given as path → contents, so a mistake in one says where. Their
-// scenarios are another backend's, and their mistakes are spp-lang check's to
+// scenarios are another backend's, and their mistakes are gpp-lang check's to
 // report: a template fails only on one it uses. The addon's preview entry
 // calls it with what its Vite plugin read (preset.ts).
 export function useWords(files: Record<string, string>): void {
@@ -58,11 +58,11 @@ export function useWords(files: Record<string, string>): void {
 
 const template = () => words({ template: true })
 
-// A template as a script of its own, as spp-lang check reads it in a stories
+// A template as a script of its own, as gpp-lang check reads it in a stories
 // file (templates.ts), with room above it for the Gherkin around it, and on
 // lines of its own, so a message shows only what's in it.
-const FILE = 'spp template.js'
-const script = (src: string) => `\n\nspp\`\n${src}\n\``
+const FILE = 'gpp template.js'
+const script = (src: string) => `\n\ngpp\`\n${src}\n\``
 
 // What a template means, or the first thing wrong with it.
 export type Prepared = { scenario: Scenario; problem: null } | { scenario: null; problem: string }
@@ -70,7 +70,7 @@ export type Prepared = { scenario: Scenario; problem: null } | { scenario: null;
 // Reads and checks a template, as written, with the Defines from useWords.
 export function prepare(src: string): Prepared {
   const source = script(src)
-  let file: SppFile
+  let file: GppFile
   try {
     file = loadSource(FILE, source)
   } catch (err) {
@@ -93,17 +93,17 @@ function framed(source: string, { line, column, message }: { line: number; colum
 
 const frame = (text: string, index: number) => `    ${text}\n    ${' '.repeat(Math.max(0, index))}^`
 
-export function spp(strings: TemplateStringsArray, ...values: never[]): Play {
-  if (values.length) throw new SppError(INTERPOLATION)
-  // Raw, so a string's \" reaches Spec++ as it was written.
+export function gpp(strings: TemplateStringsArray, ...values: never[]): Play {
+  if (values.length) throw new GppError(INTERPOLATION)
+  // Raw, so a string's \" reaches Gherkin++ as it was written.
   const src = strings.raw.join('')
-  let prepared: { for: SppFile[]; as: Prepared } | undefined
+  let prepared: { for: GppFile[]; as: Prepared } | undefined
 
   return async (context) => {
     // Read again if useWords has been called since, as it is when preview.ts changes.
     if (prepared?.for !== defines) prepared = { for: defines, as: prepare(src) }
     const { scenario, problem } = prepared.as
-    if (problem !== null) throw new SppError(problem)
+    if (problem !== null) throw new GppError(problem)
 
     const vocabulary = defines.flatMap((f) => f.vocabulary)
     const ctx = { canvasElement: context.canvasElement, driver: testingLibrary }

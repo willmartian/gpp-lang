@@ -2,24 +2,24 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { INTERPOLATION, LoadError, loadSource, templates } from '../../src/index.ts'
 
-// The text of each spp template in some JavaScript.
+// The text of each gpp template in some JavaScript.
 const texts = (src: string) => templates(src).map((t) => src.slice(t.start, t.end))
 
-test('spp templates are found, and other templates are not', () => {
-  assert.deepEqual(texts('a = spp`When I Click` + html`<p>` + s.spp`Then I See "x"`'), [
+test('gpp templates are found, and other templates are not', () => {
+  assert.deepEqual(texts('a = gpp`When I Click` + html`<p>` + s.gpp`Then I See "x"`'), [
     'When I Click',
     'Then I See "x"',
   ])
-  assert.deepEqual(texts('myspp`When I Click`'), [])
+  assert.deepEqual(texts('mygpp`When I Click`'), [])
 })
 
-test("spp in a string or a comment isn't a template", () => {
-  assert.deepEqual(texts('"spp`a`" + \'spp`b`\' // spp`c`\n/* spp`d` */ spp`e`'), ['e'])
+test("gpp in a string or a comment isn't a template", () => {
+  assert.deepEqual(texts('"gpp`a`" + \'gpp`b`\' // gpp`c`\n/* gpp`d` */ gpp`e`'), ['e'])
 })
 
 test("a template's escapes and what's put in it don't end it", () => {
-  const src = `spp\`a \\\` b\` + \`\${ { x: \`}\` } } spp\` + spp\`c \${ spp\`d\` } e\``
-  assert.deepEqual(texts(src), ['a \\` b', `c \${ spp\`d\` } e`, 'd'])
+  const src = `gpp\`a \\\` b\` + \`\${ { x: \`}\` } } gpp\` + gpp\`c \${ gpp\`d\` } e\``
+  assert.deepEqual(texts(src), ['a \\` b', `c \${ gpp\`d\` } e`, 'd'])
   assert.deepEqual(
     templates(src).map((t) => t.interpolations.length),
     [0, 1, 0],
@@ -27,16 +27,16 @@ test("a template's escapes and what's put in it don't end it", () => {
 })
 
 const stories = [
-  "import { spp } from '@spp-lang/storybook'", //  1
+  "import { gpp } from '@gpp-lang/storybook'", //  1
   '', //                                           2
   'export const Saving = {', //                    3
-  '  play: spp`', //                               4
+  '  play: gpp`', //                               4
   '    When I Click the Button "Save"', //         5
   '    Then the Status should Read "Saved"', //    6
   '  `,', //                                       7
   '}', //                                          8
   '', //                                           9
-  'export const Empty = { play: spp`Then the Status should be Empty` }', // 10
+  'export const Empty = { play: gpp`Then the Status should be Empty` }', // 10
 ].join('\n')
 
 test('each template is a scenario, named for its story, with its steps where they are', () => {
@@ -68,9 +68,9 @@ function problems(src: string): string[] {
 }
 
 test("a template that isn't steps says where", () => {
-  assert.deepEqual(problems('\n\nconst a = spp`\n  When I Click the Button "Save"\n  Click the Button "Save"\n`'), [
-    '5:3 Each line of an spp template is a step, starting with Given, When, Then, And, But or *',
+  assert.deepEqual(problems('\n\nconst a = gpp`\n  When I Click the Button "Save"\n  Click the Button "Save"\n`'), [
+    '5:3 Each line of a gpp template is a step, starting with Given, When, Then, And, But or *',
   ])
-  assert.deepEqual(problems('\n\nconst a = spp`\n  # nothing\n`'), ['3:15 An spp template needs at least one step'])
-  assert.deepEqual(problems(`const a = spp\`When I Click "\${x}"\``), [`1:29 ${INTERPOLATION}`])
+  assert.deepEqual(problems('\n\nconst a = gpp`\n  # nothing\n`'), ['3:15 A gpp template needs at least one step'])
+  assert.deepEqual(problems(`const a = gpp\`When I Click "\${x}"\``), [`1:29 ${INTERPOLATION}`])
 })

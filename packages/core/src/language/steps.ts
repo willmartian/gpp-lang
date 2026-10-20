@@ -16,7 +16,7 @@
 // For now every mode says the same, the rule in words/shared.ts's settler: only
 // checks. Given, When and Then are where each will say more.
 
-import { apply, Block, call, Env, run, SppError, Stack } from './cognate.ts'
+import { apply, Block, call, Env, GppError, run, Stack } from './cognate.ts'
 import type { Scenario, Step, Vocabulary } from './load.ts'
 import type { Context, Form } from './types.ts'
 import { formsFor, type } from './types.ts'
@@ -164,7 +164,7 @@ export async function runSteps<C extends Context>(
         await apply(step.keyword.trim(), keywordForms(steps, step.keywordType), modes, ctx)
       } catch (err) {
         // A keyword that couldn't take what it needed is its own mistake.
-        if (!block.ran && err instanceof SppError && step.error === undefined) err.pos = -step.keyword.length
+        if (!block.ran && err instanceof GppError && step.error === undefined) err.pos = -step.keyword.length
         throw err
       }
     })

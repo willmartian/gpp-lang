@@ -6,10 +6,10 @@ import {
   core,
   Env,
   formsFor,
+  GppError,
   lex,
   parse,
   run,
-  SppError,
   Stack,
   signature,
   TextType,
@@ -42,11 +42,11 @@ async function evaluate(src: string) {
 
 const text = (t: Token) => ('name' in t ? t.name : 'value' in t ? t.value : t.type)
 
-// A SppError at pos, whose message matches.
+// A GppError at pos, whose message matches.
 const at =
   (pos: number, message = /./) =>
   (err: unknown) =>
-    err instanceof SppError && err.pos === pos && message.test(err.message)
+    err instanceof GppError && err.pos === pos && message.test(err.message)
 
 test('lowercase words are prose', () => {
   assert.deepEqual(lex('I Click the Button "Sign in"').map(text), ['I', 'Click', 'Button', 'Sign in'])
@@ -203,7 +203,7 @@ test('indentation has to mean something', () => {
 
 test('unknown words suggest a near miss', async () => {
   await assert.rejects(evaluate('Sya "x"'), (err) => {
-    assert.ok(err instanceof SppError)
+    assert.ok(err instanceof GppError)
     assert.match(err.message, /Unknown word Sya\. Did you mean Say\?/)
     assert.equal(err.pos, 0)
     return true

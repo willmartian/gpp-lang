@@ -1,62 +1,62 @@
-// Spec++ in a Playwright config: scenarios become ordinary Playwright tests,
+// Gherkin++ in a Playwright config: scenarios become ordinary Playwright tests,
 // so Playwright's command line, UI mode, reports and editor extensions work on
 // them as they do on any test.
 //
 //     // playwright.config.ts
 //     import { defineConfig } from '@playwright/test'
-//     import { defineSppConfig } from '@spp-lang/playwright'
+//     import { defineGppConfig } from '@gpp-lang/playwright'
 //
 //     export default defineConfig({
-//       ...defineSppConfig({ features: ['features'] }),
+//       ...defineGppConfig({ features: ['features'] }),
 //       use: { baseURL: 'http://localhost:3000' },
 //     })
 //
-// defineSppConfig writes a test file for each .spp file, and each Markdown
-// file with an ```spp block, into its outputDir, and returns the testDir and
+// defineGppConfig writes a test file for each .gpp file, and each Markdown
+// file with an ```gpp block, into its outputDir, and returns the testDir and
 // testMatch that find them. The testDir is the project's root, not the
 // outputDir, so Playwright says where tests are relative to the root:
-// features/cart.spp, not ../features/cart.spp.
+// features/cart.gpp, not ../features/cart.gpp.
 //
 // The files are written every time Playwright loads the config, so they're
 // never out of date, and they're no more than a list of the scenarios: what
-// each one does is read from the .spp file when it runs (runtime.ts). Each has
-// a source map back to its .spp file, so Playwright puts every test, and every
-// failure, on its line in the .spp file.
+// each one does is read from the .gpp file when it runs (runtime.ts). Each has
+// a source map back to its .gpp file, so Playwright puts every test, and every
+// failure, on its line in the .gpp file.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import type { Feature, LoadError, Scenario } from '@spp-lang/core'
-import { escapeRegExp } from '@spp-lang/core'
+import type { Feature, LoadError, Scenario } from '@gpp-lang/core'
+import { escapeRegExp } from '@gpp-lang/core'
 import type { Loaded, Project } from './project.ts'
 import { loadProject } from './project.ts'
 
-export interface SppConfig {
-  // Where the .spp files and Markdown are. By default, everywhere under the root.
+export interface GppConfig {
+  // Where the .gpp files and Markdown are. By default, everywhere under the root.
   features?: string[]
   // Files and directories to leave out, like fixtures that are meant to fail.
   ignore?: string[]
-  // Where the generated tests go, for testDir. By default, .spp-tests. Each
-  // defineSppConfig in a config needs its own.
+  // Where the generated tests go, for testDir. By default, .gpp-tests. Each
+  // defineGppConfig in a config needs its own.
   outputDir?: string
   // What the paths are relative to. By default, the directory of the config
-  // that calls defineSppConfig, as Playwright's own paths are.
+  // that calls defineGppConfig, as Playwright's own paths are.
   root?: string
 }
 
 // What a Playwright config, or one of its projects, needs to run the
 // generated tests. An explicit testDir also means Playwright doesn't leave out
-// what .gitignore does, so .spp-tests can be ignored.
-export interface SppTests {
+// what .gitignore does, so .gpp-tests can be ignored.
+export interface GppTests {
   testDir: string
   testMatch: RegExp
 }
 
-export function defineSppConfig(config: SppConfig = {}): SppTests {
+export function defineGppConfig(config: GppConfig = {}): GppTests {
   const root = path.resolve(config.root ?? callerDir())
   const strings = (paths: string[] | undefined, what: string) => {
     if (paths !== undefined && !(Array.isArray(paths) && paths.every((p) => typeof p === 'string'))) {
-      throw new Error(`defineSppConfig: ${what} should be a list of paths`)
+      throw new Error(`defineGppConfig: ${what} should be a list of paths`)
     }
     return (paths ?? []).map((p) => path.resolve(root, p))
   }
@@ -65,7 +65,7 @@ export function defineSppConfig(config: SppConfig = {}): SppTests {
     root,
     features: features.length ? features : [root],
     ignore: strings(config.ignore, 'ignore'),
-    outputDir: path.resolve(root, config.outputDir ?? '.spp-tests'),
+    outputDir: path.resolve(root, config.outputDir ?? '.gpp-tests'),
   }
   // Playwright loads its config in every worker too, but only its first load,
   // in the main process, should write anything.
@@ -73,7 +73,7 @@ export function defineSppConfig(config: SppConfig = {}): SppTests {
   return { testDir: root, testMatch: new RegExp(`^${escapeRegExp(project.outputDir + path.sep)}.*\\.spec\\.js$`) }
 }
 
-// The directory of the file that called defineSppConfig: the config. Read
+// The directory of the file that called defineGppConfig: the config. Read
 // from the stack, as Playwright reads where each test is declared.
 function callerDir(): string {
   const prepare = Error.prepareStackTrace
@@ -84,19 +84,19 @@ function callerDir(): string {
       return ''
     }
     const holder: { stack?: string } = {}
-    Error.captureStackTrace(holder, defineSppConfig)
+    Error.captureStackTrace(holder, defineGppConfig)
     // Reading the stack is what runs prepareStackTrace.
     if (holder.stack === undefined) caller = undefined
   } finally {
     Error.prepareStackTrace = prepare
   }
-  if (!caller) throw new Error("defineSppConfig couldn't tell which file called it. Give it a root.")
+  if (!caller) throw new Error("defineGppConfig couldn't tell which file called it. Give it a root.")
   return path.dirname(caller.startsWith('file:') ? fileURLToPath(caller) : caller)
 }
 
 // ---------------------------------------------------------------- generating
 
-const HEADER = '// Generated by Spec++'
+const HEADER = '// Generated by Gherkin++'
 
 // .ts when run from source, .js once built.
 const RUNTIME = path.join(import.meta.dirname, `runtime${path.extname(import.meta.filename)}`)
@@ -148,7 +148,7 @@ type Lines = [string, number | undefined][]
 
 // The file, and its source map, which is a file of its own: Playwright reads
 // either kind, but its VS Code extension only reads a map in a file, and needs
-// one to know that the tests are the .spp file's.
+// one to know that the tests are the .gpp file's.
 function render(
   project: Project,
   source: string,
@@ -227,7 +227,7 @@ function removeStale(dir: string, keep: Set<string>) {
   }
 }
 
-// Only files Spec++ wrote are removed, whatever else is there.
+// Only files Gherkin++ wrote are removed, whatever else is there.
 const isGenerated = (file: string) => fs.readFileSync(file, 'utf8').startsWith(HEADER)
 
 // ---------------------------------------------------------------- source maps

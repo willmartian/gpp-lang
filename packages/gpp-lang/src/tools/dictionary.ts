@@ -1,7 +1,7 @@
-// The dictionary: every word a .spp file can use, built in or Defined, with
+// The dictionary: every word a .gpp file can use, built in or Defined, with
 // what it takes and what it leaves. It's read from the same forms and
 // inferred Defines the checker uses, so it can't drift from what the words
-// do. Run it as `spp-lang dictionary`; the docs site shows the same entries.
+// do. Run it as `gpp-lang dictionary`; the docs site shows the same entries.
 //
 //     Click
 //       Clicks an element.
@@ -11,8 +11,8 @@
 // Words that share a doc, like the ARIA roles, are listed together.
 
 import path from 'node:path'
-import type { Analysis, Doc, Env, Form } from '@spp-lang/core'
-import { GROUPS, keywords } from '@spp-lang/core'
+import type { Analysis, Doc, Env, Form } from '@gpp-lang/core'
+import { GROUPS, keywords } from '@gpp-lang/core'
 
 const KEYWORDS = keywords(async () => {})
 

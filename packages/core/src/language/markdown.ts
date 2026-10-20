@@ -1,11 +1,11 @@
-// The Markdown Spec++ reads: fenced code blocks, and which of them are
-// ```spp blocks to load. It knows nothing of Gherkin; how a block's lines
+// The Markdown Gherkin++ reads: fenced code blocks, and which of them are
+// ```gpp blocks to load. It knows nothing of Gherkin; how a block's lines
 // divide into Defines and Features is in sections.ts.
 
 export const isMarkdown = (file: string) => file.endsWith('.md')
 
 // A fenced code block: the lines between its fences (from 0, end exclusive),
-// and the words of its info string, as in ```spp ignore or ```spp,ignore.
+// and the words of its info string, as in ```gpp ignore or ```gpp,ignore.
 export interface Fence {
   start: number
   end: number
@@ -42,17 +42,17 @@ export function fences(src: string): Fence[] {
   return found
 }
 
-// The blocks that are loaded: ```spp, but not ```spp ignore, which is only shown.
-export function sppFences(src: string): Fence[] {
-  return fences(src).filter((f) => f.info[0] === 'spp' && !f.info.includes('ignore'))
+// The blocks that are loaded: ```gpp, but not ```gpp ignore, which is only shown.
+export function gppFences(src: string): Fence[] {
+  return fences(src).filter((f) => f.info[0] === 'gpp' && !f.info.includes('ignore'))
 }
 
-// Which lines are Spec++: all of a .spp file's, and in Markdown, those in
+// Which lines are Gherkin++: all of a .gpp file's, and in Markdown, those in
 // the blocks that are loaded.
-export function sppLines(file: string, src: string): boolean[] {
+export function gppLines(file: string, src: string): boolean[] {
   const lines = src.split('\n')
   if (!isMarkdown(file)) return lines.map(() => true)
   const inside = lines.map(() => false)
-  for (const f of sppFences(src)) for (let i = f.start; i < f.end; i++) inside[i] = true
+  for (const f of gppFences(src)) for (let i = f.start; i < f.end; i++) inside[i] = true
   return inside
 }

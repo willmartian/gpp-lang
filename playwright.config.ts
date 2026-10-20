@@ -1,8 +1,9 @@
-// Spec++'s own end-to-end tests: each example against its own app, and the
+// Gherkin++'s own end-to-end tests: each example against its own app, and the
 // fixtures, which must all fail, against the demo's. Each is a project of its
 // own, with its own words, so their Defines don't clash.
+
+import { defineGppConfig } from '@gpp-lang/playwright'
 import { defineConfig } from '@playwright/test'
-import { defineSppConfig } from '@spp-lang/playwright'
 
 const demo = 'http://localhost:4173'
 const todomvc = 'http://localhost:4174'
@@ -11,17 +12,17 @@ export default defineConfig({
   projects: [
     {
       name: 'demo',
-      ...defineSppConfig({ features: ['examples/demo/features'], outputDir: '.spp-tests/demo' }),
+      ...defineGppConfig({ features: ['examples/demo/features'], outputDir: '.gpp-tests/demo' }),
       use: { baseURL: demo },
     },
     {
       name: 'todomvc',
-      ...defineSppConfig({ features: ['examples/todomvc/features'], outputDir: '.spp-tests/todomvc' }),
+      ...defineGppConfig({ features: ['examples/todomvc/features'], outputDir: '.gpp-tests/todomvc' }),
       use: { baseURL: todomvc },
     },
     {
       name: 'failures',
-      ...defineSppConfig({ features: ['packages/playwright/test/fixtures'], outputDir: '.spp-tests/failures' }),
+      ...defineGppConfig({ features: ['packages/playwright/test/fixtures'], outputDir: '.gpp-tests/failures' }),
       use: { baseURL: demo },
     },
   ],

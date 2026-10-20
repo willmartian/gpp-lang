@@ -1,6 +1,6 @@
 # Storybook
 
-A post editor's stories, each with an `spp` template for its play function. See
+A post editor's stories, each with a `gpp` template for its play function. See
 [the Storybook docs](../../docs/storybook.md).
 
 ```sh

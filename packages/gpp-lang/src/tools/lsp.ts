@@ -1,7 +1,7 @@
-// The language server, for any editor that speaks LSP: run it as `spp-lang lsp`.
+// The language server, for any editor that speaks LSP: run it as `gpp-lang lsp`.
 //
-// It works on .spp files, on the ```spp blocks in Markdown files, and on the
-// spp`…` templates in .js and .ts files, which are Storybook play functions.
+// It works on .gpp files, on the ```gpp blocks in Markdown files, and on the
+// gpp`…` templates in .js and .ts files, which are Storybook play functions.
 // It keeps every project checked as you type, since Defines are shared
 // between a project's files, and answers from that. A project is the files
 // under the nearest package.json, each checked on its own, so two can Define
@@ -19,16 +19,16 @@
 //     whatever is written at the cursor: after "Click the", something on the
 //     page.
 //   - semantic tokens: the capitalised words that are code, so an editor
-//     can pick them out of the prose without a grammar for Spec++. Not in
+//     can pick them out of the prose without a grammar for Gherkin++. Not in
 //     scripts, whose own language's tokens they'd replace: a client that can
 //     is told which documents to ask about.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import type { Analysis, Checked, CodeLine, Line, Place, SppFile, Step, Token, WordInfo } from '@spp-lang/core'
-import { checkFiles, codeLines, isScript, LoadError, lex, loadSource, sppLines } from '@spp-lang/core'
-import { discover, projectRoot } from '@spp-lang/core/node'
+import type { Analysis, Checked, CodeLine, GppFile, Line, Place, Step, Token, WordInfo } from '@gpp-lang/core'
+import { checkFiles, codeLines, gppLines, isScript, LoadError, lex, loadSource } from '@gpp-lang/core'
+import { discover, projectRoot } from '@gpp-lang/core/node'
 import type {
   CompletionItem,
   DocumentSymbol,
@@ -77,7 +77,7 @@ export function startServer(): void {
   let steps = new Map<string, Step>()
   // Every file's text, open or not, and what it loaded as.
   let sources = new Map<string, string>()
-  let loaded: SppFile[] = []
+  let loaded: GppFile[] = []
   let published = new Set<string>()
 
   const toPath = (uri: string) => fileURLToPath(uri)
@@ -118,7 +118,7 @@ export function startServer(): void {
     for (const file of onDisk) if (fs.existsSync(file)) sources.set(file, fs.readFileSync(file, 'utf8'))
     for (const doc of documents.all()) {
       const file = toPath(doc.uri)
-      if (/\.(spp|md)$/.test(file) || isScript(file)) sources.set(file, doc.getText())
+      if (/\.(gpp|md)$/.test(file) || isScript(file)) sources.set(file, doc.getText())
     }
 
     const problems = new Map<string, LspDiagnostic[]>()
@@ -134,7 +134,7 @@ export function startServer(): void {
         range: rangeAt(sources.get(file) ?? '', line, column),
         message,
         severity: DiagnosticSeverity.Error,
-        source: 'spp',
+        source: 'gpp',
       })
       problems.set(file, list)
     }
@@ -149,7 +149,7 @@ export function startServer(): void {
       }
     }
 
-    const members = new Map<string, SppFile[]>()
+    const members = new Map<string, GppFile[]>()
     for (const f of loaded) members.set(projectOf(f.file), [...(members.get(projectOf(f.file)) ?? []), f])
     checked = new Map()
     for (const [root, files] of members) {
@@ -179,7 +179,7 @@ export function startServer(): void {
 
   connection.onInitialized(async () => {
     if (registersTokens) {
-      const documentSelector = [{ language: 'spp' }, { language: 'markdown' }]
+      const documentSelector = [{ language: 'gpp' }, { language: 'markdown' }]
       await connection.client.register(SemanticTokensRegistrationType.type, { documentSelector, legend, full: true })
     }
     rediscover()
@@ -436,10 +436,10 @@ export function startServer(): void {
     const text = doc.getText()
     const lines = text.split('\n')
     const code = codeLines(text, file)
-    const spp = sppLines(file, text)
+    const gpp = gppLines(file, text)
     for (const [i, line] of lines.entries()) {
-      // In Markdown, only the ```spp blocks.
-      if (!spp[i]) continue
+      // In Markdown, only the ```gpp blocks.
+      if (!gpp[i]) continue
       const comment = /^(\s*)#/.exec(line)
       if (comment) {
         builder.push(i, comment[1].length, line.length - comment[1].length, tokenType('comment'), 0)
@@ -494,7 +494,7 @@ interface FileSymbol {
 // A word's signatures, then, for a builtin, what it's for and an example.
 function signatures(info: WordInfo): string {
   const code = (lines: string, lang = '') => `\`\`\`${lang}\n${lines}\n\`\`\``
-  const doc = info.doc ? [info.doc.summary, code(info.doc.examples[0], 'spp')] : []
+  const doc = info.doc ? [info.doc.summary, code(info.doc.examples[0], 'gpp')] : []
   return [code(info.signatures.join('\n')), ...doc].join('\n\n')
 }
 

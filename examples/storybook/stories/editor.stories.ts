@@ -1,4 +1,4 @@
-import { spp } from '@spp-lang/storybook'
+import { gpp } from '@gpp-lang/storybook'
 import type { Meta, StoryObj } from '@storybook/html-vite'
 import { fn } from 'storybook/test'
 import type { EditorArgs } from './editor.ts'
@@ -16,7 +16,7 @@ type Story = StoryObj<EditorArgs>
 export const Empty: Story = {}
 
 export const SavingADraft: Story = {
-  play: spp`
+  play: gpp`
     When I Fill the Field "Title" with "Hello"
     And I Click the Button "Save"
     Then the Status should Read "Draft saved"
@@ -25,7 +25,7 @@ export const SavingADraft: Story = {
 }
 
 export const TitleIsRequired: Story = {
-  play: spp`
+  play: gpp`
     When I Click the Button "Save"
     Then I should See the Alert Containing "Give it a title"
     And the Status should be Empty
@@ -34,7 +34,7 @@ export const TitleIsRequired: Story = {
 
 export const Tags: Story = {
   args: { tags: ['news', 'draft', 'urgent'] },
-  play: spp`
+  play: gpp`
     Then the Listitem Within the List "Tags" should Read
       | news   |
       | draft  |
@@ -45,7 +45,7 @@ export const Tags: Story = {
 
 export const AnExistingTitle: Story = {
   args: { title: 'Hello' },
-  play: spp`
+  play: gpp`
     Then the Field "Title" should have the Value "Hello"
     When I Clear the Field "Title"
     Then the Field "Title" should be Empty
@@ -53,7 +53,7 @@ export const AnExistingTitle: Story = {
 }
 
 export const UsingADefine: Story = {
-  play: spp`
+  play: gpp`
     When I Retitle the post "Hello"
     And I Press "Enter" in the Field "Title"
     Then I should See "Draft saved"
@@ -61,7 +61,7 @@ export const UsingADefine: Story = {
 }
 
 export const ConfirmingADelete: Story = {
-  play: spp`
+  play: gpp`
     When I Click the Button "Delete"
     Then I should See the Dialog "Delete post?"
     When I Click the Button "Cancel" Within the Dialog "Delete post?"

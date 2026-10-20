@@ -118,27 +118,27 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^21.2.3
         version: 21.2.3
+      '@gpp-lang/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@gpp-lang/playwright':
+        specifier: workspace:*
+        version: link:packages/playwright
+      '@gpp-lang/storybook':
+        specifier: workspace:*
+        version: link:packages/storybook
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.64.1
-      '@spp-lang/core':
-        specifier: workspace:*
-        version: link:packages/core
-      '@spp-lang/playwright':
-        specifier: workspace:*
-        version: link:packages/playwright
-      '@spp-lang/storybook':
-        specifier: workspace:*
-        version: link:packages/storybook
       '@types/node':
         specifier: ^26.6.3
         version: 26.6.5
+      gpp-lang:
+        specifier: workspace:*
+        version: link:packages/gpp-lang
       husky:
         specifier: ^9.1.7
         version: 9.1.7
-      spp-lang:
-        specifier: workspace:*
-        version: link:packages/spp-lang
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -167,28 +167,28 @@ importers:
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
-      spp-lang:
+      gpp-lang:
         specifier: workspace:*
-        version: link:../../packages/spp-lang
+        version: link:../../packages/gpp-lang
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
 
   examples/demo:
     devDependencies:
+      '@gpp-lang/playwright':
+        specifier: workspace:*
+        version: link:../../packages/playwright
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.64.1
-      '@spp-lang/playwright':
+      gpp-lang:
         specifier: workspace:*
-        version: link:../../packages/playwright
-      spp-lang:
-        specifier: workspace:*
-        version: link:../../packages/spp-lang
+        version: link:../../packages/gpp-lang
 
   examples/storybook:
     devDependencies:
-      '@spp-lang/storybook':
+      '@gpp-lang/storybook':
         specifier: workspace:*
         version: link:../../packages/storybook
       '@storybook/addon-vitest':
@@ -200,12 +200,12 @@ importers:
       '@vitest/browser-playwright':
         specifier: ^4.1.12
         version: 4.1.12(playwright@1.64.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.6.1))(vitest@4.1.12)
+      gpp-lang:
+        specifier: workspace:*
+        version: link:../../packages/gpp-lang
       playwright:
         specifier: ^1.63.0
         version: 1.64.1
-      spp-lang:
-        specifier: workspace:*
-        version: link:../../packages/spp-lang
       storybook:
         specifier: ^10.6.2
         version: 10.6.2(react@19.3.1)
@@ -218,15 +218,15 @@ importers:
 
   examples/todomvc:
     devDependencies:
+      '@gpp-lang/playwright':
+        specifier: workspace:*
+        version: link:../../packages/playwright
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.64.1
-      '@spp-lang/playwright':
+      gpp-lang:
         specifier: workspace:*
-        version: link:../../packages/playwright
-      spp-lang:
-        specifier: workspace:*
-        version: link:../../packages/spp-lang
+        version: link:../../packages/gpp-lang
 
   packages/core:
     dependencies:
@@ -237,18 +237,9 @@ importers:
         specifier: ^34.2.1
         version: 34.2.1
 
-  packages/playwright:
-    devDependencies:
-      '@playwright/test':
-        specifier: ^1.63.0
-        version: 1.64.1
-      '@spp-lang/core':
-        specifier: workspace:*
-        version: link:../core
-
-  packages/spp-lang:
+  packages/gpp-lang:
     dependencies:
-      '@spp-lang/core':
+      '@gpp-lang/core':
         specifier: workspace:^
         version: link:../core
       commander:
@@ -261,9 +252,18 @@ importers:
         specifier: ^1.0.15
         version: 1.0.15
 
+  packages/playwright:
+    devDependencies:
+      '@gpp-lang/core':
+        specifier: workspace:*
+        version: link:../core
+      '@playwright/test':
+        specifier: ^1.63.0
+        version: 1.64.1
+
   packages/storybook:
     devDependencies:
-      '@spp-lang/core':
+      '@gpp-lang/core':
         specifier: workspace:*
         version: link:../core
       '@storybook/addon-vitest':
@@ -299,21 +299,21 @@ importers:
       '@fontsource/iosevka-aile':
         specifier: ^5.3.0
         version: 5.3.0
-      '@spp-lang/core':
+      '@gpp-lang/core':
         specifier: workspace:*
         version: link:../packages/core
-      '@spp-lang/playwright':
+      '@gpp-lang/playwright':
         specifier: workspace:*
         version: link:../packages/playwright
       '@types/markdown-it':
         specifier: ^14.2.0
         version: 14.2.0
+      gpp-lang:
+        specifier: workspace:*
+        version: link:../packages/gpp-lang
       shiki:
         specifier: ^4.5.0
         version: 4.5.0
-      spp-lang:
-        specifier: workspace:*
-        version: link:../packages/spp-lang
 
 packages:
 

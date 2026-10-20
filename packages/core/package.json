@@ -1,7 +1,7 @@
 {
-  "name": "@spp-lang/core",
+  "name": "@gpp-lang/core",
   "version": "0.1.0",
-  "description": "Spec++'s language and checker, and what its backends are made of.",
+  "description": "Gherkin++'s language and checker, and what its backends are made of.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -34,7 +34,7 @@
     "bdd",
     "testing-library",
     "cognate",
-    "spp-lang"
+    "gpp-lang"
   ],
   "license": "MIT",
   "engines": {
@@ -42,7 +42,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/willmartian/spp-lang.git",
+    "url": "git+https://github.com/willmartian/gpp-lang.git",
     "directory": "packages/core"
   },
   "dependencies": {

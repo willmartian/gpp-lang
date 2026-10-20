@@ -1,16 +1,16 @@
 # Storybook
 
-An `spp` template is a story's [play function](https://storybook.js.org/docs/writing-stories/play-function).
+A `gpp` template is a story's [play function](https://storybook.js.org/docs/writing-stories/play-function).
 The story is the scenario: its args set it up, and the template is its steps. See
 [`examples/storybook`](../examples/storybook). For Features that run against your whole app,
 see [Playwright](playwright.md); a project can use both.
 
 ```ts
-import { spp } from '@spp-lang/storybook'
+import { gpp } from '@gpp-lang/storybook'
 
 export const SavingADraft: Story = {
   args: { title: '' },
-  play: spp`
+  play: gpp`
     When I Fill the Field "Title" with "Hello"
     And I Click the Button "Save"
     Then the Status should Read "Draft saved"
@@ -21,13 +21,13 @@ export const SavingADraft: Story = {
 Needs Storybook 10.
 
 ```sh
-npm install --save-dev spp-lang @spp-lang/storybook
+npm install --save-dev gpp-lang @gpp-lang/storybook
 ```
 
 Add it to `.storybook/main.ts` as an addon:
 
 ```ts
-addons: ['@spp-lang/storybook']
+addons: ['@gpp-lang/storybook']
 ```
 
 - **Each line is a step**, starting with Given, When, Then, And, But or `*`. Tables and
@@ -53,16 +53,16 @@ The [words](words.md) are the same, less the ones for a page: a template plays
 
 ## Defines
 
-[Defines](defines.md) go in the project's `.spp` files, under the nearest `package.json`
+[Defines](defines.md) go in the project's `.gpp` files, under the nearest `package.json`
 ([Where they work](defines.md#where-they-work)), and every template can use them. The addon reads them as
 Storybook builds, since a play function runs in a browser, which can't, and changing one
 reloads the stories. A `Feature:` in one is Playwright's to run.
 
 ## Checking
 
-`spp-lang check` checks every template in a project's `.js` and `.ts` files, with the words
+`gpp-lang check` checks every template in a project's `.js` and `.ts` files, with the words
 above and the project's Defines, and says where each mistake is in the stories file.
 
 The [language server](tools.md#language-server) does the same as you type, and hover, completion, go to
 definition and references work inside templates. VS Code's extension also highlights them as
-Spec++.
+Gherkin++.

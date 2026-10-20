@@ -35,8 +35,8 @@ test('Feature keywords from other Gherkin languages count', () => {
 // ---------------------------------------------------------------- choosing scenarios
 
 test('a scenario is picked out by any of its lines, a file or a directory', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-select-'))
-  const file = path.join(dir, 'a.spp')
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-select-'))
+  const file = path.join(dir, 'a.gpp')
   fs.writeFileSync(
     file,
     [
@@ -57,14 +57,14 @@ test('a scenario is picked out by any of its lines, a file or a directory', () =
   const picked = (...selections: string[]) => scenarios.filter((s) => selects(selections, s, dir)).map((s) => s.line)
 
   assert.deepEqual(picked(), [4, 10, 11])
-  assert.deepEqual(picked('a.spp:4'), [4])
-  assert.deepEqual(picked('a.spp:5'), [4])
-  assert.deepEqual(picked('a.spp:6'), [10, 11])
-  assert.deepEqual(picked('a.spp:11'), [11])
+  assert.deepEqual(picked('a.gpp:4'), [4])
+  assert.deepEqual(picked('a.gpp:5'), [4])
+  assert.deepEqual(picked('a.gpp:6'), [10, 11])
+  assert.deepEqual(picked('a.gpp:11'), [11])
   // A Background belongs to every scenario, so its lines pick none out.
-  assert.deepEqual(picked('a.spp:3'), [])
-  assert.deepEqual(picked('a.spp'), [4, 10, 11])
+  assert.deepEqual(picked('a.gpp:3'), [])
+  assert.deepEqual(picked('a.gpp'), [4, 10, 11])
   assert.deepEqual(picked('.'), [4, 10, 11])
-  assert.deepEqual(picked('b.spp'), [])
+  assert.deepEqual(picked('b.gpp'), [])
   assert.deepEqual(scenarios[1].outline, { name: 'Rows', line: 6, row: 'p: /a' })
 })

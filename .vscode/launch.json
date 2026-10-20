@@ -1,12 +1,12 @@
 {
-  // Run and Debug → "Run Spec++ extension": a second VS Code window with the
+  // Run and Debug → "Run Gherkin++ extension": a second VS Code window with the
   // extension from editors/vscode loaded, open on this repo (by way of a
   // workspace file; see extension-host.code-workspace). Running scenarios is
   // Playwright's extension's job, through playwright.config.ts.
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run Spec++ extension",
+      "name": "Run Gherkin++ extension",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -14,7 +14,7 @@
         "${workspaceFolder}/.vscode/extension-host.code-workspace"
       ],
       "outFiles": ["${workspaceFolder}/editors/vscode/out/**/*.js"],
-      "preLaunchTask": "build Spec++ extension"
+      "preLaunchTask": "build Gherkin++ extension"
     }
   ]
 }

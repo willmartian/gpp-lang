@@ -1,11 +1,11 @@
 {
-  "$comment": "Highlights spp`…` templates in JavaScript and TypeScript as Spec++, by injecting into their grammars.",
-  "scopeName": "inline.spp.template",
+  "$comment": "Highlights gpp`…` templates in JavaScript and TypeScript as Gherkin++, by injecting into their grammars.",
+  "scopeName": "inline.gpp.template",
   "injectionSelector": "L:source.js -comment -string, L:source.js.jsx -comment -string, L:source.ts -comment -string, L:source.tsx -comment -string",
   "patterns": [{ "include": "#template" }],
   "repository": {
     "template": {
-      "begin": "\\b(spp)\\s*(`)",
+      "begin": "\\b(gpp)\\s*(`)",
       "end": "(?<!\\\\)`",
       "beginCaptures": {
         "1": { "name": "entity.name.function.tagged-template.js" },
@@ -14,11 +14,11 @@
       "endCaptures": {
         "0": { "name": "string.template.js punctuation.definition.string.template.end.js" }
       },
-      "contentName": "meta.embedded.block.spp",
+      "contentName": "meta.embedded.block.gpp",
       "patterns": [
         { "match": "\\\\.", "name": "constant.character.escape.js" },
-        { "match": "\\$\\{[^}]*\\}?", "name": "invalid.illegal.interpolation.spp" },
-        { "include": "source.spp" }
+        { "match": "\\$\\{[^}]*\\}?", "name": "invalid.illegal.interpolation.gpp" },
+        { "include": "source.gpp" }
       ]
     }
   }

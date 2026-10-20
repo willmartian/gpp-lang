@@ -1,4 +1,4 @@
-// Spec++ that must fail, the way @spp-lang/playwright's test/fixtures/broken.spp must.
+// Gherkin++ that must fail, the way @gpp-lang/playwright's test/fixtures/broken.gpp must.
 // Each story passes only when its template fails with the message given.
 
 import type { Meta, StoryObj } from '@storybook/html-vite'
@@ -6,7 +6,7 @@ import { fn } from 'storybook/test'
 import type { EditorArgs } from '../../../../examples/storybook/stories/editor.ts'
 import { editor } from '../../../../examples/storybook/stories/editor.ts'
 import type { Play } from '../../src/play.ts'
-import { spp } from '../../src/play.ts'
+import { gpp } from '../../src/play.ts'
 
 export default {
   title: 'Failures',
@@ -32,7 +32,7 @@ function fails(message: string, play: Play): Play {
 export const TheWrongText: Story = {
   play: fails(
     'Expected the status role to read "Published", but it reads "Draft saved"',
-    spp`
+    gpp`
       When I Fill the Field "Title" with "Hello"
       And I Click the Button "Save"
       Then the Status should Read "Published"
@@ -43,7 +43,7 @@ export const TheWrongText: Story = {
 export const NothingToClick: Story = {
   play: fails(
     'Looked for the button role named "Publish", but found nothing',
-    spp`
+    gpp`
       When I Click the Button "Publish"
     `,
   ),
@@ -52,7 +52,7 @@ export const NothingToClick: Story = {
 export const TwoToClick: Story = {
   play: fails(
     'found 2, and only one should match',
-    spp`
+    gpp`
       When I Click the Button Containing "e"
     `,
   ),
@@ -61,7 +61,7 @@ export const TwoToClick: Story = {
 export const NotHidden: Story = {
   play: fails(
     'Expected the heading role named "Edit post" to be hidden, but it is visible',
-    spp`
+    gpp`
       Then the Heading "Edit post" should be Hidden
     `,
   ),
@@ -70,7 +70,7 @@ export const NotHidden: Story = {
 export const TheWrongOrder: Story = {
   play: fails(
     'Expected the listitem role to read "b", "a", but they read "a", "b"',
-    spp`
+    gpp`
       Then the Listitem should Read
         | b |
         | a |
@@ -81,7 +81,7 @@ export const TheWrongOrder: Story = {
 export const NotEachOne: Story = {
   play: fails(
     'Each Listitem Contain "a", but number 2 of 2 is Not Contain "a"',
-    spp`
+    gpp`
       Then Each Listitem should Contain "a"
     `,
   ),
@@ -90,7 +90,7 @@ export const NotEachOne: Story = {
 export const ADialogInAPortal: Story = {
   play: fails(
     'Expected the dialog role named "Delete post?" to be hidden, but it is visible',
-    spp`
+    gpp`
       When I Click the Button "Delete"
       Then the Dialog "Delete post?" should be Hidden
     `,
@@ -99,8 +99,8 @@ export const ADialogInAPortal: Story = {
 
 export const NoKeyword: Story = {
   play: fails(
-    'Each line of an spp template is a step',
-    spp`
+    'Each line of a gpp template is a step',
+    gpp`
       I Click the Button "Save"
     `,
   ),
@@ -109,7 +109,7 @@ export const NoKeyword: Story = {
 export const AnUnknownWord: Story = {
   play: fails(
     'Unknown word Clik. Did you mean Click?',
-    spp`
+    gpp`
       When I Clik the Button "Save"
     `,
   ),
@@ -118,7 +118,7 @@ export const AnUnknownWord: Story = {
 export const NoPageToVisit: Story = {
   play: fails(
     'A template plays on one page, already open, so it has no Visit',
-    spp`
+    gpp`
       When I Visit "/"
     `,
   ),
@@ -130,7 +130,7 @@ export const AStepThatFails: Story = {
 
     Then the Status should Read "Published"
          ^`,
-    spp`
+    gpp`
       Then the Status should Read "Published"
     `,
   ),

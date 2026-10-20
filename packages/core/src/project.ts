@@ -1,10 +1,10 @@
-// A project's files checked: .spp files and Markdown with the language's
+// A project's files checked: .gpp files and Markdown with the language's
 // words, templates with a template's, which have no page words, and the
 // Defines, which both use, once.
 
 import type { Analysis, Diagnostic } from './language/check.ts'
 import { analyze } from './language/check.ts'
-import type { SppFile } from './language/load.ts'
+import type { GppFile } from './language/load.ts'
 import { isScript } from './language/templates.ts'
 import { leftovers, words } from './words/shared.ts'
 
@@ -16,7 +16,7 @@ export interface Checked {
   analysisOf(file: string): Analysis
 }
 
-export function checkFiles(files: SppFile[], name: (file: string) => string = (file) => file): Checked {
+export function checkFiles(files: GppFile[], name: (file: string) => string = (file) => file): Checked {
   const options = { settle: leftovers, name }
   const specs = analyze(
     files.filter((f) => !isScript(f.file)),

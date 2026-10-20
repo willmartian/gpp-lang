@@ -15,8 +15,8 @@ export function projectRoot(from: string, otherwise: string): string {
   }
 }
 
-// Every Spec++ file of the project at root: .spp files, Markdown with ```spp
-// blocks, and scripts with spp templates, but not those of a package inside it.
+// Every Gherkin++ file of the project at root: .gpp files, Markdown with ```gpp
+// blocks, and scripts with gpp templates, but not those of a package inside it.
 export function projectFiles(root: string): string[] {
   return discover([root], root, [], true).filter((file) => projectRoot(path.dirname(file), root) === root)
 }

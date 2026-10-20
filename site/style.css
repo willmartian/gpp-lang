@@ -38,7 +38,7 @@
   --wash: #f3f1ea;
   --accent: #3f7a3b;
 
-  /* Code. In Spec++, the words that run stand out and the prose falls back. */
+  /* Code. In Gherkin++, the words that run stand out and the prose falls back. */
   --code-foreground: var(--ink);
   --code-background: var(--wash);
   --code-token-keyword: var(--muted);
@@ -50,9 +50,9 @@
   --code-token-parameter: var(--ink);
   --code-token-punctuation: #b0aba1;
   --code-token-link: var(--accent);
-  --spp-prose: #8f8a81;
-  --spp-word: var(--accent);
-  --spp-number: var(--code-token-constant);
+  --gpp-prose: #8f8a81;
+  --gpp-word: var(--accent);
+  --gpp-number: var(--code-token-constant);
 
   color-scheme: light dark;
 }
@@ -71,7 +71,7 @@
     --code-token-comment: #6f6b63;
     --code-token-constant: #8cc0dc;
     --code-token-punctuation: #57544d;
-    --spp-prose: #7d796f;
+    --gpp-prose: #7d796f;
   }
 }
 
@@ -233,9 +233,9 @@ pre {
   line-height: 1.55;
 }
 
-/* Spec++: lowercase prose, capitalised code. */
-pre.language-spp {
-  --code-foreground: var(--spp-prose);
+/* Gherkin++: lowercase prose, capitalised code. */
+pre.language-gpp {
+  --code-foreground: var(--gpp-prose);
 }
 
 table {

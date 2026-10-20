@@ -1,4 +1,4 @@
-// The language server this extension ships with: Spec++'s own, bundled.
-import { startServer } from 'spp-lang/lsp'
+// The language server this extension ships with: Gherkin++'s own, bundled.
+import { startServer } from 'gpp-lang/lsp'
 
 startServer()
