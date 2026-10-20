@@ -16,7 +16,7 @@ import type { Diagnostic, GppFile } from '@gpp-lang/core'
 import { checkFiles, format, LoadError, words } from '@gpp-lang/core'
 import { discover, load, projectFiles, projectRoot } from '@gpp-lang/core/node'
 import { Command, Option } from 'commander'
-import { dictionary } from '../src/tools/dictionary.ts'
+import { listWords } from '../src/tools/words.ts'
 
 // Commander leaves the colour out when the output isn't a terminal, or $NO_COLOR is set.
 const style = (format: Parameters<typeof styleText>[0], text: string) =>
@@ -158,6 +158,6 @@ async function printWords(): Promise<number> {
   const cwd = process.cwd()
   // A file that doesn't parse has no Defines to list; check says why.
   const { files } = loadProject(projectRoot(cwd, cwd))
-  console.log(dictionary(words(), checkFiles(files, (file) => path.relative(cwd, file)).specs, cwd))
+  console.log(listWords(words(), checkFiles(files, (file) => path.relative(cwd, file)).specs, cwd))
   return 0
 }

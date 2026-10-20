@@ -1,4 +1,4 @@
-// The dictionary: every word a .gpp file can use, built in or Defined, with
+// Every word a .gpp file can use, built in or Defined, with
 // what it takes and what it leaves. It's read from the same forms and
 // inferred Defines the checker uses, so it can't drift from what the words
 // do. Run it as `gpp-lang words`; the docs site shows the same entries.
@@ -46,7 +46,7 @@ export function entries(words: Env): Entry[] {
   return [...byDoc.values()].sort((a, b) => GROUPS.indexOf(a.doc.group) - GROUPS.indexOf(b.doc.group))
 }
 
-export function dictionary(words: Env, analysis: Analysis, cwd = process.cwd()): string {
+export function listWords(words: Env, analysis: Analysis, cwd = process.cwd()): string {
   const out = [
     'Built-in words',
     '',
