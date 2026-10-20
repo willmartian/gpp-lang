@@ -45,7 +45,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@spp-lang/core": "workspace:*",
-    "spp-lang": "workspace:*"
+    "@spp-lang/core": "workspace:*"
   }
 }

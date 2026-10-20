@@ -3,16 +3,15 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { analyze, core, leftovers } from '@spp-lang/core'
+import { analyze, leftovers, words as vocabulary } from '@spp-lang/core'
 import { discover, load } from '@spp-lang/core/node'
-import { browser } from '@spp-lang/playwright'
 import { dictionary } from 'spp-lang'
 
 // The dictionary for some .spp files, given as name → contents.
 function dictionaryOf(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-dictionary-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)
-  const words = browser(core())
+  const words = vocabulary()
   return dictionary(words, analyze(discover([dir]).map(load), { words, settle: leftovers }), dir)
 }
 

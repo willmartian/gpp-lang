@@ -9,14 +9,14 @@ A [pnpm](https://pnpm.io) workspace:
 
 | Directory | Is |
 | --- | --- |
-| `packages/core` | `@spp-lang/core`: the language, the checker, and the `Backend` interface |
-| `packages/spp-lang` | the CLI, the language server, and `defineConfig` for `spp.config.ts` |
+| `packages/core` | `@spp-lang/core`: the language, its words, the checker, and the driver contract |
+| `packages/spp-lang` | the CLI and the language server |
 | `packages/playwright` | `@spp-lang/playwright`, which runs `.spp` files and Markdown as Playwright tests |
 | `packages/storybook` | `@spp-lang/storybook`, which runs `spp` templates as play functions |
 | `editors/vscode` | the VS Code extension |
 | `examples/*` | projects that use the packages, as a user's would |
 | `site` | the docs site |
-| `test` | tests of the CLI and language server with both backends |
+| `test` | tests of the CLI and the language server |
 
 In the workspace, each package's `exports` point at its TypeScript source, which Node runs as
 it is. Published, `publishConfig` points them at `dist/`, which `pnpm build` writes.
@@ -55,9 +55,9 @@ the dev shell (`nix develop -c code .`) so Chromium finds its libraries.
 
 `site/` builds the README and `docs/` into a site with [Eleventy](https://www.11ty.dev/). The
 Words page is generated from each built-in word's doc: its `.doc()` in
-`packages/core/src/words/shared.ts`, `packages/playwright/src/words.ts` and
+`packages/core/src/words/shared.ts` and
 `packages/core/src/language/steps.ts`. `spp-lang dictionary` and hover show the same docs,
-and `packages/playwright/test/docs.test.ts` checks every word has one and every example checks.
+and `packages/core/test/docs.test.ts` checks every word has one and every example checks.
 
 ```sh
 pnpm docs         # serves it on localhost:8080, rebuilding as you edit

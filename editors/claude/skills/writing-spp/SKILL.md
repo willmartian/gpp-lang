@@ -129,6 +129,5 @@ since the server's report can arrive late.
 
 Before changing or renaming a `Define`, use the `LSP` tool's find references on it to see
 everywhere it's used. To run the scenarios in
-a browser, use the tool of the backend that runs them, as the project's `spp.config.ts` says:
-`npx playwright test` for `@spp-lang/playwright`, where `features/cart.spp:12` runs the
-scenario on line 12.
+a browser, use `npx playwright test`, where `features/cart.spp:12` runs the scenario on line 12.
+Storybook runs `spp` templates as play functions, with its own test runner.

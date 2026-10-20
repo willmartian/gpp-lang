@@ -3,14 +3,10 @@
 // It works on .spp files, on the ```spp blocks in Markdown files, and on the
 // spp`…` templates in .js and .ts files, which are Storybook play functions.
 // It keeps every project checked as you type, since Defines are shared
-// between a project's files, and answers from that. Each spp.config in the
-// workspace is a project, each checked on its own, so two can Define the same
-// word, and a file is the nearest one's. A config is read again when it
-// changes. Each file is checked with the words of the backend that runs it.
-//
-// A workspace folder with no config, or a workspace that isn't trusted, so
-// its config mustn't run, is checked with the backends startServer is given,
-// if any: VS Code's bundled server is given both of Spec++'s.
+// between a project's files, and answers from that. A project is the files
+// under the nearest package.json, each checked on its own, so two can Define
+// the same word. Nothing of the workspace's runs, so it's the same whether the
+// workspace is trusted or not.
 //
 //   - diagnostics: the checker's mistakes, and files that don't parse
 //   - hover: a word's signatures; a Define's are inferred
@@ -30,21 +26,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import type {
-  Analysis,
-  Backend,
-  CodeLine,
-  Line,
-  Place,
-  SppConfig,
-  SppFile,
-  Step,
-  Token,
-  WordInfo,
-} from '@spp-lang/core'
-import { codeLines, isScript, LoadError, lex, loadSource, sppLines } from '@spp-lang/core'
-import type { Checked } from '@spp-lang/core/node'
-import { checkProject, findConfigs, isConfig, loadConfig, projectFiles } from '@spp-lang/core/node'
+import type { Analysis, Checked, CodeLine, Line, Place, SppFile, Step, Token, WordInfo } from '@spp-lang/core'
+import { checkFiles, codeLines, isScript, LoadError, lex, loadSource, sppLines } from '@spp-lang/core'
+import { discover, projectRoot } from '@spp-lang/core/node'
 import type {
   CompletionItem,
   DocumentSymbol,
@@ -80,17 +64,14 @@ const tokenType = (t: (typeof TOKEN_TYPES)[number]) => TOKEN_TYPES.indexOf(t)
 
 const WORD_CHARS = /[A-Za-z0-9\-?!'+/*>=<^.]*$/
 
-export function startServer(options: { defaults?: Backend[] } = {}): void {
+export function startServer(): void {
   const connection = createConnection(ProposedFeatures.all, process.stdin, process.stdout)
   const documents = new TextDocuments(TextDocument)
 
   let roots: string[] = []
-  let configs: SppConfig[] = []
-  let trusted = true
-  // Every file each project's backends cover, with its project and the
-  // backend that runs it.
-  let owners = new Map<string, { config: SppConfig; runner: Backend | null }>()
-  let checked = new Map<SppConfig, Checked>()
+  let onDisk: string[] = []
+  // Each project, by its root, checked.
+  let checked = new Map<string, Checked>()
   // Whether the client is told which documents have semantic tokens.
   let registersTokens = false
   let steps = new Map<string, Step>()
@@ -105,8 +86,6 @@ export function startServer(options: { defaults?: Backend[] } = {}): void {
   connection.onInitialize((params) => {
     roots = (params.workspaceFolders ?? []).map((f) => toPath(f.uri))
     if (!roots.length && params.rootUri) roots = [toPath(params.rootUri)]
-    // A client can say the workspace isn't trusted, so its config mustn't run.
-    trusted = (params.initializationOptions as { trusted?: boolean } | undefined)?.trusted !== false
     registersTokens = params.capabilities.textDocument?.semanticTokens?.dynamicRegistration === true
     return {
       capabilities: {
@@ -125,45 +104,18 @@ export function startServer(options: { defaults?: Backend[] } = {}): void {
   // ---------------------------------------------------------------- checking
 
   function rediscover() {
-    owners = new Map()
-    for (const config of configs) {
-      for (const { file, runner } of projectFiles(config)) if (!owners.has(file)) owners.set(file, { config, runner })
-    }
+    onDisk = discover(roots, roots[0], [], true)
   }
 
-  async function reloadConfigs() {
-    configs = []
-    for (const root of roots) {
-      const files = trusted ? findConfigs(root) : []
-      for (const file of files) {
-        try {
-          configs.push(await loadConfig(file))
-        } catch (err) {
-          connection.window.showErrorMessage(`Spec++: ${err instanceof Error ? err.message : String(err)}`)
-        }
-      }
-      if (!files.length && options.defaults) configs.push({ root, backends: options.defaults })
-    }
-  }
-
-  // A file's project, and the backend that runs it. One its project's
-  // backends don't cover, like a file not yet saved, is the project's whose
-  // root it's deepest in, with nothing to run it.
-  const within = (file: string, dir: string) => file === dir || file.startsWith(dir + path.sep)
-  function ownerOf(file: string) {
-    const owner = owners.get(file)
-    if (owner) return owner
-    const config = configs.filter((c) => within(file, c.root)).sort((a, b) => b.root.length - a.root.length)[0]
-    return config && { config, runner: null }
-  }
-  const analysisOf = (file: string): Analysis | undefined => {
-    const owner = ownerOf(file)
-    return owner && checked.get(owner.config)?.analysisOf(file)
-  }
+  // A file's project: the root it's checked with. Without a package.json, the
+  // workspace folder it's in.
+  const projectOf = (file: string) =>
+    projectRoot(path.dirname(file), roots.find((root) => file.startsWith(root + path.sep)) ?? path.dirname(file))
+  const analysisOf = (file: string): Analysis | undefined => checked.get(projectOf(file))?.analysisOf(file)
 
   function refresh() {
     sources = new Map()
-    for (const file of owners.keys()) if (fs.existsSync(file)) sources.set(file, fs.readFileSync(file, 'utf8'))
+    for (const file of onDisk) if (fs.existsSync(file)) sources.set(file, fs.readFileSync(file, 'utf8'))
     for (const doc of documents.all()) {
       const file = toPath(doc.uri)
       if (/\.(spp|md)$/.test(file) || isScript(file)) sources.set(file, doc.getText())
@@ -197,16 +149,12 @@ export function startServer(options: { defaults?: Backend[] } = {}): void {
       }
     }
 
-    const members = new Map<SppConfig, SppFile[]>()
-    for (const f of loaded) {
-      const owner = ownerOf(f.file)
-      if (owner) members.set(owner.config, [...(members.get(owner.config) ?? []), f])
-    }
+    const members = new Map<string, SppFile[]>()
+    for (const f of loaded) members.set(projectOf(f.file), [...(members.get(projectOf(f.file)) ?? []), f])
     checked = new Map()
-    const runnerOf = (file: string) => ownerOf(file)?.runner ?? null
-    for (const [config, files] of members) {
-      const c = checkProject(config, files, runnerOf, (file) => path.relative(roots[0], file))
-      checked.set(config, c)
+    for (const [root, files] of members) {
+      const c = checkFiles(files, (file) => path.relative(roots[0], file))
+      checked.set(root, c)
       for (const d of c.diagnostics) add(d.file, d.line, d.column, d.message)
     }
     steps = new Map()
@@ -234,7 +182,6 @@ export function startServer(options: { defaults?: Backend[] } = {}): void {
       const documentSelector = [{ language: 'spp' }, { language: 'markdown' }]
       await connection.client.register(SemanticTokensRegistrationType.type, { documentSelector, legend, full: true })
     }
-    await reloadConfigs()
     rediscover()
     refresh()
   })
@@ -247,8 +194,7 @@ export function startServer(options: { defaults?: Backend[] } = {}): void {
     rediscover()
     soon()
   })
-  connection.onDidChangeWatchedFiles(async ({ changes }) => {
-    if (changes.some((c) => isConfig(toPath(c.uri)))) await reloadConfigs()
+  connection.onDidChangeWatchedFiles(() => {
     rediscover()
     soon()
   })

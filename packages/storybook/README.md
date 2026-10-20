@@ -8,24 +8,13 @@ npm install --save-dev spp-lang @spp-lang/storybook
 ```
 
 ```ts
-// spp.config.ts
-import storybook from '@spp-lang/storybook'
-import { defineConfig } from 'spp-lang'
-
-export default defineConfig({ backends: [storybook({ files: ['src'] })] })
-```
-
-```ts
 // .storybook/main.ts
-import { sppStories } from '@spp-lang/storybook'
-import spp from '../spp.config.ts'
-
-export default { ...sppStories(spp), framework: '@storybook/react-vite', stories: ['../src/**/*.stories.tsx'] }
+addons: ['@spp-lang/storybook']
 ```
 
 ```ts
 // a story
-import { spp } from '@spp-lang/storybook/play'
+import { spp } from '@spp-lang/storybook'
 
 export const SavingADraft: Story = {
   play: spp`
@@ -36,4 +25,5 @@ export const SavingADraft: Story = {
 }
 ```
 
-See [Storybook](https://github.com/willmartian/spp-lang/blob/master/docs/storybook.md).
+The project's `.spp` files of Defines work in every template. See
+[Storybook](https://github.com/willmartian/spp-lang/blob/master/docs/storybook.md).

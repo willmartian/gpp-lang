@@ -5,17 +5,16 @@
 // spp-lang lsp
 //
 // Checks the scenarios without running them, lists the words they can use, or
-// answers an editor. The project is the nearest spp.config above the current
-// directory: its backends say which files are its, and each file is checked
-// with the words of the backend that runs it. Running them is each backend's
-// tool's job, like Playwright's.
+// answers an editor. A project is the files under the nearest package.json,
+// which share their Defines. Running them is each backend's tool's job, like
+// Playwright's.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { styleText } from 'node:util'
-import type { Backend, Diagnostic, SppConfig, SppFile } from '@spp-lang/core'
-import { format, LoadError } from '@spp-lang/core'
-import { checkProject, findConfig, load, loadConfig, projectFiles } from '@spp-lang/core/node'
+import type { Diagnostic, SppFile } from '@spp-lang/core'
+import { checkFiles, format, LoadError, words } from '@spp-lang/core'
+import { discover, load, projectFiles, projectRoot } from '@spp-lang/core/node'
 import { Command, Option } from 'commander'
 import { dictionary } from '../src/tools/dictionary.ts'
 
@@ -51,9 +50,9 @@ ${style('bold', 'Examples:')}
   ${style('dim', '$')} spp-lang check
   ${style('dim', '$')} spp-lang check features/cart.spp
 
-The project is the nearest spp.config.ts above the current directory. Its
-backends say which files are the project's, and every Define in a project can
-be used by all of its files.`,
+A project is the .spp files, Markdown with \`\`\`spp blocks and spp templates under
+the nearest package.json, and every Define in a project can be used by all of
+its files.`,
   )
 
 program
@@ -63,9 +62,9 @@ program
   .addHelpText(
     'after',
     `
-Checks every file under each path, or the whole project, and exits non-zero if
-it finds a mistake. The rest of the project is still loaded, for its Defines.
-Each file is checked with the words of the backend that runs it.`,
+Checks every file under each path, or under the current directory, and exits
+non-zero if it finds a mistake. The rest of each file's project is still
+loaded, for its Defines.`,
   )
   .action(async (paths: string[]) => process.exit(await checkOnly(paths)))
 
@@ -76,7 +75,7 @@ program
     'after',
     `
 Lists the built-in words and the project's own Defines, with what each takes
-and leaves: for each backend, when there's more than one.`,
+and leaves.`,
   )
   .action(async () => process.exit(await printDictionary()))
 
@@ -107,28 +106,11 @@ function named(paths: string[], cwd: string) {
   return (file: string) => !targets.length || targets.some((t) => file === t || file.startsWith(t + path.sep))
 }
 
-// The project above the current directory, or, without one, null, having said so.
-async function project(): Promise<SppConfig | null> {
-  const file = findConfig(process.cwd())
-  if (file) return loadConfig(file)
-  console.error(`No spp.config.ts here or above. Make one that says which backends run your scenarios:
-
-  // spp.config.ts
-  import { defineConfig } from 'spp-lang'
-  import playwright from '@spp-lang/playwright'
-
-  export default defineConfig({ backends: [playwright({ files: ['features'] })] })`)
-  return null
-}
-
-// A project's files, the backend that runs each, and why those that don't
-// load don't.
-function loadAll(config: SppConfig) {
+// A project's files, and why those that don't load don't.
+function loadProject(root: string) {
   const files: SppFile[] = []
   const broken: LoadError[] = []
-  const runners = new Map<string, Backend | null>()
-  for (const { file, runner } of projectFiles(config)) {
-    runners.set(file, runner)
+  for (const file of projectFiles(root)) {
     try {
       files.push(load(file))
     } catch (err) {
@@ -136,50 +118,46 @@ function loadAll(config: SppConfig) {
       broken.push(err)
     }
   }
-  return { files, broken, runnerOf: (file: string) => runners.get(file) ?? null }
+  return { files, broken }
 }
 
 async function checkOnly(paths: string[]): Promise<number> {
-  const config = await project()
-  if (!config) return 1
   const cwd = process.cwd()
   const relative = (file: string) => path.relative(cwd, file)
   const shown = named(paths, cwd)
-  const { files, broken, runnerOf } = loadAll(config)
+  // Each project a named file is in, checked whole, since the named files may
+  // use Defines from the rest of it.
+  const roots = new Set(
+    discover(paths.length ? paths : [cwd], cwd, [], true).map((f) => projectRoot(path.dirname(f), cwd)),
+  )
   let problems = 0
-  for (const err of broken.filter((e) => shown(e.file))) {
-    // A file that doesn't parse: its message already says where.
-    console.log(`${relative(err.file)}\n  ${err.message}\n`)
-    problems++
+  let count = 0
+  for (const root of roots) {
+    const { files, broken } = loadProject(root)
+    for (const err of broken.filter((e) => shown(e.file))) {
+      // A file that doesn't parse: its message already says where.
+      console.log(`${relative(err.file)}\n  ${err.message}\n`)
+      problems++
+    }
+    // An Outline's rows share their steps, and so their mistakes.
+    const seen = new Set<string>()
+    const diagnostics = checkFiles(files, relative).diagnostics.filter((d: Diagnostic) => {
+      const key = `${d.file}:${d.line}:${d.column}:${d.message}`
+      return shown(d.file) && !seen.has(key) && seen.add(key)
+    })
+    for (const d of diagnostics) console.log(`${format(d, fs.readFileSync(d.file, 'utf8'), relative)}\n`)
+    problems += diagnostics.length
+    count += [...files, ...broken].filter((f) => shown(f.file)).length
   }
-  // The whole project is checked, since the named files may use Defines from
-  // the rest of it. An Outline's rows share their steps, and so their mistakes.
-  const seen = new Set<string>()
-  const diagnostics = checkProject(config, files, runnerOf, relative).diagnostics.filter((d: Diagnostic) => {
-    const key = `${d.file}:${d.line}:${d.column}:${d.message}`
-    return shown(d.file) && !seen.has(key) && seen.add(key)
-  })
-  for (const d of diagnostics) console.log(`${format(d, fs.readFileSync(d.file, 'utf8'), relative)}\n`)
-  problems += diagnostics.length
-
-  const count = [...files, ...broken].filter((f) => shown(f.file)).length
   const counted = `${count} file${count === 1 ? '' : 's'}`
   console.log(problems ? `${problems} mistake${problems === 1 ? '' : 's'} in ${counted}` : `No mistakes in ${counted}`)
   return problems ? 1 : 0
 }
 
 async function printDictionary(): Promise<number> {
-  const config = await project()
-  if (!config) return 1
   const cwd = process.cwd()
   // A file that doesn't parse has no Defines to list; check says why.
-  const { files, runnerOf } = loadAll(config)
-  const { analyses } = checkProject(config, files, runnerOf, (file) => path.relative(cwd, file))
-  for (const [i, backend] of config.backends.entries()) {
-    // With more than one backend, each has words of its own.
-    if (config.backends.length > 1) console.log(`${i ? '\n' : ''}${style('bold', backend.name)}\n`)
-    const analysis = analyses.get(backend)
-    if (analysis) console.log(dictionary(backend.words(), analysis, cwd))
-  }
+  const { files } = loadProject(projectRoot(cwd, cwd))
+  console.log(dictionary(words(), checkFiles(files, (file) => path.relative(cwd, file)).specs, cwd))
   return 0
 }

@@ -1,53 +1,47 @@
 import assert from 'node:assert/strict'
-import fs from 'node:fs'
-import os from 'node:os'
-import path from 'node:path'
 import { test } from 'node:test'
-import type { Context, Driver } from '../src/index.ts'
-import { actions, check, checks, core, Env, leftovers, queries } from '../src/index.ts'
-import { discover, load } from '../src/node.ts'
+import type { AnyDriver } from '../src/index.ts'
+import { checkFiles, loadSource, runSteps, settle, words } from '../src/index.ts'
 
-// A driver that can tap buttons and see them, and nothing else, as a phone
-// might. Nothing here runs, so it never needs to do any of it.
-const unused = () => {
-  throw new Error('not run')
+// A driver that writes down what it's asked to do, finding things as strings.
+function recorder() {
+  const done: string[] = []
+  const driver: AnyDriver = {
+    find: (_, root, query) => `${root ? `${root} > ` : ''}${JSON.stringify(query)}`,
+    act: async (_, target, action) => void done.push(`${action.do} ${target}`),
+    press: async (_, key) => void done.push(`press ${key}`),
+    expect: async (_, target, state, not) => void done.push(`${not ? 'not ' : ''}${state.is} ${target}`),
+    all: async () => [],
+    retry: (_, attempt) => attempt(),
+    visit: async (_, where) => void done.push(`visit ${where}`),
+    reload: async () => void done.push('reload'),
+    back: async () => void done.push('back'),
+    expectPage: async (_, state, not) => void done.push(`${not ? 'not ' : ''}${state.is} page`),
+  }
+  return { driver, done }
 }
-const small: Driver<Context, unknown> = {
-  roles: ['button'],
-  queries: [],
-  actions: ['click'],
-  states: ['visible'],
-  find: unused,
-  act: unused,
-  press: unused,
-  expect: unused,
-  all: unused,
-  retry: unused,
+
+const scenario = (...steps: string[]) => {
+  const src = ['Feature: F', '  Scenario: S', ...steps.map((s) => `    ${s}`)].join('\n')
+  const [found] = loadSource('a.spp', src).features[0].scenarios
+  return found
 }
 
-const vocabularyOf = (driver: Driver<Context, unknown>) =>
-  checks(actions(queries(new Env(core()), driver), driver), driver)
+const play = (driver: AnyDriver | undefined, ...steps: string[]) =>
+  runSteps(scenario(...steps), { words: words(), vocabulary: [], settle }, { driver }, (_, body) => body())
 
-test("a driver's words are only the ones it can do", () => {
-  const words = new Set(vocabularyOf(small).names())
-  for (const word of ['Button', 'Click', 'See', 'Visible', 'Not', 'Within', 'Containing'])
-    assert.ok(words.has(word), word)
-  for (const word of ['Heading', 'Field', 'Text', 'Hover', 'Fill', 'Press', 'Checked', 'Value'])
-    assert.ok(!words.has(word), word)
+test("the words drive whatever driver the step's context has", async () => {
+  const { driver, done } = recorder()
+  await play(driver, 'Given I Visit "/"', 'When I Click the Button "Add"', 'Then I should be At "/added"')
+  assert.deepEqual(done, ['visit /', 'click {"by":"role","role":"button","name":"Add"}', 'at page'])
 })
 
-test('See takes some text only when the driver can find things by text', () => {
-  assert.equal((vocabularyOf(small).lookup('See') as unknown[]).length, 1)
+test('the words, run with no driver, say so', async () => {
+  await assert.rejects(play(undefined, 'When I Click the Button "Add"'), /ran without a driver/)
 })
 
-test("the checker catches a word the driver can't do, before anything runs", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-words-'))
-  fs.writeFileSync(path.join(dir, 'a.spp'), 'Feature: F\n  Scenario: S\n    When I Hover the Button "Add"')
-  const report = check(discover([dir]).map(load), {
-    words: vocabularyOf(small),
-    settle: leftovers,
-    name: (file) => path.relative(dir, file),
-  })
-  const [problem] = report.scenarios.values()
-  assert.match(problem.message, /^Unknown word Hover\./)
+test("a template's words have none for the page, and say why", () => {
+  const src = '\n\nexport const S = { play: spp`Given I Visit "/"` }\n'
+  const [problem] = checkFiles([loadSource('a.stories.ts', src)]).diagnostics
+  assert.equal(problem.message, 'A template plays on one page, already open, so it has no Visit')
 })

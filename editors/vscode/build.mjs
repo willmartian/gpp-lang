@@ -6,12 +6,5 @@ const common = { bundle: true, platform: 'node', format: 'cjs', target: 'node20'
 
 await Promise.all([
   build({ ...common, entryPoints: ['src/extension.ts'], outfile: 'out/extension.js', external: ['vscode'] }),
-  // The backends work out where their own files are, for running scenarios,
-  // which the language server never does; in CommonJS that's __dirname.
-  build({
-    ...common,
-    entryPoints: ['src/server.ts'],
-    outfile: 'out/server.js',
-    define: { 'import.meta.dirname': '__dirname', 'import.meta.filename': '__filename' },
-  }),
+  build({ ...common, entryPoints: ['src/server.ts'], outfile: 'out/server.js' }),
 ])

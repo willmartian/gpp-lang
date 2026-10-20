@@ -17,24 +17,24 @@
 // A template can't have ${…} in it: what a spec checks is written out, so it
 // reads the same as it runs, and the checker can see all of it.
 //
-// It's checked the first time it plays, against the words a play function has
-// (words.ts) and any Defines from useWords, so a mistake fails its own story
-// before anything is clicked.
+// It's checked the first time it plays, against the language's words as a
+// template has them, with no page words, and the project's Defines, so a
+// mistake fails its own story before anything is clicked.
 
-import type { Env, Scenario, SppFile, Step } from '@spp-lang/core'
+import type { Scenario, SppFile, Step } from '@spp-lang/core'
 import {
   check,
-  core,
-  format,
   INTERPOLATION,
   LoadError,
   leftovers,
   loadSource,
   runSteps,
   SppError,
+  settle,
+  words,
 } from '@spp-lang/core'
-import type { StoryContext } from './vocabulary.ts'
-import { playWords, settle } from './words.ts'
+import type { StoryContext } from './driver.ts'
+import { testingLibrary } from './driver.ts'
 
 // What a play function is given, as far as Spec++ needs it. Storybook's own
 // context has all of this, so a template's type fits any renderer's play.
@@ -49,19 +49,14 @@ let defines: SppFile[] = []
 
 // The project's Defines, for every template, from its .spp files and
 // Markdown, given as path → contents, so a mistake in one says where. Their
-// scenarios are another backend's. sppStories's preview entry calls it with
-// what its Vite plugin read (stories.ts).
+// scenarios are another backend's, and their mistakes are spp-lang check's to
+// report: a template fails only on one it uses. The addon's preview entry
+// calls it with what its Vite plugin read (preset.ts).
 export function useWords(files: Record<string, string>): void {
   defines = Object.entries(files).map(([file, src]) => ({ ...loadSource(file, src), features: [] }))
-  const report = check(defines, { words: words(), settle: leftovers })
-  if (report.vocabulary.length) throw new SppError(report.vocabulary.map((d) => format(d, files[d.file])).join('\n\n'))
 }
 
-let builtins: Env | undefined
-const words = () => {
-  builtins ??= playWords(core())
-  return builtins
-}
+const template = () => words({ template: true })
 
 // A template as a script of its own, as spp-lang check reads it in a stories
 // file (templates.ts), with room above it for the Gherkin around it, and on
@@ -84,9 +79,7 @@ export function prepare(src: string): Prepared {
   }
   const scenario = file.features[0]?.scenarios[0]
   if (!scenario) throw new Error('A template that loads has a scenario')
-  const report = check([...defines, file], { words: words(), settle: leftovers })
-  const vocabulary = report.vocabulary[0]
-  if (vocabulary) return { scenario: null, problem: vocabulary.message }
+  const report = check([...defines, file], { words: template(), settle: leftovers })
   const mistake = report.scenarios.get(scenario)
   return mistake ? { scenario: null, problem: framed(source, mistake) } : { scenario, problem: null }
 }
@@ -113,7 +106,8 @@ export function spp(strings: TemplateStringsArray, ...values: never[]): Play {
     if (problem !== null) throw new SppError(problem)
 
     const vocabulary = defines.flatMap((f) => f.vocabulary)
-    await runSteps(scenario, { words: words(), vocabulary, settle }, context, async (step, body) => {
+    const ctx = { canvasElement: context.canvasElement, driver: testingLibrary }
+    await runSteps(scenario, { words: template(), vocabulary, settle }, ctx, async (step, body) => {
       await context.step(`${step.keyword}${step.text}`, async () => {
         try {
           await body()

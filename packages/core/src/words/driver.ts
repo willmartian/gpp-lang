@@ -1,11 +1,9 @@
-// What a backend does for the shared words: find things, act on them and
-// check them. Playwright is one backend (@spp-lang/playwright); anything that
-// can find things by role and accessible name, the way Testing Library does,
-// can be another.
-//
-// A driver also says what it can do. The shared words are made from that
-// (shared.ts), so a backend that can't hover has no Hover, and the checker
-// says so before anything runs, without a device or a browser.
+// What a backend does for the language's words: find things, act on them,
+// check them, and go places on the page. Playwright is one backend
+// (@spp-lang/playwright), Storybook another (@spp-lang/storybook); anything
+// that can find things by role and accessible name, the way Testing Library
+// does, can be one more. A backend implements all of it, so the words are the
+// same everywhere, and the checker knows them without asking which runs.
 
 import type { Context } from '../language/types.ts'
 
@@ -35,17 +33,13 @@ export type State =
   | { is: 'texts'; texts: string[] }
   | { is: 'count'; count: number }
 
-export interface Capabilities {
-  // The roles it can find things by, as ARIA spells them.
-  roles: readonly string[]
-  queries: readonly QueryKind[]
-  actions: readonly Action['do'][]
-  states: readonly State['is'][]
-}
+// Where the page is, or what it's called.
+export type PageState = { is: 'at'; where: string } | { is: 'titled'; title: Name }
 
 // C is the context words run with, like a page; H is a handle on something
-// found, like a Playwright locator.
-export interface Driver<C extends Context, H> extends Capabilities {
+// found, like a Playwright locator. A backend implements all of it, so every
+// word works with every backend.
+export interface Driver<C extends Context, H> {
   // Handles are lazy, as Playwright's locators are: finding does nothing until
   // the handle is used, so Within and the deferred checks can hold onto one.
   // A null root means the whole screen.
@@ -61,4 +55,13 @@ export interface Driver<C extends Context, H> extends Capabilities {
   // Runs attempt until it doesn't throw, or times out as expect does, and then
   // throws what it last threw.
   retry(ctx: C, attempt: () => Promise<void>): Promise<void>
+  // The page: going to a path or URL, reloading it, going back, and checking
+  // where it is or what it's called, retrying as expect does.
+  visit(ctx: C, where: string): Promise<void>
+  reload(ctx: C): Promise<void>
+  back(ctx: C): Promise<void>
+  expectPage(ctx: C, state: PageState, not: boolean): Promise<void>
 }
+
+// Any driver: its members are methods, so one that needs more, like a page, fits.
+export type AnyDriver = Driver<Context, unknown>

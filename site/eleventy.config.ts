@@ -14,8 +14,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { HtmlBasePlugin } from '@11ty/eleventy'
-import { core, fences, GROUPS } from '@spp-lang/core'
-import { browser } from '@spp-lang/playwright'
+import { fences, GROUPS, words as vocabulary } from '@spp-lang/core'
 import type MarkdownIt from 'markdown-it'
 import { entries, shape, takes } from 'spp-lang'
 import { highlight } from './highlight.ts'
@@ -107,7 +106,7 @@ export default function (config: EleventyConfig) {
 
 // The built-in words, by group, for words.njk.
 function words() {
-  const all = entries(browser(core()))
+  const all = entries(vocabulary())
   return GROUPS.map((name) => ({
     name,
     id: slug(name),

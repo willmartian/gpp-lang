@@ -4,16 +4,15 @@ import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import type { Diagnostic } from '@spp-lang/core'
-import { check, core, leftovers } from '@spp-lang/core'
+import { check, leftovers, words } from '@spp-lang/core'
 import { discover, load } from '@spp-lang/core/node'
-import { browser } from '@spp-lang/playwright'
 
 // Checks some .spp files, given as name → contents.
 function checkFiles(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-check-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)
   const report = check(discover([dir]).map(load), {
-    words: browser(core()),
+    words: words(),
     settle: leftovers,
     name: (file) => path.relative(dir, file),
   })
@@ -28,7 +27,7 @@ function checkFiles(files: Record<string, string>) {
 const scenario = (...steps: string[]) => ['Feature: F', '  Scenario: S', ...steps.map((s) => `    ${s}`)].join('\n')
 
 test('the demo checks clean', () => {
-  const report = check(discover(['examples/demo/features']).map(load), { words: browser(core()), settle: leftovers })
+  const report = check(discover(['examples/demo/features']).map(load), { words: words(), settle: leftovers })
   assert.deepEqual(report.vocabulary, [])
   assert.deepEqual([...report.scenarios.values()], [])
 })

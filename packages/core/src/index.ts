@@ -1,8 +1,6 @@
-// @spp-lang/core: the language, its checker, and what a backend, like
-// @spp-lang/playwright or @spp-lang/storybook, is made of. It runs anywhere, a
-// browser too; @spp-lang/core/node has what needs Node.
-
-export type { Backend, SppConfig } from './backend.ts'
+// @spp-lang/core: the language, its words and its checker, and the driver a
+// backend, like @spp-lang/playwright or @spp-lang/storybook, implements to run
+// them. It runs anywhere, a browser too; @spp-lang/core/node has what needs Node.
 
 export type { CheckOptions, Diagnostic, Line, Place, Report, WordInfo } from './language/check.ts'
 export { Analysis, analyze, check, format } from './language/check.ts'
@@ -33,12 +31,12 @@ export {
   TextType,
   type,
 } from './language/types.ts'
-export type { Action, Capabilities, Driver, Name, Query, QueryKind, State } from './words/driver.ts'
+export type { Checked } from './project.ts'
+export { checkFiles } from './project.ts'
+export type { Action, AnyDriver, Driver, Name, PageState, Query, QueryKind, State } from './words/driver.ts'
 export {
   ARIA_ROLES,
-  actions,
   CheckType,
-  checks,
   ElementType,
   Expectation,
   escapeRegExp,
@@ -50,9 +48,9 @@ export {
   nameOf,
   Pattern,
   PatternType,
-  queries,
   ScopeType,
   say,
-  settler,
+  settle,
   UNNAMED_ROLES,
+  words,
 } from './words/shared.ts'

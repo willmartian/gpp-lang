@@ -13,13 +13,12 @@ import { test } from 'node:test'
 const cli = createRequire(import.meta.url).resolve('@playwright/test/cli')
 const packages = path.join(import.meta.dirname, '..', '..')
 
-// Installs Spec++'s backends in a scratch project, as links to this repo's, so
-// its config imports them and the tools find them as they would in any project.
+// Installs this package in a scratch project, as a link to this repo's, so its
+// config imports it as any project's would.
 function install(dir: string) {
   const scope = path.join(dir, 'node_modules', '@spp-lang')
   fs.mkdirSync(scope, { recursive: true })
   fs.symlinkSync(path.join(packages, 'playwright'), path.join(scope, 'playwright'))
-  fs.symlinkSync(path.join(packages, 'spp-lang'), path.join(dir, 'node_modules', 'spp-lang'))
 }
 
 const cart = [
@@ -54,15 +53,9 @@ function scratch(): string {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'spp-generate-')))
   install(dir)
   const files: Record<string, string> = {
-    'spp.config.mjs': [
-      "import playwright from '@spp-lang/playwright'",
-      "import { defineConfig } from 'spp-lang'",
-      "export default defineConfig({ backends: [playwright({ files: ['features'] })] })",
-    ].join('\n'),
     'playwright.config.mjs': [
-      "import { sppTests } from '@spp-lang/playwright'",
-      "import spp from './spp.config.mjs'",
-      'export default { ...sppTests(spp) }',
+      "import { defineSppConfig } from '@spp-lang/playwright'",
+      "export default { ...defineSppConfig({ features: ['features'] }) }",
     ].join('\n'),
     'features/cart.spp': cart,
     'features/words.spp': brokenDefine,

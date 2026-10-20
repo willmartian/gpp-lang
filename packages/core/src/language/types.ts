@@ -17,6 +17,8 @@
 //
 // A noun's kind, like Cart, also has a base: the kind it narrows, like
 // Element. Anything that takes an Element takes a Cart, but not the reverse.
+import type { AnyDriver } from '../words/driver.ts'
+
 export interface Type<T = unknown> {
   readonly name: string
   readonly phrase: string
@@ -62,6 +64,9 @@ export const TableType = type(
 // what their words need, like a page to drive.
 export interface Context {
   print?: (line: string) => void
+  // What the words drive, as a backend gives it. The checker never runs them,
+  // so it needs none.
+  driver?: AnyDriver
 }
 
 type Values<I extends readonly Type<unknown>[]> = { [K in keyof I]: I[K] extends Type<infer T> ? T : never }

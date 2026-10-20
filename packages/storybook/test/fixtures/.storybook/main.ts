@@ -1,11 +1,10 @@
+import path from 'node:path'
 import type { StorybookConfig } from '@storybook/html-vite'
-import { sppStories } from '../../../src/index.ts'
-import spp from '../spp.config.ts'
 
 export default {
-  ...sppStories(spp),
   framework: '@storybook/html-vite',
   stories: ['../*.stories.ts'],
-  addons: ['@storybook/addon-vitest'],
+  // This package's own addon, from its source.
+  addons: ['@storybook/addon-vitest', path.join(import.meta.dirname, '../../../src/preset.ts')],
   core: { disableTelemetry: true },
 } satisfies StorybookConfig

@@ -1,29 +1,11 @@
-// The words that drive a browser: the shared words (words/shared.ts) on a
-// Playwright driver, and the words only a browser has, like Visit.
+// The driver that runs the language's words in a browser, with Playwright.
 //
 // Playwright's getBy* locators implement Testing Library's queries, and its
-// expect retries until a check passes, which is what the shared words ask of
-// a driver.
+// expect retries until a check passes, which is what the words ask of a driver.
 
 import type { expect, Locator, Page } from '@playwright/test'
 import type { Context, Driver } from '@spp-lang/core'
-import {
-  ARIA_ROLES,
-  actions,
-  CheckType,
-  called,
-  checks,
-  Env,
-  Expectation,
-  escapeRegExp,
-  formsFor,
-  NameType,
-  nameOf,
-  queries,
-  say,
-  settler,
-  TextType,
-} from '@spp-lang/core'
+import { escapeRegExp } from '@spp-lang/core'
 
 export interface BrowserContext extends Context {
   page: Page
@@ -35,24 +17,6 @@ type AriaRole = Parameters<Page['getByRole']>[0]
 // ---------------------------------------------------------------- the driver
 
 export const playwright: Driver<BrowserContext, Locator> = {
-  roles: ARIA_ROLES,
-  queries: ['label', 'text', 'placeholder', 'alt', 'title', 'testId'],
-  actions: ['click', 'double-click', 'hover', 'focus', 'check', 'uncheck', 'clear', 'fill', 'type', 'select', 'press'],
-  states: [
-    'visible',
-    'hidden',
-    'checked',
-    'enabled',
-    'disabled',
-    'focused',
-    'empty',
-    'value',
-    'text',
-    'containing',
-    'texts',
-    'count',
-  ],
-
   find({ page }, root, query) {
     const r = root ?? page
     if (query.by === 'role') {
@@ -147,6 +111,23 @@ export const playwright: Driver<BrowserContext, Locator> = {
     return target.all()
   },
 
+  async visit({ page }, where) {
+    await page.goto(where)
+  },
+
+  async reload({ page }) {
+    await page.reload()
+  },
+
+  async back({ page }) {
+    await page.goBack()
+  },
+
+  expectPage(ctx, state, not) {
+    const e = not ? ctx.expect(ctx.page).not : ctx.expect(ctx.page)
+    return state.is === 'at' ? e.toHaveURL(urlPattern(state.where)) : e.toHaveTitle(state.title)
+  },
+
   // expect.poll retries for as long as the project's expect timeout.
   async retry(ctx, attempt) {
     let last: unknown
@@ -165,84 +146,6 @@ export const playwright: Driver<BrowserContext, Locator> = {
       throw last ?? err
     }
   },
-}
-
-export const settle = settler(playwright)
-
-// ---------------------------------------------------------------- vocabulary
-
-const form = formsFor<BrowserContext>()
-const Path = called(TextType, 'a "/path" or URL')
-
-export function browser(parent: Env | null = null): Env {
-  const env = queries(new Env(parent), playwright)
-
-  // navigation
-  env
-    .word(
-      'Visit',
-      form([Path], (ctx, path) => ctx.page.goto(path)),
-    )
-    .word(
-      'Reload',
-      form([], (ctx) => ctx.page.reload()),
-    )
-    .word(
-      'Back',
-      form([], (ctx) => ctx.page.goBack()),
-    )
-    .doc({ group: 'Doing', summary: 'Goes to a path on the app, or a URL.', examples: ['Given I Visit "/"'] }, 'Visit')
-    .doc({ group: 'Doing', summary: 'Reloads the page.', examples: ['When I Reload the page'] }, 'Reload')
-    .doc(
-      { group: 'Doing', summary: "Goes back, as the browser's back button does.", examples: ['When I go Back'] },
-      'Back',
-    )
-
-  actions(env, playwright)
-  checks(env, playwright)
-
-  // checks on the page itself
-  return env
-    .word(
-      'At',
-      form(
-        [Path],
-        CheckType,
-        (ctx, where) =>
-          new Expectation(`At ${JSON.stringify(where)}`, (not) => {
-            const e = ctx.expect(ctx.page)
-            return (not ? e.not : e).toHaveURL(urlPattern(where))
-          }),
-      ),
-    )
-    .word(
-      'Titled',
-      form(
-        [NameType],
-        CheckType,
-        (ctx, title) =>
-          new Expectation(`Titled ${say(title)}`, (not) => {
-            const e = ctx.expect(ctx.page)
-            return (not ? e.not : e).toHaveTitle(nameOf(title))
-          }),
-      ),
-    )
-    .doc(
-      {
-        group: 'Checking',
-        summary: "Checks the page's path, or its whole URL.",
-        examples: ['Then I should be At "/dashboard"'],
-      },
-      'At',
-    )
-    .doc(
-      {
-        group: 'Checking',
-        summary: "Checks the page's title.",
-        examples: ['Then the page should be Titled "Dashboard"'],
-      },
-      'Titled',
-    )
 }
 
 // "/dashboard" means that path on whatever host the page is on.

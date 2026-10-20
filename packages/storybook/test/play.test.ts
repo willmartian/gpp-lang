@@ -48,8 +48,8 @@ test('a mistake is shown at its word, before anything runs', () => {
   )
 })
 
-test("a browser's words for the page say why a story has none", () => {
-  assert.match(problem('When I Visit "/"') ?? '', /^A story is one page, already open, so a play function has no Visit/)
+test('the words for the page say why a template has none', () => {
+  assert.match(problem('When I Visit "/"') ?? '', /^A template plays on one page, already open, so it has no Visit/)
 })
 
 test('a line that is not a step says so', () => {
@@ -78,12 +78,13 @@ test('a template can use the Defines from useWords', () => {
   assert.match(problem('When I Retitle the post "Hello"') ?? '', /^Unknown word Retitle/)
 })
 
-test('useWords says where a mistake in a Define is', () => {
-  assert.throws(
-    () => useWords({ 'words.spp': 'Define: Retitle Text (New)\n  Fil the Field "Title" with New\n' }),
-    /^SppError: words\.spp:2:3 \(in Define Retitle\)\n {4}Fil the Field "Title" with New\n {4}\^\n {2}Unknown word Fil/,
-  )
-  useWords({})
+test('a mistake in a Define fails only the templates that use it, as spp-lang check reports it', () => {
+  useWords({ 'words.spp': 'Define: Retitle Text (New)\n  Fil the Field "Title" with New\n' })
+  try {
+    assert.equal(problem('When I Click the Button "Save"'), null)
+  } finally {
+    useWords({})
+  }
 })
 
 test("useWords takes a file's Defines, and leaves its scenarios to another backend", () => {

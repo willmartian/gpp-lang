@@ -66,26 +66,11 @@ fs.writeFileSync(
     '',
   ].join('\n'),
 )
-// This repo's spp-lang, from source, and its backends, linked in as a project
-// would have them installed, with a spp.config that uses both.
-const packages = path.join(here, '..', '..', '..', 'packages')
+// This repo's spp-lang, from source, since there's no node_modules/spp-lang here.
 fs.mkdirSync(path.join(workspace, '.vscode'))
 fs.writeFileSync(
   path.join(workspace, '.vscode', 'settings.json'),
-  JSON.stringify({ 'spp.path': path.join(packages, 'spp-lang', 'bin', 'spp-lang.ts') }),
-)
-fs.mkdirSync(path.join(workspace, 'node_modules', '@spp-lang'), { recursive: true })
-for (const name of ['playwright', 'storybook'])
-  fs.symlinkSync(path.join(packages, name), path.join(workspace, 'node_modules', '@spp-lang', name))
-fs.symlinkSync(path.join(packages, 'spp-lang'), path.join(workspace, 'node_modules', 'spp-lang'))
-fs.writeFileSync(
-  path.join(workspace, 'spp.config.mjs'),
-  [
-    "import playwright from '@spp-lang/playwright'",
-    "import storybook from '@spp-lang/storybook'",
-    "import { defineConfig } from 'spp-lang'",
-    'export default defineConfig({ backends: [playwright(), storybook()] })',
-  ].join('\n'),
+  JSON.stringify({ 'spp.path': path.join(here, '..', '..', '..', 'packages', 'spp-lang', 'bin', 'spp-lang.ts') }),
 )
 
 try {

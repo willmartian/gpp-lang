@@ -1,7 +1,5 @@
-// spp-lang: the spp-lang command, the language server, and defineConfig, for a
-// project's spp.config.ts.
+// spp-lang: the spp-lang command and the language server, and the dictionary
+// they and the docs site list the words with.
 
-export type { Backend, SppConfig } from '@spp-lang/core'
-export { defineConfig } from '@spp-lang/core/node'
 export type { Entry } from './tools/dictionary.ts'
 export { dictionary, entries, shape, takes } from './tools/dictionary.ts'

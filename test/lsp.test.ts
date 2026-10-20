@@ -56,7 +56,7 @@ const shop = [
 
 // Storybook play functions, which use the project's Defines too.
 const stories = [
-  "import { spp } from '@spp-lang/storybook/play'", //           0
+  "import { spp } from '@spp-lang/storybook'", //                0
   '', //                                                         1
   'export const Adding = {', //                                  2
   '  play: spp`', //                                            3
@@ -69,24 +69,7 @@ const stories = [
   '',
 ].join('\n')
 
-const packages = path.join(import.meta.dirname, '..', 'packages')
-
-// Installs Spec++'s backends in a scratch project, as links to this repo's, so
-// its config imports them and the tools find them as they would in any project.
-function install(dir: string) {
-  const scope = path.join(dir, 'node_modules', '@spp-lang')
-  fs.mkdirSync(scope, { recursive: true })
-  for (const name of ['playwright', 'storybook']) fs.symlinkSync(path.join(packages, name), path.join(scope, name))
-  fs.symlinkSync(path.join(packages, 'spp-lang'), path.join(dir, 'node_modules', 'spp-lang'))
-}
-
-const config = (backends: string) =>
-  [
-    "import playwright from '@spp-lang/playwright'",
-    "import storybook from '@spp-lang/storybook'",
-    "import { defineConfig } from 'spp-lang'",
-    `export default defineConfig({ backends: [${backends}] })`,
-  ].join('\n')
+const bin = path.join(import.meta.dirname, '..', 'packages', 'spp-lang', 'bin', 'spp-lang.ts')
 
 type Published = {
   uri: string
@@ -95,24 +78,17 @@ type Published = {
 
 test('the language server', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spp-lsp-'))
-  install(dir)
+  fs.writeFileSync(path.join(dir, 'package.json'), '{}')
   fs.writeFileSync(path.join(dir, 'words.spp'), words)
   fs.writeFileSync(path.join(dir, 'a.spp'), feature)
   fs.writeFileSync(path.join(dir, 'README.md'), readme)
   fs.writeFileSync(path.join(dir, 'shop.spp'), shop)
   fs.writeFileSync(path.join(dir, 'editor.stories.ts'), stories)
-  // Left out by the config: its mistake should never be reported.
-  fs.mkdirSync(path.join(dir, 'drafts'))
-  fs.writeFileSync(path.join(dir, 'drafts', 'b.spp'), 'Feature: Draft\n  Scenario: S\n    When I Clik\n')
-  // A project of its own, which Defines Add too, its own way.
+  // A package of its own, so a project of its own, which Defines Add too, its own way.
   fs.mkdirSync(path.join(dir, 'other'))
+  fs.writeFileSync(path.join(dir, 'other', 'package.json'), '{}')
   fs.writeFileSync(path.join(dir, 'other', 'words.spp'), 'Define: Add Text (Item)\n  Fill the Field "Name" with Item\n')
   fs.writeFileSync(path.join(dir, 'other', 'c.spp'), 'Feature: Other\n  Scenario: S\n    When I Add "Tea"\n')
-  fs.writeFileSync(
-    path.join(dir, 'spp.config.mjs'),
-    config("playwright({ ignore: ['drafts'] }), storybook({ ignore: ['drafts'] })"),
-  )
-  fs.writeFileSync(path.join(dir, 'other', 'spp.config.mjs'), config('playwright()'))
   const uri = pathToFileURL(path.join(dir, 'a.spp')).href
   const wordsUri = pathToFileURL(path.join(dir, 'words.spp')).href
   const readmeUri = pathToFileURL(path.join(dir, 'README.md')).href
@@ -120,13 +96,9 @@ test('the language server', async (t) => {
   const storiesUri = pathToFileURL(path.join(dir, 'editor.stories.ts')).href
 
   // As an editor's language client starts it.
-  const child = spawn(
-    process.execPath,
-    [path.join(packages, 'spp-lang', 'bin', 'spp-lang.ts'), 'lsp', '--stdio', `--clientProcessId=${process.pid}`],
-    {
-      stdio: ['pipe', 'pipe', 'inherit'],
-    },
-  )
+  const child = spawn(process.execPath, [bin, 'lsp', '--stdio', `--clientProcessId=${process.pid}`], {
+    stdio: ['pipe', 'pipe', 'inherit'],
+  })
   const connection = rpc.createMessageConnection(
     new rpc.StreamMessageReader(child.stdout),
     new rpc.StreamMessageWriter(child.stdin),
@@ -176,11 +148,7 @@ test('the language server', async (t) => {
     )
   })
 
-  await t.test("leaves out what the project's config ignores", async () => {
-    assert.deepEqual(await connection.sendRequest('workspace/symbol', { query: 'Draft' }), [])
-  })
-
-  await t.test('checks each project on its own, so two can Define the same word', async () => {
+  await t.test('checks each package on its own, so two can Define the same word', async () => {
     const clashes = published.filter((p) => /words\.spp$/.test(p.uri) && p.diagnostics.length)
     assert.deepEqual(clashes, [])
     const hover = await connection.sendRequest<{ contents: { value: string } }>('textDocument/hover', {
@@ -417,7 +385,7 @@ test('the language server', async (t) => {
         ],
         [
           { line: 9, character: visiting.indexOf('Visit "/"') },
-          'A story is one page, already open, so a play function has no Visit',
+          'A template plays on one page, already open, so it has no Visit',
         ],
       ],
     )

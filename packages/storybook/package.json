@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./play": "./src/play.ts"
+    "./preset": "./src/preset.ts"
   },
   "files": [
     "dist",
@@ -18,9 +18,9 @@
         "types": "./dist/src/index.d.ts",
         "default": "./dist/src/index.js"
       },
-      "./play": {
-        "types": "./dist/src/play.d.ts",
-        "default": "./dist/src/play.js"
+      "./preset": {
+        "types": "./dist/src/preset.d.ts",
+        "default": "./dist/src/preset.js"
       }
     }
   },
@@ -57,7 +57,6 @@
     "@storybook/html-vite": "^10.6.2",
     "@vitest/browser-playwright": "^4.1.12",
     "playwright": "^1.63.0",
-    "spp-lang": "workspace:*",
     "storybook": "^10.6.2",
     "vite": "^8.3.4",
     "vitest": "^4.1.12"

@@ -1,8 +1,7 @@
-// @spp-lang/storybook: Spec++ as Storybook play functions. storybook() is the
-// backend, for spp.config.ts, and sppStories() runs it, in .storybook/main.ts.
-// Stories import spp from @spp-lang/storybook/play.
+// @spp-lang/storybook: Spec++ as Storybook play functions. Stories import spp
+// from here; .storybook/main.ts lists the package as an addon (preset.ts).
 
-export type { SppStories } from './stories.ts'
-export { sppStories } from './stories.ts'
-export type { StorybookOptions, StoryContext } from './vocabulary.ts'
-export { storybook as default } from './vocabulary.ts'
+export type { StoryContext } from './driver.ts'
+export { testingLibrary } from './driver.ts'
+export type { Play, PlayContext } from './play.ts'
+export { spp } from './play.ts'

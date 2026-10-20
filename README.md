@@ -28,8 +28,8 @@ Gherkin without step definitions. Every scenario runs as a Playwright test.
 
 ## Install
 
-Needs Node.js 22.13 or later. `spp-lang` is the language, its checker and its editor support;
-a backend runs the scenarios.
+Needs Node.js 22.13 or later. `spp-lang` checks your specs and gives your editor its support;
+a backend runs them.
 
 | Package | Runs |
 | --- | --- |
@@ -42,21 +42,12 @@ npx playwright install chromium
 ```
 
 ```ts
-// spp.config.ts: the project, and the backends that run it
-import playwright from '@spp-lang/playwright'
-import { defineConfig } from 'spp-lang'
-
-export default defineConfig({ backends: [playwright({ files: ['features'] })] })
-```
-
-```ts
 // playwright.config.ts
 import { defineConfig } from '@playwright/test'
-import { sppTests } from '@spp-lang/playwright'
-import spp from './spp.config.ts'
+import { defineSppConfig } from '@spp-lang/playwright'
 
 export default defineConfig({
-  ...sppTests(spp),
+  ...defineSppConfig({ features: ['features'] }),
   use: { baseURL: 'http://localhost:3000' },
 })
 ```
@@ -78,7 +69,7 @@ npx spp-lang dictionary                     # every word you can use
 | --- | --- |
 | [Words](docs/words.md) | every built-in word |
 | [Defines](docs/defines.md) | your own words |
-| [Running](docs/running.md) | `spp.config.ts`, Playwright, the CLI, tags |
+| [Running](docs/running.md) | Playwright, projects, the CLI, tags |
 | [Markdown](docs/markdown.md) | ` ```spp ` blocks that run as tests |
 | [Storybook](docs/storybook.md) | templates as stories' play functions |
 | [Editors](docs/editors.md) | the language server, VS Code, Claude Code, Neovim |

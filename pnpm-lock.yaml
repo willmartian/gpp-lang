@@ -152,12 +152,6 @@ importers:
         specifier: ^10.1.2
         version: 10.1.2
     devDependencies:
-      '@spp-lang/playwright':
-        specifier: workspace:*
-        version: link:../../packages/playwright
-      '@spp-lang/storybook':
-        specifier: workspace:*
-        version: link:../../packages/storybook
       '@types/node':
         specifier: ^26.6.3
         version: 26.6.5
@@ -251,9 +245,6 @@ importers:
       '@spp-lang/core':
         specifier: workspace:*
         version: link:../core
-      spp-lang:
-        specifier: workspace:*
-        version: link:../spp-lang
 
   packages/spp-lang:
     dependencies:
@@ -287,9 +278,6 @@ importers:
       playwright:
         specifier: ^1.63.0
         version: 1.64.1
-      spp-lang:
-        specifier: workspace:*
-        version: link:../spp-lang
       storybook:
         specifier: ^10.6.2
         version: 10.6.2(react@19.3.1)

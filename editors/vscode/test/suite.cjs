@@ -128,7 +128,7 @@ test("a stories file's spp templates are checked", async () => {
   })
   assert.deepEqual(
     found.map((d) => [d.range.start.line, d.range.start.character, d.message]),
-    [[2, 11, 'A story is one page, already open, so a play function has no Visit']],
+    [[2, 11, 'A template plays on one page, already open, so it has no Visit']],
   )
 })
 

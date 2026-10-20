@@ -9,8 +9,8 @@
 // Only userEvent is instrumented, so the Interactions panel shows each step
 // and what it did, and not every query made while retrying.
 
-import type { Action, Driver, Env, Name, Query, State } from '@spp-lang/core'
-import { SppError, settler } from '@spp-lang/core'
+import type { Action, Context, Driver, Name, Query, State } from '@spp-lang/core'
+import { SppError } from '@spp-lang/core'
 import {
   getConfig,
   queryAllByAltText,
@@ -22,8 +22,11 @@ import {
   queryAllByTitle,
   userEvent,
 } from 'storybook/test'
-import type { StoryContext } from './vocabulary.ts'
-import { capabilities, storyWords } from './vocabulary.ts'
+
+// What the driver needs from a play function's context: the story's canvas.
+export interface StoryContext extends Context {
+  canvasElement: HTMLElement
+}
 
 // ---------------------------------------------------------------- handles
 
@@ -238,8 +241,6 @@ const typed = (text: string) => text.replace(/[{[]/g, '$&$&')
 // ---------------------------------------------------------------- the driver
 
 export const testingLibrary: Driver<StoryContext, Target> = {
-  ...capabilities,
-
   find(_, root, query) {
     const { label, search: find } = search(query)
     return new Target(root ? `${label} within the ${root.label}` : label, root, find)
@@ -302,11 +303,14 @@ export const testingLibrary: Driver<StoryContext, Target> = {
   retry(_, attempt) {
     return retry(attempt)
   },
+
+  // A template has no page words (words({ template: true })), so these never run.
+  visit: onePage,
+  reload: onePage,
+  back: onePage,
+  expectPage: onePage,
 }
 
-export const settle = settler(testingLibrary)
-
-// The words a play function can use.
-export function playWords(parent: Env | null = null): Env {
-  return storyWords(testingLibrary, parent)
+async function onePage(): Promise<never> {
+  throw new SppError('A template plays on one page, already open')
 }
