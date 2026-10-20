@@ -15,6 +15,7 @@
     "test:e2e": "playwright test",
     "test:storybook": "pnpm --recursive test:storybook",
     "demo": "pnpm --filter example-demo start",
+    "storybook": "pnpm --filter example-storybook storybook",
     "docs": "pnpm --filter site start",
     "docs:build": "pnpm --filter site build",
     "prepare": "husky"

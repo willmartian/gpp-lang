@@ -35,6 +35,7 @@ pnpm test             # each package's tests, then test/: no browser
 pnpm test:e2e         # examples/demo and examples/todomvc against their apps, plus packages/playwright/test/fixtures, which must all fail
 pnpm test:storybook   # examples/storybook's play functions, plus packages/storybook/test/fixtures, which must fail
 pnpm build            # each package's dist/
+pnpm storybook        # examples/storybook's stories, opened in a browser
 ```
 
 ## The VS Code extension
