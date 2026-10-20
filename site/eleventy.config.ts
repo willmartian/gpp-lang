@@ -69,6 +69,7 @@ export default function (config: EleventyConfig) {
   }
   config.addGlobalData('pages', PAGES)
   config.addGlobalData('repo', REPO)
+  config.addGlobalData('version', version())
   config.addGlobalData('groups', groups)
 
   config.addPlugin(HtmlBasePlugin)
@@ -102,6 +103,13 @@ export default function (config: EleventyConfig) {
     // The pages are plain Markdown, and the docs show {{ }} as they are.
     markdownTemplateEngine: false,
   }
+}
+
+// The version users install, from the CLI's package: every package shares it.
+function version(): string {
+  const pkg: unknown = JSON.parse(readFileSync(path.join(ROOT, 'packages/gpp-lang/package.json'), 'utf8'))
+  if (typeof pkg === 'object' && pkg && 'version' in pkg && typeof pkg.version === 'string') return pkg.version
+  throw new Error('packages/gpp-lang/package.json has no version')
 }
 
 // The built-in words, by group, for words.njk.
