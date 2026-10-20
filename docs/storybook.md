@@ -2,7 +2,8 @@
 
 An `spp` template is a story's [play function](https://storybook.js.org/docs/writing-stories/play-function).
 The story is the scenario: its args set it up, and the template is its steps. See
-[`examples/storybook`](../examples/storybook).
+[`examples/storybook`](../examples/storybook). For Features that run against your whole app,
+see [Playwright](playwright.md); a project can use both.
 
 ```ts
 import { spp } from '@spp-lang/storybook'
@@ -41,8 +42,8 @@ addons: ['@spp-lang/storybook']
 
 ## Words
 
-The [words](words.md) are the same, less the ones for a page: a template plays on one page,
-already open, so there's no `Visit`, `Reload`, `Back`, `At` or `Titled`.
+The [words](words.md) are the same, less the ones for a page: a template plays
+[on one page](words.md#on-one-page), already open.
 
 - **Things are looked for in the whole page,** not only the story's canvas, so a dialog in a
   portal is found as a user finds it.
@@ -53,7 +54,7 @@ already open, so there's no `Visit`, `Reload`, `Back`, `At` or `Titled`.
 ## Defines
 
 [Defines](defines.md) go in the project's `.spp` files, under the nearest `package.json`
-([Projects](running.md#projects)), and every template can use them. The addon reads them as
+([Projects](projects.md)), and every template can use them. The addon reads them as
 Storybook builds, since a play function runs in a browser, which can't, and changing one
 reloads the stories. A `Feature:` in one is Playwright's to run.
 

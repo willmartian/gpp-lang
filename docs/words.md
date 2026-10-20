@@ -26,3 +26,8 @@ Button : Text | Pattern, Scope -> Element
 | `Matcher` | a check waiting for an element, like `Checked` |
 | `Check` | a check, like `See the Button "Save"` |
 | `Step`, `Mode` | a step, and the Given, When or Then above it |
+
+## On one page
+
+Every backend runs the same words, except that a Storybook template plays on one page, already
+open. It has no `Visit`, `Reload`, `Back`, `At` or `Titled`.

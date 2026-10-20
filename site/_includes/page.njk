@@ -19,6 +19,9 @@
     <nav class="sidebar" aria-label="Docs">
       <ul>
         {%- for p in pages %}
+        {%- if p.section %}
+        <li class="section">{{ p.section }}</li>
+        {%- endif %}
         <li>
           <a href="{{ p.url }}"{% if p.url == page.url %} aria-current="page"{% endif %}>{{ p.nav }}</a>
           {%- if p.url == page.url and toc.length %}

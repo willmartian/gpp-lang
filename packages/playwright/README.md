@@ -18,4 +18,4 @@ export default defineConfig({
 })
 ```
 
-Then `npx playwright test`. See [Running](https://github.com/willmartian/spp-lang/blob/master/docs/running.md).
+Then `npx playwright test`. See [Playwright](https://github.com/willmartian/spp-lang/blob/master/docs/playwright.md).

@@ -24,11 +24,11 @@ const REPO = 'https://github.com/willmartian/spp-lang'
 
 const PAGES = [
   { file: 'README.md', url: '/', nav: 'Overview' },
-  { file: 'docs/words.md', url: '/words/', nav: 'Words', layout: 'words.njk' },
+  { file: 'docs/words.md', url: '/words/', nav: 'Words', layout: 'words.njk', section: 'The language' },
   { file: 'docs/defines.md', url: '/defines/', nav: 'Defines' },
-  { file: 'docs/running.md', url: '/running/', nav: 'Running' },
-  { file: 'docs/markdown.md', url: '/markdown/', nav: 'Markdown' },
+  { file: 'docs/playwright.md', url: '/playwright/', nav: 'Playwright', section: 'Backends' },
   { file: 'docs/storybook.md', url: '/storybook/', nav: 'Storybook' },
+  { file: 'docs/projects.md', url: '/projects/', nav: 'Projects', section: 'Tools' },
   { file: 'docs/editors.md', url: '/editors/', nav: 'Editors' },
 ]
 
