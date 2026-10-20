@@ -273,7 +273,7 @@ function statementOf(tokens: Token[]): Statement {
 function paramsOf(tokens: Token[]): Param[] {
   const params: Param[] = []
   const wrong = (t: Token) =>
-    new SppError("After a Define's name come the kinds it takes, like Text or Element, each maybe named in ( )", t.pos)
+    new SppError("After a Define's name come the types it takes, like Text or Element, each maybe named in ( )", t.pos)
   for (let n = 0; n < tokens.length; n++) {
     const t = tokens[n]
     // a trailing colon, as in the old way, is prose
@@ -562,7 +562,7 @@ export function resolve(params: Param[], env: Env): { name: string; type: Type }
 
 export function notAKind(name: string, builtins: Iterable<Type>): string {
   const kinds = [...new Set([...builtins].map((t) => t.name))].join(', ')
-  return `${name} isn't a kind a Define can take. The kinds are ${kinds}, and nouns: Defines that leave one of those`
+  return `${name} isn't a type a Define can take. The types are ${kinds}, and nouns: Defines that leave one of those`
 }
 
 // Whether a value is what a form's input takes, and what the form is given.

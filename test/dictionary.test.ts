@@ -55,7 +55,7 @@ test("a Define's header is listed with the names it gives", () => {
   assert.match(out, /\nMove\n {2}Text \(Item\), Element -> {4}words\.spp:1$/)
 })
 
-test('a noun is listed as leaving its kind', () => {
+test('a noun is listed as leaving its type', () => {
   const out = dictionaryOf({ 'words.spp': 'Define: Cart\n  the Region "Cart"' })
   assert.match(out, /\nCart\n {2}-> Cart {4}words\.spp:1$/)
 })

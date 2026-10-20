@@ -111,7 +111,7 @@ test('Define: needs a name', () => {
   assert.doesNotThrow(() => parse('Define: Greet everyone:\n  Say "hi"'))
 })
 
-test("a Define's header lists the kinds it takes, each maybe named", () => {
+test("a Define's header lists the types it takes, each maybe named", () => {
   const [[define]] = parse('Define: Move Text (the Item) from Element (Source) to Element\n  Say Item')
   assert.deepEqual(define.type === 'define' && define.params.map((p) => `${p.kind} ${p.name} ${p.pos}`), [
     'Text Item 13',
@@ -120,8 +120,8 @@ test("a Define's header lists the kinds it takes, each maybe named", () => {
   ])
 })
 
-test("a Define's header takes only kinds and names", () => {
-  assert.throws(() => parse('Define: Greet "you"\n  Say "hi"'), at(14, /come the kinds it takes/))
+test("a Define's header takes only types and names", () => {
+  assert.throws(() => parse('Define: Greet "you"\n  Say "hi"'), at(14, /come the types it takes/))
   assert.throws(() => parse('Define: Greet Text ()\n  Say "hi"'), at(19, /\( \) after Text holds one Capitalised name/))
   assert.throws(() => parse('Define: Greet Text (Who\n  Say "hi"'), /\( \) after Text holds one/)
 })
@@ -138,19 +138,19 @@ test("a Define can't reach into its caller's stack, but leaves things on it", as
   assert.deepEqual((await evaluate('Define: Two\n  2\nSay Two')).seen, [2])
 })
 
-test('a Define can only take kinds there are, which it looks up when first used', async () => {
+test('a Define can only take types there are, which it looks up when first used', async () => {
   const greet = 'Define: Greet Person\n  Say "hi"\n'
   assert.deepEqual((await evaluate(greet)).seen, [])
   await assert.rejects(
     evaluate(`${greet}Greet`),
-    /Person isn't a kind a Define can take. The kinds are Text, Number, Table, Any, and nouns/,
+    /Person isn't a type a Define can take. The types are Text, Number, Table, Any, and nouns/,
   )
 })
 
 const nouns =
   'Define: Cart\n  "the cart"\nDefine: Coupon\n  "SAVE10"\nDefine: Use Text (Code) on Cart\n  Say Code\n  Say Cart\n'
 
-test("a noun's kind is its name, and a Define that takes it takes nothing else", async () => {
+test("a noun's type is its name, and a Define that takes it takes nothing else", async () => {
   assert.deepEqual((await evaluate(`${nouns}Use "x" on the Cart`)).seen, ['x', 'the cart'])
   await assert.rejects(evaluate(`${nouns}Use "x" on the Coupon`), /Use expected a Cart, but got "SAVE10"/)
   await assert.rejects(evaluate(`${nouns}Use "x" on "the cart"`), /Use expected a Cart, but got "the cart"/)
@@ -160,7 +160,7 @@ test("a noun's value is still what it was, to any other word", async () => {
   assert.deepEqual((await evaluate(`${nouns}Wants-text Coupon\nSay Coupon`)).seen, ['SAVE10'])
 })
 
-test('a word can have several Defines, and a use runs the one whose kinds it has', async () => {
+test('a word can have several Defines, and a use runs the one whose types it has', async () => {
   const more = `${nouns}Define: Use Number (N) on Cart\n  Say N\nDefine: Use Text (Code)\n  Say "just"\n  Say Code\n`
   assert.deepEqual((await evaluate(`${more}Use 2 on the Cart`)).seen, [2])
   assert.deepEqual((await evaluate(`${more}Use "x" on the Cart`)).seen, ['x', 'the cart'])

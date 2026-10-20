@@ -89,7 +89,7 @@ porting Spec++.
       `Checked` and so on. Expectations would need to remember where they came from.
 - [ ] **Only the first mistake in each scenario is reported,** so fixing one reveals the next.
       Consider carrying on after a mistake where the stack is still meaningful.
-- [ ] **A kind in a `Define`'s header is treated as a use of that word** by hover and find
+- [ ] **A type in a `Define`'s header is treated as a use of that word** by hover and find
       references: hovering `Text` in `Define: Add Text (Item)` shows the `Text` query.
 
 ## Running

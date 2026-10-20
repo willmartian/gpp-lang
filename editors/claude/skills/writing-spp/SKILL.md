@@ -76,12 +76,12 @@ Define: Signed-in
   Click the Button "Sign in"
 ```
 
-- After the name come the kinds it takes: `Text`, `Number`, `Element`, `Table` or
-  `Any`, in the order the caller writes them. In the body, each is called by its kind, or
+- After the name come the types it takes: `Text`, `Number`, `Element`, `Table` or
+  `Any`, in the order the caller writes them. In the body, each is called by its type, or
   by the name in `( )` after it. `Text` is also a query word, so always name it, as in
-  `Text (Item)`. Two of the same kind need names: `Element (Source) to Element (Target)`.
+  `Text (Item)`. Two of the same type need names: `Element (Source) to Element (Target)`.
 - A Define takes only what its header lists, and nothing with nothing after its name.
-- A Define that leaves one thing is a noun, and its name is a kind: after
+- A Define that leaves one thing is a noun, and its name is a type: after
   `Define: Cart` with `the Region "Shopping cart"` in its body, another Define can take
   `Cart`, and is then only given a Cart. A Cart still works anywhere something on the page
   does. Name the parts of the app a spec talks about this way.

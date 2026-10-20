@@ -605,7 +605,7 @@ class Checker {
             ? `${b.name} is a noun, so it can only have one Define, and there's another at ${where}`
             : clash(a, b) === 'same'
               ? `${b.name} takes the same things here as at ${where}, so there'd be no telling which one a step means`
-              : `${b.name} here and at ${where} could both take the same things, and neither takes narrower kinds, so there'd be no telling which one a step means`
+              : `${b.name} here and at ${where} could both take the same things, and neither takes narrower types, so there'd be no telling which one a step means`
         b.error = { ...b.at, message, define: b.name }
         this.report.vocabulary.push(b.error)
       }

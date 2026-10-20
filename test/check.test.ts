@@ -181,10 +181,10 @@ test('a Define takes nothing from its caller but what its header says', () => {
   ])
 })
 
-test("a Define's header names only kinds there are, once each, without hiding words", () => {
+test("a Define's header names only types there are, once each, without hiding words", () => {
   const vocabulary = (header: string) => checkFiles({ 'words.spp': `Define: ${header}\n  Print "hi"\n` }).vocabulary
   assert.deepEqual(vocabulary('Go Person'), [
-    "words.spp:1:12 Person isn't a kind a Define can take. The kinds are Element, Text, Number, Table, Any, and nouns: Defines that leave one of those",
+    "words.spp:1:12 Person isn't a type a Define can take. The types are Element, Text, Number, Table, Any, and nouns: Defines that leave one of those",
   ])
   assert.deepEqual(vocabulary('Go Element to Element'), [
     'words.spp:1:23 Two things are called Element. Name them, as in Element (Source) and Element (Target)',
@@ -201,7 +201,7 @@ test("a Define with a mistake in its header can't be used, and says why", () => 
   const files = { 'words.spp': 'Define: Go Person\n  Print "hi"\n', 'a.spp': scenario('When I Go') }
   assert.match(
     checkFiles(files).scenarios[0],
-    /Go can't be used: its Define has a mistake, at words\.spp:1:12: Person isn't a kind/,
+    /Go can't be used: its Define has a mistake, at words\.spp:1:12: Person isn't a type/,
   )
 })
 
@@ -213,7 +213,7 @@ const cart = [
   '',
 ].join('\n')
 
-test('a noun makes a kind, which a Define can take, and which is still what it was', () => {
+test('a noun makes a type, which a Define can take, and which is still what it was', () => {
   const steps = (...s: string[]) => checkFiles({ 'words.spp': cart, 'a.spp': scenario(...s) })
   assert.deepEqual(steps('When I Add "Milk" to the Cart', 'Then the Cart should be Visible', 'And I Click the Cart'), {
     vocabulary: [],
@@ -229,14 +229,14 @@ test('a Define can take a noun from a later file', () => {
   assert.deepEqual(checkFiles(files).vocabulary, [])
 })
 
-test('only a noun makes a kind', () => {
+test('only a noun makes a type', () => {
   const words = 'Define: Home\n  Visit "/"\nDefine: Go Home\n  Print "hi"\n'
   assert.deepEqual(checkFiles({ 'words.spp': words }).vocabulary, [
     "words.spp:3:12 Home can't be a kind: only a noun can, a Define that leaves one thing, like something on the page",
   ])
 })
 
-test("a Define's header can hide a noun only with that noun's own kind", () => {
+test("a Define's header can hide a noun only with that noun's own type", () => {
   assert.deepEqual(checkFiles({ 'words.spp': `${cart}Define: Go Text (Cart)\n  Print Cart\n` }).vocabulary, [
     'words.spp:5:12 Cart is already a word, so call this one something else',
   ])
@@ -251,7 +251,7 @@ const shop = [
   '',
 ].join('\n')
 
-test('a word can have several Defines, told apart by the kinds they take', () => {
+test('a word can have several Defines, told apart by the types they take', () => {
   const steps = (...s: string[]) => checkFiles({ 'words.spp': shop, 'a.spp': scenario(...s) })
   assert.deepEqual(steps('When I Add "Milk" to the Cart', 'And I Add "a@b" to the Settings'), {
     vocabulary: [],
@@ -281,7 +281,7 @@ test('Defines of a word that could always both fit are a mistake', () => {
   assert.deepEqual(
     vocabulary('Define: Put Cart to Element\n  Click Cart\nDefine: Put Element to Cart\n  Click Cart\n'),
     [
-      "words.spp:7:1 Put here and at words.spp:5:1 could both take the same things, and neither takes narrower kinds, so there'd be no telling which one a step means",
+      "words.spp:7:1 Put here and at words.spp:5:1 could both take the same things, and neither takes narrower types, so there'd be no telling which one a step means",
     ],
   )
   // one narrower throughout is fine: it's chosen when it fits
