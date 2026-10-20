@@ -18,12 +18,12 @@ Feature: Signing in
     Then I should See the Heading "Welcome back"
 ```
 
-## Before writing: read the dictionary
+## Before writing: list the words
 
 Run this from the project root before writing any steps:
 
 ```sh
-npx gpp-lang dictionary
+npx gpp-lang words
 ```
 
 It's the reference for every word the project's `.gpp` files can use. Each built-in word is
@@ -51,7 +51,7 @@ current.
   `TestId` is a last resort.
 - **Don't change the app to suit a spec.** If a role has no name, find it by the text inside
   it, with `Containing`, rather than adding an `aria-label`.
-- **Check lists whole,** with the words in the dictionary's Lists group. There are no loops:
+- **Check lists whole,** with the words in the Lists group of `gpp-lang words`. There are no loops:
   don't repeat a step per item to check a list.
 - **A step's data table or doc string acts as if it were written at the end of the step.**
   Write `When I Fill in the form:` with a `| label | value |` table, or
@@ -91,7 +91,7 @@ Define: Signed-in
   are a mistake.
 - There are no variables in scenarios. Write values out in each step, or use a Scenario
   Outline when they vary.
-- The dictionary shows what each Define takes.
+- `gpp-lang words` shows what each Define takes.
 
 Prefer one clear word for a repeated sequence of steps, like `Signed-in` for signing in in
 a Background, over copying the steps into every scenario.

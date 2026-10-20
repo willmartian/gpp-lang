@@ -5,7 +5,7 @@
 | Command | Does |
 | --- | --- |
 | `gpp-lang check [paths...]` | checks the files under each path, or where it's run, without running them |
-| `gpp-lang dictionary` | lists every word, and the project's own Defines |
+| `gpp-lang words` | lists every word, and the project's own Defines |
 | `gpp-lang lsp` | starts the language server |
 
 `check` covers `.gpp` files, Markdown's ` ```gpp ` blocks and `gpp` templates in `.js` and

@@ -2,7 +2,7 @@
   "name": "gpp-lang",
   "displayName": "Gherkin++",
   "version": "0.1.0",
-  "description": "Helps Claude write Gherkin++ (.gpp) files: the language's rules, the project's own words from `gpp-lang dictionary`, and checking with `gpp-lang check` after every edit.",
+  "description": "Helps Claude write Gherkin++ (.gpp) files: the language's rules, the project's own words from `gpp-lang words`, and checking with `gpp-lang check` after every edit.",
   "author": { "name": "Will Martin" },
   "keywords": ["gherkin", "gherkin++", "bdd", "playwright", "testing"]
 }

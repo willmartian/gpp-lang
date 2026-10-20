@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // gpp-lang check [paths...]
-// gpp-lang dictionary
+// gpp-lang words
 // gpp-lang lsp
 //
 // Checks the scenarios without running them, lists the words they can use, or
@@ -69,7 +69,7 @@ loaded, for its Defines.`,
   .action(async (paths: string[]) => process.exit(await checkOnly(paths)))
 
 program
-  .command('dictionary')
+  .command('words')
   .description('List every word the project can use')
   .addHelpText(
     'after',
@@ -77,7 +77,7 @@ program
 Lists the built-in words and the project's own Defines, with what each takes
 and leaves.`,
   )
-  .action(async () => process.exit(await printDictionary()))
+  .action(async () => process.exit(await printWords()))
 
 program
   .command('lsp')
@@ -154,7 +154,7 @@ async function checkOnly(paths: string[]): Promise<number> {
   return problems ? 1 : 0
 }
 
-async function printDictionary(): Promise<number> {
+async function printWords(): Promise<number> {
   const cwd = process.cwd()
   // A file that doesn't parse has no Defines to list; check says why.
   const { files } = loadProject(projectRoot(cwd, cwd))

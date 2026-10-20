@@ -10,7 +10,7 @@ without step definitions. A backend runs the specs:
 
 ```sh
 npx gpp-lang check        # check every spec under here, without running anything
-npx gpp-lang dictionary   # every word you can use
+npx gpp-lang words        # every word you can use
 npx gpp-lang lsp          # the language server
 ```
 

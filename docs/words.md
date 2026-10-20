@@ -31,7 +31,7 @@ finds the button named "Sign in", then `Click` clicks it. Verbs come first, as i
 
 ## Types
 
-Every word has a signature. Hover shows it; `npx gpp-lang dictionary` lists them all.
+Every word has a signature. Hover shows it; `npx gpp-lang words` lists them all.
 
 ```
 Button : Text | Pattern, Scope -> Element
@@ -74,5 +74,5 @@ Storybook templates run on one page that's already open, so they have no `Visit`
 
 ## More words
 
-- [Built-in words](dictionary.md)
+- [Built-in words](built-in-words.md)
 - [Your own words](defines.md)

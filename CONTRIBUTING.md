@@ -55,7 +55,7 @@ start VS Code from the dev shell (`nix develop -c code .`).
 
 `site/` builds the README and `docs/` with [Eleventy](https://www.11ty.dev/). Built-in words
 comes from each word's `.doc()` in `packages/core/src/words/shared.ts` and
-`packages/core/src/language/steps.ts`, as do `gpp-lang dictionary` and hover.
+`packages/core/src/language/steps.ts`, as do `gpp-lang words` and hover.
 `packages/core/test/docs.test.ts` checks every word has docs and every example checks.
 
 ```sh

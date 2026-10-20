@@ -113,7 +113,7 @@ export function formsFor<C extends Context>() {
   return form
 }
 
-// What a built-in word is for, for people: the dictionary, hover and the docs
+// What a built-in word is for, for people: `gpp-lang words`, hover and the docs
 // site all show it. Words that do the same thing, like synonyms, share one.
 export interface Doc {
   group: Group

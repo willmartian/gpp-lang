@@ -75,7 +75,7 @@ Both backends share the same words and [Defines](docs/defines.md).
 
 ```sh
 npx gpp-lang check        # check every spec, without running it
-npx gpp-lang dictionary   # every word you can use
+npx gpp-lang words        # every word you can use
 ```
 
 ## Docs
@@ -84,7 +84,7 @@ npx gpp-lang dictionary   # every word you can use
 | --- | --- |
 | **Words** | |
 | [How words work](docs/words.md) | code and prose, right to left, types |
-| [Built-in words](docs/dictionary.md) | every word Gherkin++ has |
+| [Built-in words](docs/built-in-words.md) | every word Gherkin++ has |
 | [Your own words](docs/defines.md) | Defines, and which files can use them |
 | **Backends** | |
 | [Playwright](docs/playwright.md) | Features as Playwright tests, in `.gpp` files and Markdown |

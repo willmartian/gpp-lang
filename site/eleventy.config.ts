@@ -25,7 +25,7 @@ const REPO = 'https://github.com/willmartian/gpp-lang'
 const PAGES = [
   { file: 'README.md', url: '/', nav: 'Overview' },
   { file: 'docs/words.md', url: '/words/', nav: 'How words work', section: 'Words' },
-  { file: 'docs/dictionary.md', url: '/dictionary/', nav: 'Built-in words', layout: 'words.njk' },
+  { file: 'docs/built-in-words.md', url: '/built-in-words/', nav: 'Built-in words', layout: 'words.njk' },
   { file: 'docs/defines.md', url: '/defines/', nav: 'Your own words' },
   { file: 'docs/playwright.md', url: '/playwright/', nav: 'Playwright', section: 'Backends' },
   { file: 'docs/storybook.md', url: '/storybook/', nav: 'Storybook' },

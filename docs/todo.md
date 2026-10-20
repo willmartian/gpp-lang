@@ -117,7 +117,7 @@ porting Gherkin++.
 - [ ] **The Neovim setup in the README is untested.**
 - [ ] **The language server rescans the workspace** on every open and save. That's fine now;
       in a large repo it wants a watcher-based cache.
-- [ ] **A `Define`'s comment isn't shown** in the dictionary or on hover, as a built-in word's
+- [ ] **A `Define`'s comment isn't shown** in `gpp-lang words` or on hover, as a built-in word's
       doc is.
 
 ## Markdown

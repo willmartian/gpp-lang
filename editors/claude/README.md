@@ -2,7 +2,7 @@
 
 A Claude Code plugin that helps Claude write `.gpp` files.
 
-- **The `writing-gpp` skill** teaches the language's rules, to read `gpp-lang dictionary`
+- **The `writing-gpp` skill** teaches the language's rules, to read `gpp-lang words`
   first, and to run `gpp-lang check` after every edit.
 - **The language server** reports mistakes to Claude after each edit, and gives its `LSP`
   tool hover, go to definition, references and symbols.
