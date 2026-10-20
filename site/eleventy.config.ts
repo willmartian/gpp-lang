@@ -1,7 +1,7 @@
 // The docs site. Its pages are the repo's own Markdown, so there's one copy
 // of the docs, read on GitHub or here. Links between pages are rewritten to
-// the site, and links to anything else in the repo go to GitHub. The Words
-// page adds an entry for each built-in word, from the docs the words declare.
+// the site, and links to anything else in the repo go to GitHub. The Built-in
+// words page adds an entry for each built-in word, from the docs the words declare.
 //
 //     pnpm docs        # serve on localhost:8080, rebuilding on change
 //     pnpm docs:build  # write site/_site
@@ -24,12 +24,12 @@ const REPO = 'https://github.com/willmartian/spp-lang'
 
 const PAGES = [
   { file: 'README.md', url: '/', nav: 'Overview' },
-  { file: 'docs/words.md', url: '/words/', nav: 'Words', layout: 'words.njk', section: 'The language' },
-  { file: 'docs/defines.md', url: '/defines/', nav: 'Defines' },
+  { file: 'docs/words.md', url: '/words/', nav: 'How words work', section: 'Words' },
+  { file: 'docs/dictionary.md', url: '/dictionary/', nav: 'Built-in words', layout: 'words.njk' },
+  { file: 'docs/defines.md', url: '/defines/', nav: 'Your own words' },
   { file: 'docs/playwright.md', url: '/playwright/', nav: 'Playwright', section: 'Backends' },
   { file: 'docs/storybook.md', url: '/storybook/', nav: 'Storybook' },
-  { file: 'docs/projects.md', url: '/projects/', nav: 'Projects', section: 'Tools' },
-  { file: 'docs/editors.md', url: '/editors/', nav: 'Editors' },
+  { file: 'docs/tools.md', url: '/tools/', nav: 'CLI and editors', section: 'Tools' },
 ]
 
 const FONTS = [
@@ -55,7 +55,7 @@ export default function (config: EleventyConfig) {
   for (const page of PAGES) {
     const content = readFileSync(path.join(ROOT, page.file), 'utf8')
     const title = /^# (.*)$/m.exec(content)?.[1] ?? page.nav
-    // The page's sections, for the sidebar; the Words page's groups are sections too.
+    // The page's sections, for the sidebar; the Built-in words page's groups are sections too.
     const toc = headings(content)
     if (page.layout === 'words.njk') toc.push(...groups.map(({ name, id }) => ({ text: name, id })))
     config.addTemplate(page.file, content, {

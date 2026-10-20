@@ -1,6 +1,6 @@
-# Defines
+# Your own words
 
-Your own words, written in Spec++.
+A Define makes a word of your own, written in Spec++.
 
 ```gherkin
 Define: Add Text (Item)
@@ -24,24 +24,18 @@ Feature: The grocery list
 | the body | indented lines of code, without step keywords |
 
 - A Define goes above a file's `Feature:` line, or in a file with no Feature.
-- Every file in the project can use it.
+- Every file in the project can use it: see [Where they work](#where-they-work).
 - Lowercase words are prose here too.
-- Two of the same kind need names: `Define: Move Element (Source) to Element (Target)`.
+- Two of the same type need names: `Define: Move Element (Source) to Element (Target)`.
 
-## Kinds
+## Types
 
-| Kind | Takes |
-| --- | --- |
-| `Text` | quoted text |
-| `Number` | a number |
-| `Element` | something on the page |
-| `Table` | the step's data table |
-| `Any` | anything |
-| a noun, like `Cart` | that noun |
+A Define can take `Text`, `Number`, `Element` or `Table`, as in
+[How words work](words.md#types), `Any`, which is anything, or a noun.
 
 ## Nouns
 
-A Define that leaves one value is a noun. Its name becomes a kind.
+A Define that leaves one value is a noun. Its name becomes a type.
 
 ```gherkin
 Define: Cart
@@ -57,7 +51,7 @@ Define: Add Text (Item) to Cart
 | `When I Click the Cart` | works: a Cart is still an Element |
 | `When I Add "Milk" to the Region "Shopping cart"` | a mistake: `Add` takes a Cart |
 
-A noun has one Define, since its name is a kind.
+A noun has one Define, since its name is a type.
 
 ## Overloads
 
@@ -74,7 +68,7 @@ Define: Add Text (Email) to Settings
 When more than one fits, the first of these wins:
 
 1. the one that takes more
-2. the one with narrower kinds: a Cart before an Element, anything before `Any`
+2. the one with narrower types: a Cart before an Element, anything before `Any`
 
 Two Defines that could always both fit are a mistake, reported where they're defined.
 
@@ -83,3 +77,11 @@ Two Defines that could always both fit are a mistake, reported where they're def
 - A Define's types are inferred from its body. `Add Text (Item)` passes `Item` to `Fill`, so
   `When I Add the Button "Milk"` is a mistake.
 - A Define with a mistake fails as a test of its own.
+
+## Where they work
+
+A project is the files under the nearest `package.json`, and every Define in it can be used by
+all of its files: Features, Markdown and Storybook templates alike. A package inside another
+is a project of its own, with words of its own. `spp-lang check`, the editor and
+Storybook see a project's Defines that way. Playwright uses the Defines in its config's
+[`features`](playwright.md#config).

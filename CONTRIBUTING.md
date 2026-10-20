@@ -55,7 +55,7 @@ the dev shell (`nix develop -c code .`) so Chromium finds its libraries.
 ## The docs site
 
 `site/` builds the README and `docs/` into a site with [Eleventy](https://www.11ty.dev/). The
-Words page is generated from each built-in word's doc: its `.doc()` in
+Built-in words page is generated from each built-in word's doc: its `.doc()` in
 `packages/core/src/words/shared.ts` and
 `packages/core/src/language/steps.ts`. `spp-lang dictionary` and hover show the same docs,
 and `packages/core/test/docs.test.ts` checks every word has one and every example checks.

@@ -54,7 +54,7 @@ The [words](words.md) are the same, less the ones for a page: a template plays
 ## Defines
 
 [Defines](defines.md) go in the project's `.spp` files, under the nearest `package.json`
-([Projects](projects.md)), and every template can use them. The addon reads them as
+([Where they work](defines.md#where-they-work)), and every template can use them. The addon reads them as
 Storybook builds, since a play function runs in a browser, which can't, and changing one
 reloads the stories. A `Feature:` in one is Playwright's to run.
 
@@ -63,6 +63,6 @@ reloads the stories. A `Feature:` in one is Playwright's to run.
 `spp-lang check` checks every template in a project's `.js` and `.ts` files, with the words
 above and the project's Defines, and says where each mistake is in the stories file.
 
-The [language server](editors.md) does the same as you type, and hover, completion, go to
+The [language server](tools.md#language-server) does the same as you type, and hover, completion, go to
 definition and references work inside templates. VS Code's extension also highlights them as
 Spec++.

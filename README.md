@@ -84,7 +84,7 @@ export const SavingADraft: Story = {
 
 ## Check
 
-Both backends use the same words and the same [Defines](docs/defines.md), and `spp-lang`
+Both backends use the same words and the same [Defines](docs/defines.md), your own words, and `spp-lang`
 checks both before anything runs.
 
 ```sh
@@ -96,15 +96,15 @@ npx spp-lang dictionary   # every word you can use
 
 | Page | Covers |
 | --- | --- |
-| **The language** | |
-| [Words](docs/words.md) | every built-in word |
-| [Defines](docs/defines.md) | your own words |
+| **Words** | |
+| [How words work](docs/words.md) | code and prose, right to left, types |
+| [Built-in words](docs/dictionary.md) | every word Spec++ has |
+| [Your own words](docs/defines.md) | Defines, and which files can use them |
 | **Backends** | |
 | [Playwright](docs/playwright.md) | Features as Playwright tests, in `.spp` files and Markdown |
 | [Storybook](docs/storybook.md) | steps as stories' play functions |
 | **Tools** | |
-| [Projects](docs/projects.md) | what a project is, and the CLI |
-| [Editors](docs/editors.md) | the language server, VS Code, Claude Code, Neovim |
+| [CLI and editors](docs/tools.md) | `spp-lang`, the language server, VS Code, Claude Code, Neovim |
 
 ## Why
 
