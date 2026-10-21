@@ -128,7 +128,13 @@ test("a stories file's gpp templates are checked", async () => {
   })
   assert.deepEqual(
     found.map((d) => [d.range.start.line, d.range.start.character, d.message]),
-    [[2, 11, 'A template plays on one page, already open, so it has no Visit']],
+    [
+      [
+        2,
+        11,
+        "Unknown word Visit. Did you mean List? Capitalised words are code; if it's prose, write it in lowercase.",
+      ],
+    ],
   )
 })
 

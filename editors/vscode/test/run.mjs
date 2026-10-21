@@ -11,9 +11,23 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { runTests } from '@vscode/test-electron'
 
 const here = import.meta.dirname
+const packages = path.join(here, '..', '..', '..', 'packages')
+
+/**
+ * A gpp.config.mjs that runs .gpp files and Markdown with Playwright and
+ * stories with Storybook, from this repo's packages, wherever it is.
+ */
+const source = (file) => JSON.stringify(pathToFileURL(path.join(packages, file)).href)
+const config = [
+  `import { defineConfig } from ${source('core/src/node.ts')}`,
+  `import { playwright } from ${source('playwright/src/config.ts')}`,
+  `import { storybook } from ${source('storybook/src/config.ts')}`,
+  'export default defineConfig({ backends: [playwright(), storybook()] })',
+].join('\n')
 
 function installedVSCode() {
   if (process.env.GPP_VSCODE) return process.env.GPP_VSCODE
@@ -27,6 +41,7 @@ function installedVSCode() {
 }
 
 const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-vscode-'))
+fs.writeFileSync(path.join(workspace, 'gpp.config.mjs'), config)
 fs.writeFileSync(
   path.join(workspace, 'words.gpp'),
   ['Define: Add Text (Item)', '  Fill the Field "Item" with Item', '  Click the Button "Add"', ''].join('\n'),
@@ -72,7 +87,7 @@ fs.writeFileSync(
 fs.mkdirSync(path.join(workspace, '.vscode'))
 fs.writeFileSync(
   path.join(workspace, '.vscode', 'settings.json'),
-  JSON.stringify({ 'gpp.path': path.join(here, '..', '..', '..', 'packages', 'gpp-lang', 'bin', 'gpp-lang.ts') }),
+  JSON.stringify({ 'gpp.path': path.join(packages, 'gpp-lang', 'bin', 'gpp-lang.ts') }),
 )
 
 try {
