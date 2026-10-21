@@ -24,7 +24,7 @@ import type { GppFile, Scenario, Step, Vocabulary } from './load.ts'
 import { lineCol } from './load.ts'
 import { keywordForms, keywords, StepType } from './steps.ts'
 import type { Doc, Form, Type } from './types.ts'
-import { AnyType, article, NumberType, signature, TableType, TextType, type } from './types.ts'
+import { AnyType, article, ComponentType, NumberType, signature, TableType, TextType, type } from './types.ts'
 
 export interface Diagnostic {
   file: string
@@ -442,7 +442,7 @@ class Checker {
     // top of the stack: the first thing left takes from below is it.
     let program: Program
     try {
-      program = parse(left)
+      program = parse(left, { slots: true })
     } catch {
       return null
     }
@@ -490,6 +490,8 @@ class Checker {
         return void sim.stack.push({ ty: TextType, shown: JSON.stringify(node.value) })
       case 'num':
         return void sim.stack.push({ ty: NumberType, shown: String(node.value) })
+      case 'slot':
+        return void sim.stack.push({ ty: ComponentType, shown: `a \${…}` })
       case 'sym':
         return void sim.stack.push({ ty: SymbolType, shown: `\\${node.value}` })
       case 'block':

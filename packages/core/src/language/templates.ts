@@ -1,6 +1,6 @@
-// The JavaScript Gherkin++ reads: gpp`…` templates, Storybook play functions, in
-// .js and .ts files and their kin. It knows nothing of Gherkin; how a
-// template becomes a scenario is in sections.ts.
+// The JavaScript Gherkin++ reads: gpp`…` templates, Storybook play functions
+// and tests' Features, in .js and .ts files and their kin. It knows nothing
+// of Gherkin; how a template becomes a scenario is in sections.ts.
 //
 // It reads just enough JavaScript to find them: comments, strings and
 // templates, with what's in a template's ${…}, so gpp` in a string or a
@@ -10,11 +10,11 @@
 export const isScript = (file: string) => /\.[cm]?[jt]sx?$/.test(file)
 
 // A template: where its text starts and ends, after the opening backtick and
-// at the closing one, and where any ${…} in it starts.
+// at the closing one, and where each ${…} in it is, from its $ to past its }.
 export interface Template {
   start: number
   end: number
-  interpolations: number[]
+  interpolations: { start: number; end: number }[]
 }
 
 // Every gpp`…` template, in order.
@@ -74,13 +74,14 @@ function stringEnd(src: string, i: number): number {
 
 // Past the backtick that closes the template at i, noting it if it's gpp's.
 function template(src: string, i: number, gpp: boolean, found: Template[]): number {
-  const interpolations: number[] = []
+  const interpolations: Template['interpolations'] = []
   let j = i + 1
   while (j < src.length && src[j] !== '`') {
     if (src[j] === '\\') j += 2
     else if (src[j] === '$' && src[j + 1] === '{') {
-      interpolations.push(j)
+      const start = j
       j = code(src, j + 2, true, found) + 1
+      interpolations.push({ start, end: j })
     } else j++
   }
   if (gpp) found.push({ start: i + 1, end: j, interpolations })

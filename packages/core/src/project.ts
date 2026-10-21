@@ -1,6 +1,6 @@
 // A project's files checked: .gpp files and Markdown with the language's
-// words, templates with a template's, which have no page words, and the
-// Defines, which both use, once.
+// words; stories' templates with a template's, which have no page words; tests'
+// templates with those and Render; and the Defines, which all use, once.
 
 import type { Analysis, Diagnostic } from './language/check.ts'
 import { analyze } from './language/check.ts'
@@ -10,7 +10,8 @@ import { leftovers, words } from './words/shared.ts'
 
 export interface Checked {
   specs: Analysis
-  templates: Analysis
+  stories: Analysis
+  tests: Analysis
   diagnostics: Diagnostic[]
   // The analysis a file is checked in, for an editor's questions about it.
   analysisOf(file: string): Analysis
@@ -23,18 +24,24 @@ export function checkFiles(files: GppFile[], name: (file: string) => string = (f
     { words: words(), ...options },
   )
   // Every file's Defines, and the templates whole, in the same order.
-  const templates = analyze(
-    files.map((f) => (isScript(f.file) ? f : { ...f, features: [] })),
-    { words: words({ template: true }), ...options },
-  )
+  const templates = (these: (f: GppFile) => boolean, render: boolean) =>
+    analyze(
+      files.map((f) => (isScript(f.file) && these(f) ? f : { ...f, features: [] })),
+      { words: words({ template: true, render }), ...options },
+    )
+  const stories = templates((f) => !f.tests, false)
+  const tests = templates((f) => f.tests === true, true)
+  const testFiles = new Set(files.filter((f) => f.tests).map((f) => f.file))
   return {
     specs,
-    templates,
+    stories,
+    tests,
     diagnostics: [
       ...specs.report.vocabulary,
       ...specs.report.scenarios.values(),
-      ...templates.report.scenarios.values(),
+      ...stories.report.scenarios.values(),
+      ...tests.report.scenarios.values(),
     ],
-    analysisOf: (file) => (isScript(file) ? templates : specs),
+    analysisOf: (file) => (testFiles.has(file) ? tests : isScript(file) ? stories : specs),
   }
 }

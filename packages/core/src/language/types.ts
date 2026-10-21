@@ -60,6 +60,22 @@ export const TableType = type(
   (v): v is string[][] => Array.isArray(v) && v.every((row) => Array.isArray(row)),
 )
 
+// What a test's gpp template has in a ${…}, for Render: anything its
+// backend's renderer takes, like a React element. Only a script's templates
+// can have one (sections.ts), so a .gpp file never makes one.
+export class Component {
+  value: unknown
+
+  constructor(value: unknown) {
+    this.value = value
+  }
+  describe() {
+    return `a \${…}`
+  }
+}
+
+export const ComponentType = type('Component', `a component, as \${…}`, (v): v is Component => v instanceof Component)
+
 // What run() is given, passed on to every word. Vocabularies extend it with
 // what their words need, like a page to drive.
 export interface Context {
@@ -67,6 +83,11 @@ export interface Context {
   // What the words drive, as a backend gives it. The checker never runs them,
   // so it needs none.
   driver?: AnyDriver
+  // What a template's ${…} hold, in order, for the ${0}, ${1}… its steps have
+  // in their place.
+  values?: readonly unknown[]
+  // What Render renders those with, in a backend that runs tests' templates.
+  render?: (ui: unknown) => unknown
 }
 
 type Values<I extends readonly Type<unknown>[]> = { [K in keyof I]: I[K] extends Type<infer T> ? T : never }

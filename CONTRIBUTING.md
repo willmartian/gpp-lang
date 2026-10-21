@@ -13,6 +13,7 @@ A [pnpm](https://pnpm.io) workspace:
 | `packages/gpp-lang` | the CLI and the language server |
 | `packages/playwright` | `@gpp-lang/playwright`, which runs `.gpp` files and Markdown as Playwright tests |
 | `packages/storybook` | `@gpp-lang/storybook`, which runs `gpp` templates as play functions |
+| `packages/testing-library` | `@gpp-lang/testing-library`, which runs `gpp` templates as Vitest or Jest tests |
 | `editors/vscode` | the VS Code extension |
 | `examples/*` | projects that use the packages, as a user's would |
 | `site` | the docs site |
@@ -34,6 +35,7 @@ pnpm typecheck
 pnpm test             # each package's tests, then test/: no browser
 pnpm test:e2e         # the Playwright examples, plus fixtures that must fail
 pnpm test:storybook   # the Storybook example, plus fixtures that must fail
+pnpm test:vitest      # the Testing Library example and fixtures, in jsdom
 pnpm build            # each package's dist/
 pnpm storybook        # examples/storybook's stories, opened in a browser
 ```

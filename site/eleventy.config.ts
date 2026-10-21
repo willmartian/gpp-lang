@@ -29,6 +29,7 @@ const PAGES = [
   { file: 'docs/defines.md', url: '/defines/', nav: 'Your own words' },
   { file: 'docs/playwright.md', url: '/playwright/', nav: 'Playwright', section: 'Backends' },
   { file: 'docs/storybook.md', url: '/storybook/', nav: 'Storybook' },
+  { file: 'docs/testing-library.md', url: '/testing-library/', nav: 'Testing Library' },
   { file: 'docs/tools.md', url: '/tools/', nav: 'CLI and editors', section: 'Tools' },
 ]
 

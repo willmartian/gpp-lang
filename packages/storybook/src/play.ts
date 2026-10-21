@@ -26,6 +26,7 @@ import {
   check,
   GppError,
   INTERPOLATION,
+  isFeatureTemplate,
   LoadError,
   leftovers,
   loadSource,
@@ -65,10 +66,14 @@ const FILE = 'gpp template.js'
 const script = (src: string) => `\n\ngpp\`\n${src}\n\``
 
 // What a template means, or the first thing wrong with it.
+const FEATURE =
+  "A gpp template with a Feature is a test, for @gpp-lang/testing-library. A story's template is only its steps"
+
 export type Prepared = { scenario: Scenario; problem: null } | { scenario: null; problem: string }
 
 // Reads and checks a template, as written, with the Defines from useWords.
 export function prepare(src: string): Prepared {
+  if (isFeatureTemplate(src)) return { scenario: null, problem: FEATURE }
   const source = script(src)
   let file: GppFile
   try {

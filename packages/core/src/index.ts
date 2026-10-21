@@ -11,7 +11,7 @@ export { LoadError, lineCol, loadSource } from './language/load.ts'
 export type { Fence } from './language/markdown.ts'
 export { fences, gppFences, gppLines, isMarkdown } from './language/markdown.ts'
 export type { CodeLine, Problem, Sections } from './language/sections.ts'
-export { codeLines, INTERPOLATION, sections, split } from './language/sections.ts'
+export { codeLines, INTERPOLATION, isFeatureTemplate, sections, split } from './language/sections.ts'
 export type { Runner } from './language/steps.ts'
 export { keywords, runSteps } from './language/steps.ts'
 export type { Template } from './language/templates.ts'
@@ -20,6 +20,8 @@ export type { Context, Doc, Form, Group, Type } from './language/types.ts'
 export {
   AnyType,
   article,
+  Component,
+  ComponentType,
   called,
   formsFor,
   GROUPS,
@@ -33,6 +35,8 @@ export {
 } from './language/types.ts'
 export type { Checked } from './project.ts'
 export { checkFiles } from './project.ts'
+export type { DomBackend, TestingLibrary } from './words/dom.ts'
+export { domDriver, Target } from './words/dom.ts'
 export type { Action, AnyDriver, Driver, Name, PageState, Query, QueryKind, State } from './words/driver.ts'
 export {
   ARIA_ROLES,

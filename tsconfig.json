@@ -12,7 +12,9 @@
     // Only syntax Node can strip, and imports written as they are on disk.
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    // examples/testing-library's React
+    "jsx": "react-jsx"
   },
   "include": ["packages/*/src", "packages/*/bin", "packages/*/test", "test", "examples", "site", "playwright.config.ts"]
 }

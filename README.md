@@ -14,7 +14,7 @@ Feature: Signing in
 ```
 
 Gherkin without step definitions: capitalised words are code, the rest is prose.
-Runs as Playwright tests, Storybook play functions, or both. [How words work](docs/words.md)
+Runs as Playwright tests, Storybook play functions, or Vitest and Jest tests. [How words work](docs/words.md)
 
 ## Install
 
@@ -69,9 +69,40 @@ export const SavingADraft: Story = {
 }
 ```
 
+### Vitest or Jest
+
+Runs a Feature in a test file, rendering components with Testing Library.
+[Docs](docs/testing-library.md).
+
+```sh
+npm install --save-dev gpp-lang @gpp-lang/testing-library @testing-library/dom @testing-library/user-event
+```
+
+```ts
+// a setup file
+import { renderWith } from '@gpp-lang/testing-library'
+import { render } from '@testing-library/react'
+
+renderWith(render)
+```
+
+```tsx
+// a test
+import { gpp } from '@gpp-lang/testing-library'
+
+gpp`
+  Feature: The editor
+
+    Scenario: Saving a draft
+      Given I Render ${<Editor title="" />}
+      When I Click the Button "Save"
+      Then the Status should Read "Draft saved"
+`
+```
+
 ## Check
 
-Both backends share the same words and [Defines](docs/defines.md).
+Every backend shares the same words and [Defines](docs/defines.md).
 
 ```sh
 npx gpp-lang check        # check every spec, without running it
@@ -89,6 +120,7 @@ npx gpp-lang words        # every word you can use
 | **Backends** | |
 | [Playwright](docs/playwright.md) | Features as Playwright tests, in `.gpp` files and Markdown |
 | [Storybook](docs/storybook.md) | steps as stories' play functions |
+| [Testing Library](docs/testing-library.md) | Features as Vitest or Jest tests |
 | **Tools** | |
 | [CLI and editors](docs/tools.md) | `gpp-lang`, the language server, VS Code, Claude Code, Neovim |
 

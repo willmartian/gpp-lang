@@ -21,7 +21,18 @@
 import type { Stack } from '../language/cognate.ts'
 import { core, describe, Env, GppError, unwrap } from '../language/cognate.ts'
 import type { Context, Doc, Form } from '../language/types.ts'
-import { article, called, formsFor, mistake, NumberType, oneOf, TableType, TextType, type } from '../language/types.ts'
+import {
+  article,
+  ComponentType,
+  called,
+  formsFor,
+  mistake,
+  NumberType,
+  oneOf,
+  TableType,
+  TextType,
+  type,
+} from '../language/types.ts'
 import type { Action, AnyDriver, Name, Query, QueryKind, State } from './driver.ts'
 
 // The driver a step runs with: its context's.
@@ -462,6 +473,26 @@ function actions(env: Env): Env {
   return env
 }
 
+// ---------------------------------------------------------------- rendering
+
+// Rendering what a test's gpp template has in a ${…} (sections.ts), with the
+// renderer its backend puts in the step's context. Elsewhere there's no ${…},
+// so Render says why, though it still lists how a test uses it.
+function rendering(env: Env, why: string | null): Env {
+  const render = form([ComponentType], async (ctx, component) => {
+    if (!ctx.render) throw new Error('Render ran without a renderer: a backend gives one in its context')
+    await ctx.render(component.value)
+  })
+  return env.word('Render', render, ...(why === null ? [] : [mistake([], () => why)])).doc(
+    {
+      group: 'Doing',
+      summary: `Renders what a test's gpp template has in a \${…}, like a React element.`,
+      examples: [`Given I Render \${<Editor title="" />}`],
+    },
+    'Render',
+  )
+}
+
 // ---------------------------------------------------------------- checks
 
 type TextState = Extract<State, { text: Name }>['is']
@@ -773,17 +804,26 @@ function pageChecks(env: Env): Env {
 
 // ---------------------------------------------------------------- the vocabulary
 
-const vocabularies = new Map<boolean, Env>()
+const vocabularies = new Map<string, Env>()
 
 // Every word, as .gpp files and Markdown have them, or as a template does,
-// where the page's words say why there are none. Made once, since they're the
-// same wherever they run.
-export function words({ template = false }: { template?: boolean } = {}): Env {
-  const known = vocabularies.get(template)
+// where the page's words say why there are none. A test's template, with
+// render, also has Render. Made once, since they're the same wherever they run.
+export function words({ template = false, render = false }: { template?: boolean; render?: boolean } = {}): Env {
+  const key = `${template} ${render}`
+  const known = vocabularies.get(key)
   if (known) return known
   const env = queries(new Env(core()))
   if (!template) navigation(env)
   actions(env)
+  rendering(
+    env,
+    render
+      ? null
+      : template
+        ? 'A story renders itself from its args, so its template has no Render'
+        : `Only a test's gpp template can Render: it has a \${…} to render`,
+  )
   checks(env)
   if (!template) pageChecks(env)
   else
@@ -792,6 +832,6 @@ export function words({ template = false }: { template?: boolean } = {}): Env {
         word,
         mistake([], () => `A template plays on one page, already open, so it has no ${word}`),
       )
-  vocabularies.set(template, env)
+  vocabularies.set(key, env)
   return env
 }

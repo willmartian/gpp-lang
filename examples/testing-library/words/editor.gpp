@@ -1,0 +1,4 @@
+# Words every test's gpp template can use.
+
+Define: Retitle Text (New)
+  Fill the Field "Title" with New

@@ -8,8 +8,8 @@
 | `gpp-lang words` | lists every word, and the project's own Defines |
 | `gpp-lang lsp` | starts the language server |
 
-`check` covers `.gpp` files, Markdown's ` ```gpp ` blocks and `gpp` templates in `.js` and
-`.ts` files.
+`check` covers `.gpp` files, Markdown's ` ```gpp ` blocks and `gpp` templates in `.js`, `.ts`,
+`.jsx` and `.tsx` files.
 
 ## Language server
 

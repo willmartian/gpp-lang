@@ -3,7 +3,7 @@
 A `gpp` template is a story's [play function](https://storybook.js.org/docs/writing-stories/play-function).
 The args set the story up; the template is its steps. See
 [`examples/storybook`](../examples/storybook). For whole-app tests, see
-[Playwright](playwright.md).
+[Playwright](playwright.md); for components in Vitest or Jest, [Testing Library](testing-library.md).
 
 ```ts
 import { gpp } from '@gpp-lang/storybook'

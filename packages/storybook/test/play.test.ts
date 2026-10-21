@@ -56,11 +56,18 @@ test('a line that is not a step says so', () => {
   assert.equal(
     problem('Click the Button "Save"'),
     [
-      'Each line of a gpp template is a step, starting with Given, When, Then, And, But or *',
+      'Each line of a gpp template is a step, starting with Given, When, Then, And, But or *, unless the template starts with Feature:',
       '',
       '    Click the Button "Save"',
       '    ^',
     ].join('\n'),
+  )
+})
+
+test("a test's template, a Feature, isn't a story's", () => {
+  assert.match(
+    problem('Feature: Editor\n  Scenario: Saving\n    When I Click the Button "Save"') ?? '',
+    /^A gpp template with a Feature is a test/,
   )
 })
 

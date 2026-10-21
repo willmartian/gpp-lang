@@ -69,8 +69,8 @@ A step must use everything it makes. Anything left at the end must be a check.
 
 ## On one page
 
-Storybook templates run on one page that's already open, so they have no `Visit`, `Reload`,
-`Back`, `At` or `Titled`.
+Storybook and Testing Library templates run on one page that's already open, so they have no
+`Visit`, `Reload`, `Back`, `At` or `Titled`. Only Testing Library's have `Render`.
 
 ## More words
 

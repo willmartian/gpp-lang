@@ -69,8 +69,53 @@ function problems(src: string): string[] {
 
 test("a template that isn't steps says where", () => {
   assert.deepEqual(problems('\n\nconst a = gpp`\n  When I Click the Button "Save"\n  Click the Button "Save"\n`'), [
-    '5:3 Each line of a gpp template is a step, starting with Given, When, Then, And, But or *',
+    '5:3 Each line of a gpp template is a step, starting with Given, When, Then, And, But or *, unless the template starts with Feature:',
   ])
   assert.deepEqual(problems('\n\nconst a = gpp`\n  # nothing\n`'), ['3:15 A gpp template needs at least one step'])
   assert.deepEqual(problems(`const a = gpp\`When I Click "\${x}"\``), [`1:29 ${INTERPOLATION}`])
+})
+
+const tests = [
+  "import { gpp } from '@gpp-lang/testing-library'", // 1
+  '', //                                                2
+  'gpp`', //                                           3
+  '  Feature: Editor', //                              4
+  '', //                                                5
+  '    Scenario: Saving', //                           6
+  `    Given I Render \${<Editor title="" />} on its own`, // 7
+  '    When I Click the Button "Save"', //             8
+  '', //                                                9
+  '    @skip', //                                       10
+  '    Scenario: Retitling', //                       11
+  '    Given I Render ${<Editor', //                  12
+  '      title="Old"', //                              13
+  '    />} with a title', //                           14
+  '    When I Fill the Field "Title" with "New"', //   15
+  '`', //                                               16
+].join('\n')
+
+test(`a test's template is a Feature, its \${…} numbered in their place`, () => {
+  const [feature] = loadSource('editor.test.tsx', tests).features
+  assert.equal(feature.name, 'Editor')
+  const [saving, retitling] = feature.scenarios
+  assert.deepEqual(
+    saving.steps.map((s) => [s.line, s.column, `${s.keyword}${s.text}`]),
+    [
+      // padded to the width of ${<Editor title="" />}
+      [7, 11, `Given I Render \${0}${' '.repeat(18)} on its own`],
+      [8, 10, 'When I Click the Button "Save"'],
+    ],
+  )
+  assert.deepEqual(retitling.tags, ['@skip'])
+  assert.deepEqual(
+    retitling.steps.map((s) => [s.line, `${s.keyword}${s.text}`]),
+    [
+      [12, `Given I Render \${1}  with a title`],
+      [15, 'When I Fill the Field "Title" with "New"'],
+    ],
+  )
+})
+
+test(`only a test's template can have a \${…}`, () => {
+  assert.deepEqual(problems(`a = gpp\`Given I Render \${x}\``), [`1:24 ${INTERPOLATION}`])
 })

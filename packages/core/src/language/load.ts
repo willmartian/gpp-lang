@@ -20,6 +20,7 @@ import { IdGenerator } from '@cucumber/messages'
 import type { Program } from './cognate.ts'
 import { GppError, parse } from './cognate.ts'
 import { sections } from './sections.ts'
+import { isScript } from './templates.ts'
 
 export interface Step {
   keyword: string
@@ -69,6 +70,8 @@ export interface GppFile {
   vocabulary: Vocabulary[]
   // a .gpp file's Feature; in Markdown, any number
   features: Feature[]
+  // a script whose gpp templates are tests', not stories'
+  tests?: boolean
 }
 
 // A file that can't be read as Gherkin++ at all, and where.
@@ -86,12 +89,13 @@ export class LoadError extends Error {
 
 // Loads a file as it is right now, which in an editor may not be saved.
 export function loadSource(file: string, src: string): GppFile {
-  const { preambles, documents, problems } = sections(file, src)
+  const { preambles, documents, problems, tests } = sections(file, src)
   if (problems.length) throw new LoadError(file, problems)
   return {
     file,
     vocabulary: preambles.flatMap((p) => loadVocabulary(file, p) ?? []),
     features: documents.flatMap((d) => loadFeature(file, d) ?? []),
+    ...(tests && { tests }),
   }
 }
 
@@ -170,7 +174,8 @@ function loadFeature(file: string, src: string): Feature | null {
           argument: argument(ps.argument),
         }
         try {
-          step.program = parse(ps.text)
+          // A script's steps can have the ${0} that stands for a template's ${…}.
+          step.program = parse(ps.text, { slots: isScript(file) })
         } catch (err) {
           // Reported when the step runs, so one typo fails one scenario.
           step.error = err

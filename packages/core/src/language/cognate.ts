@@ -18,9 +18,11 @@
 //     not parentheses. Define is a section keyword, like Gherkin's: its
 //     colon comes first, "Define: Add", and its body is indented under it.
 //   - Comments are Gherkin's: a line starting with #.
+//   - In a test's gpp template, ${0}, ${1}… stand for what its ${…} hold,
+//     in order (sections.ts), and leave a Component. Nowhere else has them.
 
 import type { Context, Doc, Form, Type } from './types.ts'
-import { AnyType, article, formsFor, NumberType, signature, TableType, TextType, type } from './types.ts'
+import { AnyType, article, Component, formsFor, NumberType, signature, TableType, TextType, type } from './types.ts'
 
 export class GppError extends Error {
   pos?: number
@@ -40,6 +42,7 @@ export type Node = Located &
   (
     | { type: 'num'; value: number }
     | { type: 'str'; value: string }
+    | { type: 'slot'; index: number }
     | { type: 'sym'; value: string }
     | { type: 'word'; name: string }
     | { type: 'define'; name: string; params: Param[] }
@@ -56,6 +59,7 @@ export type Program = Statement[]
 type Lexeme =
   | { type: 'num'; value: number }
   | { type: 'str'; value: string }
+  | { type: 'slot'; index: number }
   | { type: 'sym'; value: string }
   | { type: 'word'; name: string }
   | { type: ':' }
@@ -74,6 +78,7 @@ const NUMBER = /-?(?:[1-9][0-9]*|[0-9])(?:\.[0-9]+)?(?:e-?[0-9]+)?(?=[\s;,:]|$)/
 const SYMBOL = /\\[A-Za-z0-9\-?!'+/*>=<^.]+/y
 const STRING = /"((?:\\[abfnrtv\\"]|[^\n"\\])*)"/y
 const PROSE = /[,:.]+(?=[\s;]|$)/y
+const SLOT = /\$\{(\d+)\}/y
 // a colon that opens a block is the last thing on its line
 const LINE_END = /[ \t]*(?:\n|$)/y
 
@@ -89,7 +94,9 @@ const ESCAPES: Record<string, string> = {
   '"': '"',
 }
 
-export function lex(src: string): Token[] {
+// slots: whether ${0} and the like stand for a template's ${…}, as they do in
+// a script's steps.
+export function lex(src: string, slots = false): Token[] {
   const tokens: Token[] = []
   let i = 0
   let line = 0
@@ -134,6 +141,12 @@ export function lex(src: string): Token[] {
     if (string) {
       push({ type: 'str', value: string[1].replace(/\\(.)/g, (_, e: string) => ESCAPES[e]) }, string[0].length)
       i += string[0].length
+      continue
+    }
+    const slot = slots ? at(SLOT) : null
+    if (slot) {
+      push({ type: 'slot', index: Number(slot[1]) }, slot[0].length)
+      i += slot[0].length
       continue
     }
     const number = at(NUMBER)
@@ -190,9 +203,9 @@ type Line = { number: number; indent: number; tokens: Token[] }
 // nodes; a block node holds a program of its own. A line ending in a colon
 // takes the more-indented lines after it as a block, placed at the end of
 // that line.
-export function parse(src: string): Program {
+export function parse(src: string, { slots = false }: { slots?: boolean } = {}): Program {
   const lines: Line[] = []
-  for (const t of lex(src)) {
+  for (const t of lex(src, slots)) {
     let last = lines.at(-1)
     if (last?.number !== t.line) {
       last = { number: t.line, indent: t.indent, tokens: [] }
@@ -609,6 +622,11 @@ async function evaluate(node: Node, env: Env, stack: Stack, ctx: Context): Promi
       return void stack.push(node.value)
     case 'sym':
       return void stack.push(new Sym(node.value))
+    case 'slot': {
+      if (!ctx.values || node.index >= ctx.values.length)
+        throw new Error(`$\{${node.index}} ran without the value of the template's $\{…} number ${node.index}`)
+      return void stack.push(new Component(ctx.values[node.index]))
+    }
     case 'block':
       return void stack.push(new Block(node.body, env))
     case 'define':

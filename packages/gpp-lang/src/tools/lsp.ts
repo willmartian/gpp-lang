@@ -470,7 +470,9 @@ export function startServer(): void {
               ? 'number'
               : t.type === 'str' || t.type === 'sym'
                 ? 'string'
-                : null
+                : t.type === 'slot'
+                  ? 'variable'
+                  : null
         if (kind) builder.push(i, here.offset + t.pos, t.length, tokenType(kind), 0)
       }
     }
@@ -498,14 +500,15 @@ function signatures(info: WordInfo): string {
   return [code(info.signatures.join('\n')), ...doc].join('\n\n')
 }
 
-// A line's tokens, or as many as can be made out while it's being typed.
+// A line's tokens, or as many as can be made out while it's being typed. A
+// test's template has ${0} where its ${…} are (sections.ts).
 function tokensOf(code: CodeLine): Token[] {
   try {
-    return lex(code.text)
+    return lex(code.text, true)
   } catch {
     const cut = code.text.lastIndexOf('"')
     try {
-      return cut > 0 ? lex(code.text.slice(0, cut)) : []
+      return cut > 0 ? lex(code.text.slice(0, cut), true) : []
     } catch {
       return []
     }

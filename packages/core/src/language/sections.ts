@@ -18,6 +18,8 @@ export interface Sections {
   preambles: string[]
   documents: string[]
   problems: Problem[]
+  // For a script: whether its templates are tests' Features, not stories' steps.
+  tests?: boolean
 }
 
 export function sections(file: string, src: string): Sections {
@@ -94,10 +96,16 @@ function markdownSections(src: string): Sections {
   return { preambles: preambles.filter((p) => p.size).map(view), documents: documents.map(view), problems }
 }
 
-// A script's gpp templates, each a Feature of one Scenario, named for the
-// story it's in. A template's view keeps its text where it is, with the
-// Feature and Scenario lines on the two lines above its first step, which the
-// view has blanked.
+// A script's gpp templates. A template's view keeps its text where it is.
+//
+// A test's template is a Feature, whose ${…} hold what Render renders. Each
+// becomes ${0}, ${1}… in order, padded to its width so what follows stays
+// where it was. One over several lines takes the rest of its last line up
+// to its first.
+//
+// A story's template is the steps of a Feature of one Scenario, named for the
+// story it's in, with the Feature and Scenario lines on the two lines above
+// its first step, which the view has blanked.
 function scriptSections(src: string): Sections {
   const lines = src.split('\n')
   const starts: number[] = []
@@ -107,12 +115,8 @@ function scriptSections(src: string): Sections {
 
   const documents: string[] = []
   const problems: Problem[] = []
+  let tests = false
   for (const t of templates(src)) {
-    const [interpolation] = t.interpolations
-    if (interpolation !== undefined) {
-      problems.push({ ...place(interpolation), message: INTERPOLATION })
-      continue
-    }
     const first = lineOf(t.start)
     const last = lineOf(t.end)
     const view = lines.map(() => '')
@@ -120,6 +124,26 @@ function scriptSections(src: string): Sections {
       const from = i === first ? t.start - starts[i] : 0
       const to = i === last ? t.end - starts[i] : lines[i].length
       view[i] = ' '.repeat(from) + lines[i].slice(from, to)
+    }
+    if (isFeatureTemplate(view.join('\n'))) {
+      // From the last, so each one's place is as the source has it.
+      for (const [k, { start, end }] of [...t.interpolations.entries()].reverse()) {
+        const line = lineOf(start)
+        const lastLine = lineOf(end - 1)
+        const slot = `\${${k}}`
+        const rest = view[lastLine].slice(end - starts[lastLine])
+        for (let i = line + 1; i <= lastLine; i++) view[i] = ''
+        const width = line === lastLine ? end - start : slot.length + 1
+        view[line] = view[line].slice(0, start - starts[line]) + slot.padEnd(width) + rest
+      }
+      documents.push(view.join('\n'))
+      tests = true
+      continue
+    }
+    const [interpolation] = t.interpolations
+    if (interpolation !== undefined) {
+      problems.push({ ...place(interpolation.start), message: INTERPOLATION })
+      continue
     }
     const top = view.findIndex((l, i) => i >= first && l.trim())
     const wrong = notAStep(view, first, last)
@@ -135,10 +159,17 @@ function scriptSections(src: string): Sections {
       documents.push(view.join('\n'))
     }
   }
-  return { preambles: [], documents, problems }
+  return { preambles: [], documents, problems, tests }
 }
 
-export const INTERPOLATION = `A gpp template can't have \${…} in it. Write what it checks out in full, so it reads as it runs.`
+export const INTERPOLATION = `A story's gpp template can't have \${…} in it: its args set the story up. Write what it checks out in full, so it reads as it runs.`
+
+// Whether a template is a test's, a Feature, rather than a story's steps: its
+// first line that isn't blank, a comment or a tag starts with Feature:.
+export function isFeatureTemplate(text: string): boolean {
+  const first = text.split('\n').find((l) => l.trim() && !/^\s*[#@]/.test(l))
+  return first !== undefined && FEATURE.test(first)
+}
 
 const STEP = /^(?:Given|When|Then|And|But|\*)\s/
 const DOC_STRING = /^(?:"""|```)/
@@ -156,7 +187,8 @@ function notAStep(view: string[], first: number, last: number): Problem | null {
     return {
       line: i + 1,
       column: view[i].length - view[i].trimStart().length + 1,
-      message: 'Each line of a gpp template is a step, starting with Given, When, Then, And, But or *',
+      message:
+        'Each line of a gpp template is a step, starting with Given, When, Then, And, But or *, unless the template starts with Feature:',
     }
   }
   return null
