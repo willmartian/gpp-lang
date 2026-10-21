@@ -1,5 +1,7 @@
-// The ```gpp blocks in Markdown files: finding them, and loading them as
-// Defines and Features with true line numbers.
+/*
+ * The ```gpp blocks in Markdown files: finding them, and loading them as
+ * Defines and Features with true line numbers.
+ */
 
 import assert from 'node:assert/strict'
 import fs from 'node:fs'

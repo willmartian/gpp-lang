@@ -1,6 +1,8 @@
-// Every story's play function as a test, in Chromium, through Storybook's
-// Vitest addon. Run it from the repo's root with `npm run test:storybook`, or
-// look at the stories with `npx storybook dev -c examples/storybook/.storybook`.
+/*
+ * Every story's play function as a test, in Chromium, through Storybook's
+ * Vitest addon. Run it from the repo's root with `npm run test:storybook`, or
+ * look at the stories with `npx storybook dev -c examples/storybook/.storybook`.
+ */
 import path from 'node:path'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 import { playwright } from '@vitest/browser-playwright'

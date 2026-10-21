@@ -1,5 +1,7 @@
-// Tests' gpp templates in jsdom: editor.spec.ts must pass, and each of
-// failures.spec.ts's scenarios must fail with the message it gives.
+/*
+ * Tests' gpp templates in jsdom: editor.spec.ts must pass, and each of
+ * failures.spec.ts's scenarios must fail with the message it gives.
+ */
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({

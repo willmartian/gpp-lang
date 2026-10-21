@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
-// gpp-lang check [paths...]
-// gpp-lang words
-// gpp-lang lsp
-//
-// Checks the scenarios without running them, lists the words they can use, or
-// answers an editor. A project is the files under a gpp.config.ts, which share
-// their Defines, and the config says which backend runs each, and so which
-// words it has. Running them is each backend's tool's job, like Playwright's.
+/*
+ * gpp-lang check [paths...]
+ * gpp-lang words
+ * gpp-lang lsp
+ *
+ * Checks the scenarios without running them, lists the words they can use, or
+ * answers an editor. A project is the files under a gpp.config.ts, which share
+ * their Defines, and the config says which backend runs each, and so which
+ * words it has. Running them is each backend's tool's job, like Playwright's.
+ */
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -18,11 +20,11 @@ import { findConfig, findConfigs, load, loadConfig, projectFiles } from '@gpp-la
 import { Command, Option } from 'commander'
 import { listWords } from '../src/tools/words.ts'
 
-// Commander leaves the colour out when the output isn't a terminal, or $NO_COLOR is set.
+/** Commander leaves the colour out when the output isn't a terminal, or $NO_COLOR is set. */
 const style = (format: Parameters<typeof styleText>[0], text: string) =>
   styleText(format, text, { validateStream: false })
 
-// From the source, package.json is one directory up; once built, two.
+/** From the source, package.json is one directory up; once built, two. */
 const packageJson = ['../package.json', '../../package.json']
   .map((p) => path.join(import.meta.dirname, p))
   .find((p) => fs.existsSync(p))
@@ -88,25 +90,27 @@ program
 A language server over stdio: mistakes as you type, signatures on hover,
 completion and go to definition.`,
   )
-  // What editors' language clients pass. Stdio is the only way it talks, and
-  // the server reads the client's process id itself, to exit when it does.
+  /*
+   * What editors' language clients pass. Stdio is the only way it talks, and
+   * the server reads the client's process id itself, to exit when it does.
+   */
   .addOption(new Option('--stdio').hideHelp())
   .addOption(new Option('--clientProcessId <pid>').hideHelp())
   .action(async () => {
-    // Loaded only here, so running tests doesn't pay for it.
+    /** Loaded only here, so running tests doesn't pay for it. */
     const { startServer } = await import('../src/tools/lsp.ts')
     startServer()
   })
 
 await program.parseAsync()
 
-// Whether a file is one of those the paths name; with none, every file is.
+/** Whether a file is one of those the paths name; with none, every file is. */
 function named(paths: string[], cwd: string) {
   const targets = paths.map((p) => path.resolve(cwd, p.replace(/:\d+$/, '')))
   return (file: string) => !targets.length || targets.some((t) => file === t || file.startsWith(t + path.sep))
 }
 
-// A project's files, and why those that don't load don't.
+/** A project's files, and why those that don't load don't. */
 function loadProject(root: string): { files: GppFile[]; broken: LoadError[] } {
   const files: GppFile[] = []
   const broken: LoadError[] = []
@@ -125,8 +129,10 @@ async function checkOnly(paths: string[]): Promise<number> {
   const cwd = process.cwd()
   const relative = (file: string) => path.relative(cwd, file)
   const shown = named(paths, cwd)
-  // Each project with a named file, checked whole, since the named files may
-  // use Defines from the rest of it.
+  /**
+   * Each project with a named file, checked whole, since the named files may
+   * use Defines from the rest of it.
+   */
   const configs = findConfigs(paths.length ? paths : [cwd], cwd)
   if (!configs.length) {
     console.log(`No gpp.config.ts at or under ${paths.length ? paths.join(', ') : 'this directory'}`)
@@ -142,7 +148,7 @@ async function checkOnly(paths: string[]): Promise<number> {
       console.log(`${relative(err.file)}\n  ${err.message}\n`)
       problems++
     }
-    // An Outline's rows share their steps, and so their mistakes.
+    /** An Outline's rows share their steps, and so their mistakes. */
     const seen = new Set<string>()
     const diagnostics = checkFiles(files, config, relative).diagnostics.filter((d: Diagnostic) => {
       const key = `${d.file}:${d.line}:${d.column}:${d.message}`
@@ -161,7 +167,7 @@ async function printWords(): Promise<number> {
   const cwd = process.cwd()
   const file = findConfig(cwd)
   const config: Config | null = file ? await loadConfig(file) : null
-  // A file that doesn't parse has no Defines to list; check says why.
+  /** A file that doesn't parse has no Defines to list; check says why. */
   const { files } = config ? loadProject(config.root) : { files: [] }
   const checked = checkFiles(files, config, (f) => path.relative(cwd, f))
   console.log(listWords(config, checked, cwd))

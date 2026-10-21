@@ -1,14 +1,16 @@
-// Every word a project can use: the shared words, each of its backends' own,
-// and its Defines, with what each takes and what it leaves. It's read from the same forms and
-// inferred Defines the checker uses, so it can't drift from what the words
-// do. Run it as `gpp-lang words`; the docs site shows the same entries.
-//
-//     Click
-//       Clicks an element.
-//       Element ->    takes something on the page
-//       Example: When I Click the Button "Sign in"
-//
-// Words that share a doc, like the ARIA roles, are listed together.
+/*
+ * Every word a project can use: the shared words, each of its backends' own,
+ * and its Defines, with what each takes and what it leaves. It's read from the same forms and
+ * inferred Defines the checker uses, so it can't drift from what the words
+ * do. Run it as `gpp-lang words`; the docs site shows the same entries.
+ *
+ *     Click
+ *       Clicks an element.
+ *       Element ->    takes something on the page
+ *       Example: When I Click the Button "Sign in"
+ *
+ * Words that share a doc, like the ARIA roles, are listed together.
+ */
 
 import path from 'node:path'
 import type { Checked, Config, Doc, Env, Form } from '@gpp-lang/core'
@@ -18,17 +20,19 @@ const KEYWORDS = keywords(async () => {})
 
 const WIDTH = 96
 
-// The words that share a doc, and the ways to use them.
+/** The words that share a doc, and the ways to use them. */
 export interface Entry {
   names: string[]
   doc: Doc
   forms: readonly Form[]
 }
 
-// The built-in words and step keywords, one entry per doc, in the order of
-// GROUPS, then the order they were documented in. The tests see that every
-// builtin has a doc. With own, only the words the Env itself adds, as a
-// backend's add to the shared words.
+/**
+ * The built-in words and step keywords, one entry per doc, in the order of
+ * GROUPS, then the order they were documented in. The tests see that every
+ * builtin has a doc. With own, only the words the Env itself adds, as a
+ * backend's add to the shared words.
+ */
 export function entries(words: Env, { own = false }: { own?: boolean } = {}): Entry[] {
   const byDoc = new Map<Doc, Entry>()
   for (const scope of own ? [words] : [words, KEYWORDS]) {
@@ -72,7 +76,7 @@ export function listWords(config: Config | null, checked: Checked, cwd = process
     grouped(own)
   }
 
-  // As the first backend infers them, since a Define may use its words.
+  /** As the first backend infers them, since a Define may use its words. */
   const [analysis = checked.analysisOf('')] = checked.analyses.values()
   const defines = analysis.words().filter((w) => w.kind === 'define')
   out.push('Defined in this project', '')
@@ -90,7 +94,7 @@ export function listWords(config: Config | null, checked: Checked, cwd = process
   return out.join('\n').trimEnd()
 }
 
-// An entry: its words, what they're for, a line per form and an example.
+/** An entry: its words, what they're for, a line per form and an example. */
 function listed({ names, doc, forms }: Entry): string[] {
   const width = Math.max(...forms.map((f) => shape(f).length))
   const [example] = doc.examples
@@ -102,18 +106,18 @@ function listed({ names, doc, forms }: Entry): string[] {
   ]
 }
 
-// "Text | Pattern, Scope -> Element"
+/** "Text | Pattern, Scope -> Element" */
 export function shape(f: Form): string {
   const inputs = f.inputs.map((t) => t.name).join(', ')
   return `${inputs}${inputs ? ' ' : ''}->${f.output ? ` ${f.output.name}` : ''}`
 }
 
-// 'takes a "name" to look for, then Within something'
+/** 'takes a "name" to look for, then Within something' */
 export function takes(f: Form): string {
   return f.inputs.length ? `takes ${f.inputs.map((t) => t.phrase).join(', then ')}` : 'takes nothing'
 }
 
-// A list of names, after a title if there is one, over as many lines as it needs.
+/** A list of names, after a title if there is one, over as many lines as it needs. */
 function wrap(names: string[], title?: string): string[] {
   const lines: string[] = []
   let line = title ? `${title}: ` : ''

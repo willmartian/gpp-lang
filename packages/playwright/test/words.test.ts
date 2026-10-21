@@ -1,5 +1,7 @@
-// The words Playwright adds to the shared ones: each has a doc, and its
-// examples check.
+/*
+ * The words Playwright adds to the shared ones: each has a doc, and its
+ * examples check.
+ */
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'

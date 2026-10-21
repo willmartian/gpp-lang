@@ -8,7 +8,7 @@ import { check, leftovers } from '@gpp-lang/core'
 import { discover, load } from '@gpp-lang/core/node'
 import { playwrightWords as words } from '@gpp-lang/playwright/config'
 
-// Checks some .gpp files, given as name → contents, with Playwright's words.
+/** Checks some .gpp files, given as name → contents, with Playwright's words. */
 function checkFiles(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-check-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)
@@ -24,7 +24,7 @@ function checkFiles(files: Record<string, string>) {
   }
 }
 
-// A feature with one scenario of these steps.
+/** A feature with one scenario of these steps. */
 const scenario = (...steps: string[]) => ['Feature: F', '  Scenario: S', ...steps.map((s) => `    ${s}`)].join('\n')
 
 test('the demo checks clean', () => {

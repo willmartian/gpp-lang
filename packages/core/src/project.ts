@@ -1,6 +1,8 @@
-// A project's files checked: each file's Features with the words of the
-// backend its config says runs it, and the Defines, which every backend's
-// files use, with each backend's words.
+/*
+ * A project's files checked: each file's Features with the words of the
+ * backend its config says runs it, and the Defines, which every backend's
+ * files use, with each backend's words.
+ */
 
 import type { Backend, Config } from './config.ts'
 import { backendOf } from './config.ts'
@@ -10,17 +12,21 @@ import type { GppFile } from './language/load.ts'
 import { leftovers, words } from './words/shared.ts'
 
 export interface Checked {
-  // each backend's analysis, with its words
+  /** each backend's analysis, with its words */
   analyses: Map<Backend, Analysis>
   diagnostics: Diagnostic[]
-  // The analysis a file is checked in, for an editor's questions about it:
-  // its backend's, or, for a file of only Defines, the shared words'.
+  /**
+   * The analysis a file is checked in, for an editor's questions about it:
+   * its backend's, or, for a file of only Defines, the shared words'.
+   */
   analysisOf(file: string): Analysis
 }
 
-// Without a config, as in an editor that won't run the workspace's code,
-// there's no telling which words a file has, so it says nothing is wrong, and
-// answers questions with the shared words.
+/**
+ * Without a config, as in an editor that won't run the workspace's code,
+ * there's no telling which words a file has, so it says nothing is wrong, and
+ * answers questions with the shared words.
+ */
 export function checkFiles(
   files: GppFile[],
   config: Config | null,
@@ -28,7 +34,7 @@ export function checkFiles(
 ): Checked {
   const options = { settle: leftovers, name }
   const owner = new Map(files.map((f) => [f.file, config && backendOf(config, f.file)]))
-  // Every file's Defines, and the Features of those the backend runs, in order.
+  /** Every file's Defines, and the Features of those the backend runs, in order. */
   const analyses = new Map(
     (config?.backends ?? []).map((b) => [
       b,
@@ -59,17 +65,21 @@ export function checkFiles(
   }
 }
 
-// The mistakes in Defines that every backend has: a Define that only works
-// with one backend's words, like one that uses Visit, is fine, and a mistake
-// only where it's used without them.
+/**
+ * The mistakes in Defines that every backend has: a Define that only works
+ * with one backend's words, like one that uses Visit, is fine, and a mistake
+ * only where it's used without them.
+ */
 function defineMistakes(analyses: Analysis[]): Diagnostic[] {
   const at = (d: Diagnostic) => `${d.file}:${d.line}:${d.column}`
   const [first, ...rest] = analyses.map((a) => a.report.vocabulary)
   return (first ?? []).filter((d) => rest.every((other) => other.some((o) => at(o) === at(d))))
 }
 
-// Why a file's Features don't run, if they don't: no backend runs the file,
-// or its backend's templates are of another kind.
+/**
+ * Why a file's Features don't run, if they don't: no backend runs the file,
+ * or its backend's templates are of another kind.
+ */
 function unrun(file: GppFile, backend: Backend | null, name: (file: string) => string): Diagnostic[] {
   const [feature] = file.features
   if (!feature) return []

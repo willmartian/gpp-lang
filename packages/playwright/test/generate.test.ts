@@ -1,6 +1,8 @@
-// Generating Playwright tests from .gpp files, checked through Playwright
-// itself: where it says each test is, and how the ones that fail without a
-// browser fail.
+/*
+ * Generating Playwright tests from .gpp files, checked through Playwright
+ * itself: where it says each test is, and how the ones that fail without a
+ * browser fail.
+ */
 
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
@@ -13,8 +15,10 @@ import { test } from 'node:test'
 const cli = createRequire(import.meta.url).resolve('@playwright/test/cli')
 const packages = path.join(import.meta.dirname, '..', '..')
 
-// Installs this package and gpp-lang in a scratch project, as links to this
-// repo's, so its configs import them as any project's would.
+/**
+ * Installs this package and gpp-lang in a scratch project, as links to this
+ * repo's, so its configs import them as any project's would.
+ */
 function install(dir: string) {
   const scope = path.join(dir, 'node_modules', '@gpp-lang')
   fs.mkdirSync(scope, { recursive: true })
@@ -46,7 +50,7 @@ const cart = [
 ].join('\n')
 
 const brokenDefine = 'Define: Wipe\n  Clik the Button "Wipe"\n'
-// A table whose rows don't line up isn't Gherkin.
+/** A table whose rows don't line up isn't Gherkin. */
 const unreadable =
   'Feature: Broken\n  Scenario: S\n    Given I Fill in the form:\n      | Email |\n      | Email | a@b |\n'
 
@@ -93,7 +97,7 @@ interface Suite {
   suites?: Suite[]
 }
 
-// Every test in a JSON report, by its titles below the file.
+/** Every test in a JSON report, by its titles below the file. */
 function specs(json: string): Map<string, Spec> {
   const report = JSON.parse(json) as { suites: Suite[] }
   const found = new Map<string, Spec>()
@@ -125,7 +129,7 @@ test('each scenario is a Playwright test, on its line in the .gpp file', () => {
 
 test('mistakes the checker finds fail where they are, without a browser', () => {
   const dir = scratch()
-  // Browsers are looked for where there are none, so any test that started one would fail to.
+  /** Browsers are looked for where there are none, so any test that started one would fail to. */
   const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-no-browsers-'))
   const run = playwright(dir, ['--reporter=json', '--grep-invert', 'Adding|Rows'], {
     PLAYWRIGHT_BROWSERS_PATH: nowhere,

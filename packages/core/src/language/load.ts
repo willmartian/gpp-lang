@@ -1,18 +1,20 @@
-// Turning .gpp files into vocabulary and scenarios.
-//
-// Reading them from disk is files.ts's job; this works on sources already
-// read, so it runs in a browser too.
-//
-// A .gpp file is Gherkin with an optional preamble: Defines above the
-// Feature line. Either half may be missing, so a file of nothing but Defines
-// is shared vocabulary. Every Define is visible to every scenario.
-//
-// A Markdown file's ```gpp blocks are Gherkin++ too, so a README's examples
-// can be tests (see markdown.ts, and sections.ts for how a file divides).
-//
-// Gherkin does the Gherkin: Backgrounds, Rules and Scenario Outlines are
-// compiled into flat "pickles" by @cucumber/gherkin, so an Outline's <email>
-// is already substituted by the time a step reaches the Cognate parser.
+/*
+ * Turning .gpp files into vocabulary and scenarios.
+ *
+ * Reading them from disk is files.ts's job; this works on sources already
+ * read, so it runs in a browser too.
+ *
+ * A .gpp file is Gherkin with an optional preamble: Defines above the
+ * Feature line. Either half may be missing, so a file of nothing but Defines
+ * is shared vocabulary. Every Define is visible to every scenario.
+ *
+ * A Markdown file's ```gpp blocks are Gherkin++ too, so a README's examples
+ * can be tests (see markdown.ts, and sections.ts for how a file divides).
+ *
+ * Gherkin does the Gherkin: Backgrounds, Rules and Scenario Outlines are
+ * compiled into flat "pickles" by @cucumber/gherkin, so an Outline's <email>
+ * is already substituted by the time a step reaches the Cognate parser.
+ */
 
 import { AstBuilder, compile, Errors, GherkinClassicTokenMatcher, Parser } from '@cucumber/gherkin'
 import type { Step as AstStep, FeatureChild, PickleStepArgument, RuleChild } from '@cucumber/messages'
@@ -25,13 +27,15 @@ import { isScript } from './templates.ts'
 
 export interface Step {
   keyword: string
-  // Gherkin's name for it, in any language: Context, Action, Outcome,
-  // Conjunction, or Unknown for *
+  /**
+   * Gherkin's name for it, in any language: Context, Action, Outcome,
+   * Conjunction, or Unknown for *
+   */
   keywordType?: string
   text: string
   file: string
   line: number
-  // where the step's text starts, after "Given "
+  /** where the step's text starts, after "Given " */
   column: number
   argument?: string | string[][]
   program?: Program
@@ -43,11 +47,11 @@ export interface Scenario {
   tags: string[]
   steps: Step[]
   file: string
-  // Its line: the Scenario's, or, for a row of an Outline, the row's.
+  /** Its line: the Scenario's, or, for a row of an Outline, the row's. */
   line: number
-  // Every line that picks it out: its own, its Scenario's, its steps'.
+  /** Every line that picks it out: its own, its Scenario's, its steps'. */
   lines: number[]
-  // For a row of an Outline: the Outline, and the row's values.
+  /** For a row of an Outline: the Outline, and the row's values. */
   outline?: { name: string; line: number; row: string }
 }
 
@@ -60,22 +64,22 @@ export interface Feature {
 
 export interface Vocabulary {
   file: string
-  // the file's Defines, with the Gherkin blanked out, so positions line up
+  /** the file's Defines, with the Gherkin blanked out, so positions line up */
   src: string
   program: Program
 }
 
 export interface GppFile {
   file: string
-  // a .gpp file's preamble; in Markdown, each block's Defines
+  /** a .gpp file's preamble; in Markdown, each block's Defines */
   vocabulary: Vocabulary[]
-  // a .gpp file's Feature; in Markdown, any number
+  /** a .gpp file's Feature; in Markdown, any number */
   features: Feature[]
-  // for a script, what its gpp templates are (sections.ts)
+  /** for a script, what its gpp templates are (sections.ts) */
   templates?: Templates
 }
 
-// A file that can't be read as Gherkin++ at all, and where.
+/** A file that can't be read as Gherkin++ at all, and where. */
 export class LoadError extends Error {
   file: string
   problems: { line: number; column: number; message: string }[]
@@ -88,7 +92,7 @@ export class LoadError extends Error {
   }
 }
 
-// Loads a file as it is right now, which in an editor may not be saved.
+/** Loads a file as it is right now, which in an editor may not be saved. */
 export function loadSource(file: string, src: string): GppFile {
   const { preambles, documents, problems, templates } = sections(file, src)
   if (problems.length) throw new LoadError(file, problems)
@@ -120,7 +124,7 @@ function loadFeature(file: string, src: string): Feature | null {
   const doc = parseGherkin(file, src, newId)
   if (!doc.feature) return null
 
-  // Pickles point back at AST steps by id; the AST knows keyword and position.
+  /** Pickles point back at AST steps by id; the AST knows keyword and position. */
   const astSteps = new Map<string, AstStep>()
   const scenarioLines = new Map<string, number>()
   const exampleRows = new Map<string, { line: number; values: string }>()
@@ -141,7 +145,7 @@ function loadFeature(file: string, src: string): Feature | null {
   }
   collect(doc.feature.children)
 
-  // Gherkin compiles each pickle from nodes of this document.
+  /** Gherkin compiles each pickle from nodes of this document. */
   const node = <V>(nodes: Map<string, V>, id: string): V => {
     const found = nodes.get(id)
     if (found === undefined) throw new Error(`${file} has no node ${id}`)
@@ -149,7 +153,7 @@ function loadFeature(file: string, src: string): Feature | null {
   }
   const scenarios = compile(doc, file, newId).map((pickle): Scenario => {
     const scenarioLine = node(scenarioLines, pickle.astNodeIds[0])
-    // Outline rows share a name; tell them apart by their values.
+    /** Outline rows share a name; tell them apart by their values. */
     const row = exampleRows.get(pickle.astNodeIds[1])
     const ownSteps = pickle.steps.flatMap((ps) => {
       const ast = node(astSteps, ps.astNodeIds[0])
@@ -194,7 +198,7 @@ function parseGherkin(file: string, src: string, newId: () => string) {
     return new Parser(new AstBuilder(newId), new GherkinClassicTokenMatcher()).parse(src)
   } catch (err) {
     if (!(err instanceof Errors.GherkinException)) throw err
-    // Gherkin collects several; each says where, and repeats it as "(3:5): ".
+    /** Gherkin collects several; each says where, and repeats it as "(3:5): ". */
     const each = err.errors?.length ? err.errors : [err]
     throw new LoadError(
       file,
@@ -206,8 +210,10 @@ function parseGherkin(file: string, src: string, newId: () => string) {
   }
 }
 
-// A DocString arrives as a string, a DataTable as a list of rows, as if either
-// had been written at the end of the step.
+/**
+ * A DocString arrives as a string, a DataTable as a list of rows, as if either
+ * had been written at the end of the step.
+ */
 function argument(arg: PickleStepArgument | undefined): string | string[][] | undefined {
   if (arg?.docString) return arg.docString.content
   if (arg?.dataTable) return arg.dataTable.rows.map((row) => row.cells.map((c) => c.value))

@@ -1,20 +1,26 @@
-// The Markdown Gherkin++ reads: fenced code blocks, and which of them are
-// ```gpp blocks to load. It knows nothing of Gherkin; how a block's lines
-// divide into Defines and Features is in sections.ts.
+/*
+ * The Markdown Gherkin++ reads: fenced code blocks, and which of them are
+ * ```gpp blocks to load. It knows nothing of Gherkin; how a block's lines
+ * divide into Defines and Features is in sections.ts.
+ */
 
 export const isMarkdown = (file: string) => file.endsWith('.md')
 
-// A fenced code block: the lines between its fences (from 0, end exclusive),
-// and the words of its info string, as in ```gpp ignore or ```gpp,ignore.
+/**
+ * A fenced code block: the lines between its fences (from 0, end exclusive),
+ * and the words of its info string, as in ```gpp ignore or ```gpp,ignore.
+ */
 export interface Fence {
   start: number
   end: number
   info: string[]
 }
 
-// Every fenced code block, as CommonMark finds them: a fence of three or more
-// backticks or tildes, closed by as many or more of the same, or by the end
-// of the file. A fence inside another block is only its content.
+/**
+ * Every fenced code block, as CommonMark finds them: a fence of three or more
+ * backticks or tildes, closed by as many or more of the same, or by the end
+ * of the file. A fence inside another block is only its content.
+ */
 export function fences(src: string): Fence[] {
   const lines = src.split('\n')
   const found: Fence[] = []
@@ -42,13 +48,15 @@ export function fences(src: string): Fence[] {
   return found
 }
 
-// The blocks that are loaded: ```gpp, but not ```gpp ignore, which is only shown.
+/** The blocks that are loaded: ```gpp, but not ```gpp ignore, which is only shown. */
 export function gppFences(src: string): Fence[] {
   return fences(src).filter((f) => f.info[0] === 'gpp' && !f.info.includes('ignore'))
 }
 
-// Which lines are Gherkin++: all of a .gpp file's, and in Markdown, those in
-// the blocks that are loaded.
+/**
+ * Which lines are Gherkin++: all of a .gpp file's, and in Markdown, those in
+ * the blocks that are loaded.
+ */
 export function gppLines(file: string, src: string): boolean[] {
   const lines = src.split('\n')
   if (!isMarkdown(file)) return lines.map(() => true)

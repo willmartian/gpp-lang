@@ -1,6 +1,8 @@
-// Reading and checking gpp templates, without a browser. What they do in one
-// is tested through Storybook itself: examples/storybook, and the fixtures in
-// test/fixtures, which must fail.
+/*
+ * Reading and checking gpp templates, without a browser. What they do in one
+ * is tested through Storybook itself: examples/storybook, and the fixtures in
+ * test/fixtures, which must fail.
+ */
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'

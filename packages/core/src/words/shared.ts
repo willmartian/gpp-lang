@@ -1,20 +1,22 @@
-// The language's shared words. Every backend has them all, on a driver of its
-// own (driver.ts), which a step finds in its context, so the words are made
-// once, and the checker reads the same ones that run. A backend adds words of
-// its own, like Playwright's for the page, in its Backend (config.ts).
-//
-// Queries are Testing Library's, spelled as Cognate words: a role name
-// (Button, Heading, Checkbox…) takes the accessible name to its right and
-// leaves an Element. Gherkin++ asks for exact names, as Testing Library does,
-// unless you say Containing. Roles with no name, like Listitem, take only
-// Containing, and look at the text inside them instead.
-//
-// Assertions are deferred. "Then I should Not See the Button "Save"" runs See
-// before Not, so See can't just fail on the spot; it leaves an Expectation on
-// the stack for Not to flip, and every Expectation left when the step ends is
-// checked then. Likewise "the Checkbox "Terms" should be Checked": Checked
-// runs first and leaves a Matcher, the Checkbox query lands on top of it, and
-// the step's end pairs them up.
+/*
+ * The language's shared words. Every backend has them all, on a driver of its
+ * own (driver.ts), which a step finds in its context, so the words are made
+ * once, and the checker reads the same ones that run. A backend adds words of
+ * its own, like Playwright's for the page, in its Backend (config.ts).
+ *
+ * Queries are Testing Library's, spelled as Cognate words: a role name
+ * (Button, Heading, Checkbox…) takes the accessible name to its right and
+ * leaves an Element. Gherkin++ asks for exact names, as Testing Library does,
+ * unless you say Containing. Roles with no name, like Listitem, take only
+ * Containing, and look at the text inside them instead.
+ *
+ * Assertions are deferred. "Then I should Not See the Button "Save"" runs See
+ * before Not, so See can't just fail on the spot; it leaves an Expectation on
+ * the stack for Not to flip, and every Expectation left when the step ends is
+ * checked then. Likewise "the Checkbox "Terms" should be Checked": Checked
+ * runs first and leaves a Matcher, the Checkbox query lands on top of it, and
+ * the step's end pairs them up.
+ */
 
 import type { Stack } from '../language/cognate.ts'
 import { core, describe, Env, GppError, unwrap } from '../language/cognate.ts'
@@ -22,13 +24,13 @@ import type { Context, Doc, Form } from '../language/types.ts'
 import { article, called, formsFor, mistake, NumberType, oneOf, TableType, TextType, type } from '../language/types.ts'
 import type { Action, AnyDriver, Name, Query, QueryKind, State } from './driver.ts'
 
-// The driver a step runs with: its context's.
+/** The driver a step runs with: its context's. */
 function driverOf(ctx: Context): AnyDriver {
   if (!ctx.driver) throw new Error('These words ran without a driver: a backend gives one in their context')
   return ctx.driver
 }
 
-// What every word drives: whatever driver the step's context has.
+/** What every word drives: whatever driver the step's context has. */
 const driver: AnyDriver = {
   find: (ctx, root, query) => driverOf(ctx).find(ctx, root, query),
   act: (ctx, target, action) => driverOf(ctx).act(ctx, target, action),
@@ -53,7 +55,7 @@ export class Pattern {
   }
 }
 
-// Containing the Button "Remove": something inside, for a role query to look for.
+/** Containing the Button "Remove": something inside, for a role query to look for. */
 export class Holding {
   found: Found
 
@@ -76,7 +78,7 @@ export class Scope {
   }
 }
 
-// A driver's handle that remembers the words that made it, for error messages.
+/** A driver's handle that remembers the words that made it, for error messages. */
 export class Found<H = unknown> {
   handle: H
   label: string
@@ -113,7 +115,7 @@ export class Matcher {
   }
 }
 
-// check(not) runs the assertion, inverted when not is true.
+/** check(not) runs the assertion, inverted when not is true. */
 export class Expectation {
   label: string
   check: (not: boolean) => Promise<void>
@@ -146,7 +148,7 @@ export const CheckType = type('Check', 'a check', (v): v is Expectation => v ins
 
 const QueryName = called(NameType, 'a "name" to look for')
 
-// What a role is found by: a name, or what's inside it.
+/** What a role is found by: a name, or what's inside it. */
 type Inside = string | Pattern | Holding
 const RoleName = oneOf<Inside>('a "name" to look for', TextType, PatternType, HoldingType)
 const Content = oneOf<Inside>('Containing "some text"', PatternType, HoldingType)
@@ -164,9 +166,11 @@ export function escapeRegExp(text: string) {
 
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1)
 
-// Verbs that take a thing and some text accept them in either order, so
-// "Fill the Field "Email" with "a@b"" and "Fill "a@b" into the Field "Email""
-// both work.
+/**
+ * Verbs that take a thing and some text accept them in either order, so
+ * "Fill the Field "Email" with "a@b"" and "Fill "a@b" into the Field "Email""
+ * both work.
+ */
 function eitherOrder(act: (ctx: Context, found: Found, text: string) => Promise<unknown>): Form[] {
   return [
     form([ElementType, TextType], (ctx, found, text) => act(ctx, found, text)),
@@ -176,7 +180,7 @@ function eitherOrder(act: (ctx: Context, found: Found, text: string) => Promise<
 
 // ---------------------------------------------------------------- queries
 
-// The word for each kind of query that isn't by role.
+/** The word for each kind of query that isn't by role. */
 const QUERY_WORDS: [QueryKind, Omit<Doc, 'group'>, ...string[]][] = [
   [
     'label',
@@ -216,7 +220,7 @@ const QUERY_WORDS: [QueryKind, Omit<Doc, 'group'>, ...string[]][] = [
   ],
 ]
 
-// Every ARIA role that makes sense to query by name, as a word.
+/** Every ARIA role that makes sense to query by name, as a word. */
 export const ARIA_ROLES: readonly string[] =
   `alert alertdialog application article banner blockquote button caption cell checkbox
   code columnheader combobox complementary contentinfo definition deletion dialog directory document
@@ -226,12 +230,14 @@ export const ARIA_ROLES: readonly string[] =
   scrollbar search searchbox separator slider spinbutton status strong subscript superscript switch
   tab table tablist tabpanel term textbox time timer toolbar tooltip tree treegrid treeitem`.split(/\s+/)
 
-// Roles with no name to find them by: ARIA names neither from their content
-// nor, usually, from an author's label. Most are roles ARIA forbids naming;
-// the rest, like listitem, are ones ARIA hasn't settled (w3c/aria#1800).
-// Containing finds them by the text inside instead, and an exact name is a
-// mistake. Every other role is found by its name, which is what a screen
-// reader says.
+/**
+ * Roles with no name to find them by: ARIA names neither from their content
+ * nor, usually, from an author's label. Most are roles ARIA forbids naming;
+ * the rest, like listitem, are ones ARIA hasn't settled (w3c/aria#1800).
+ * Containing finds them by the text inside instead, and an exact name is a
+ * mistake. Every other role is found by its name, which is what a screen
+ * reader says.
+ */
 export const UNNAMED_ROLES: ReadonlySet<string> = new Set([
   // naming prohibited
   'caption',
@@ -261,26 +267,30 @@ export const UNNAMED_ROLES: ReadonlySet<string> = new Set([
   'timer',
 ])
 
-// Finding things: a word for each role and query, then Containing and Within.
+/** Finding things: a word for each role and query, then Containing and Within. */
 function queries(env: Env): Env {
   env.kind(ElementType)
 
-  // What a query finds, within a Scope if one came after it, described by
-  // the words that found it.
+  /**
+   * What a query finds, within a Scope if one came after it, described by
+   * the words that found it.
+   */
   const found = (ctx: Context, word: string, query: Query, by: Inside | null, scope?: Scope) => {
     const label = [`the ${word}`, by === null ? [] : say(by), scope ? `within ${scope.found.label}` : []].flat()
     return new Found(driver.find(ctx, scope?.found.handle ?? null, query), label.join(' '))
   }
 
-  // A query by name: role words take the name to their right.
+  /** A query by name: role words take the name to their right. */
   const named = (word: string, query: (name: Name) => Query): Form[] => [
     form([QueryName, ScopeType], ElementType, (ctx, name, scope) => found(ctx, word, query(nameOf(name)), name, scope)),
     form([QueryName], ElementType, (ctx, name) => found(ctx, word, query(nameOf(name)), name)),
   ]
 
-  // A role is found by its name, or by what's inside it, or with nothing
-  // after it, as every element with that role. A role with no name is found
-  // only by what's inside it, and given a name, says why that won't do.
+  /**
+   * A role is found by its name, or by what's inside it, or with nothing
+   * after it, as every element with that role. A role with no name is found
+   * only by what's inside it, and given a name, says why that won't do.
+   */
   const role = (role: string): Form[] => {
     const word = cap(role)
     const unnamed = UNNAMED_ROLES.has(role)
@@ -333,7 +343,7 @@ function queries(env: Env): Env {
     ...unnamed,
   )
   for (const [kind, doc, ...words] of QUERY_WORDS) {
-    // Synonyms share their forms, and so describe what they found the same way.
+    /** Synonyms share their forms, and so describe what they found the same way. */
     const forms = named(words[0], (name) => ({ by: kind, name }))
     for (const word of words) env.word(word, ...forms)
     env.doc({ group: 'Finding', ...doc }, ...words)
@@ -379,7 +389,7 @@ function queries(env: Env): Env {
 
 // ---------------------------------------------------------------- actions
 
-// The actions that take only the thing they act on.
+/** The actions that take only the thing they act on. */
 type BareAction = Exclude<Action, { text: string } | { key: string }>['do']
 
 const ACTION_WORDS: [BareAction, string, summary: string, example: string][] = [
@@ -392,7 +402,7 @@ const ACTION_WORDS: [BareAction, string, summary: string, example: string][] = [
   ['clear', 'Clear', 'Empties a field.', 'When I Clear the Field "Search"'],
 ]
 
-// Doing things.
+/** Doing things. */
 function actions(env: Env): Env {
   const act = (ctx: Context, found: Found, action: Action) => driver.act(ctx, found.handle, action)
 
@@ -476,7 +486,7 @@ const STATE_WORDS: [BareState, string, summary: string, example: string][] = [
   ['empty', 'Empty', 'Checks an element has no text, or a field no value.', 'Then the Field "Search" should be Empty'],
 ]
 
-// The states that take some text, like Value "eggs".
+/** The states that take some text, like Value "eggs". */
 const TEXT_STATE_WORDS: [TextState, string, Omit<Doc, 'group'>][] = [
   [
     'value',
@@ -504,7 +514,7 @@ const TEXT_STATE_WORDS: [TextState, string, Omit<Doc, 'group'>][] = [
   ],
 ]
 
-// Checking things: See, a word for each state, and Not.
+/** Checking things: See, a word for each state, and Not. */
 function checks(env: Env): Env {
   const visible = new Matcher('Visible', { is: 'visible' })
   const see = [
@@ -583,11 +593,13 @@ function checks(env: Env): Env {
     )
 }
 
-// Each and No check everything a query finds, the way Inform 7 says "if each
-// door is open" and "if no door is open". Each wants at least one, since a
-// check of nothing would pass whatever the page showed, and every one to
-// pass. No wants none to pass, and passes for none at all, like Not See.
-// Not makes them "not every one" and "at least one".
+/**
+ * Each and No check everything a query finds, the way Inform 7 says "if each
+ * door is open" and "if no door is open". Each wants at least one, since a
+ * check of nothing would pass whatever the page showed, and every one to
+ * pass. No wants none to pass, and passes for none at all, like Not See.
+ * Not makes them "not every one" and "at least one".
+ */
 type Quantifier = 'each' | 'no'
 
 const QUANTIFIER_WORDS: [Quantifier, Omit<Doc, 'group'>, ...string[]][] = [
@@ -611,11 +623,11 @@ const QUANTIFIER_WORDS: [Quantifier, Omit<Doc, 'group'>, ...string[]][] = [
   ],
 ]
 
-// The states a matcher checks of everything found together, not of each.
+/** The states a matcher checks of everything found together, not of each. */
 const TOGETHER: readonly State['is'][] = ['texts', 'count']
 
 function quantify(quantifier: Quantifier, word: string, found: Found, matcher: Matcher, ctx: Context): Expectation {
-  // Each Checkbox "Bought" Checked, as it was written.
+  /** Each Checkbox "Bought" Checked, as it was written. */
   const label = `${word} ${found.label.replace(/^the /, '')} ${matcher.describe()}`
   if (TOGETHER.includes(matcher.state.is)) {
     if (quantifier === 'each') return matcher.against(found, ctx)
@@ -625,7 +637,7 @@ function quantify(quantifier: Quantifier, word: string, found: Found, matcher: M
   return new Expectation(label, (not) =>
     driver.retry(ctx, async () => {
       const all = await driver.all(ctx, found.handle)
-      // Whether each one passes the matcher, checked once: retry repeats it.
+      /** Whether each one passes the matcher, checked once: retry repeats it. */
       const passes: boolean[] = []
       for (const handle of all)
         passes.push(
@@ -652,13 +664,17 @@ function quantify(quantifier: Quantifier, word: string, found: Found, matcher: M
 
 // ---------------------------------------------------------------- the end of a step
 
-// What's wrong with a step that leaves these behind, said the same way by
-// leftovers and settle.
+/**
+ * What's wrong with a step that leaves these behind, said the same way by
+ * leftovers and settle.
+ */
 const unchecked = (matcher: string) => `Nothing to check is ${matcher}. Put what should be ${matcher} before it.`
 const unused = (values: string[]) => `Nothing used ${values.join(', ')}. Is the step missing a verb?`
 
-// settle's rule, for the checker: what settle would say about a step that
-// leaves values of these types, or null if it would be happy.
+/**
+ * settle's rule, for the checker: what settle would say about a step that
+ * leaves values of these types, or null if it would be happy.
+ */
 export function leftovers(stack: readonly { name: string; shown: string }[]): string | null {
   const rest = [...stack]
   for (let v = rest.pop(); v; v = rest.pop()) {
@@ -673,13 +689,15 @@ export function leftovers(stack: readonly { name: string; shown: string }[]): st
   return null
 }
 
-// The end of a step: it checks whatever assertions the step left behind.
-// Anything else left over is a sentence with no verb, which is almost always
-// a mistake worth saying so.
+/**
+ * The end of a step: it checks whatever assertions the step left behind.
+ * Anything else left over is a sentence with no verb, which is almost always
+ * a mistake worth saying so.
+ */
 export async function settle(stack: Stack, ctx: Context): Promise<void> {
   const pending: Expectation[] = []
   while (stack.length) {
-    // A noun's value is checked as what it is underneath.
+    /** A noun's value is checked as what it is underneath. */
     const v = unwrap(stack.pop())
     const under = unwrap(stack.at(-1))
     if (v instanceof Expectation) pending.push(v)
@@ -700,8 +718,10 @@ export async function settle(stack: Stack, ctx: Context): Promise<void> {
 
 let vocabulary: Env | undefined
 
-// Every shared word. Made once, since they're the same wherever they run; a
-// backend's words are an Env under this one.
+/**
+ * Every shared word. Made once, since they're the same wherever they run; a
+ * backend's words are an Env under this one.
+ */
 export function words(): Env {
   if (vocabulary) return vocabulary
   vocabulary = checks(actions(queries(new Env(core()))))

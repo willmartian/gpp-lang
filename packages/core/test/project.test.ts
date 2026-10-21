@@ -1,5 +1,7 @@
-// Checking a project's files with its config: each file with the words of the
-// backend that runs it, and only those.
+/*
+ * Checking a project's files with its config: each file with the words of the
+ * backend that runs it, and only those.
+ */
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
@@ -18,8 +20,10 @@ import {
 
 const form = formsFor()
 
-// A backend with a word of its own, Wave, whose templates are Features, with
-// a ${…} that Wave takes.
+/**
+ * A backend with a word of its own, Wave, whose templates are Features, with
+ * a ${…} that Wave takes.
+ */
 const Thing = type('Thing', `a thing, as \${…}`, (v): v is Interpolated => v instanceof Interpolated)
 const waving: Backend = {
   name: 'Waving',
@@ -38,7 +42,7 @@ const stories: Backend = { name: 'Stories', files: ['**/*.stories.ts'], words: w
 const specs: Backend = { name: 'Specs', files: ['features/*.gpp'], words: words() }
 const config: Config = { root: '/p', backends: [waving, stories, specs] }
 
-// Each mistake in these files, as file:line:column message.
+/** Each mistake in these files, as file:line:column message. */
 function mistakes(files: Record<string, string>): string[] {
   const loaded = Object.entries(files).map(([file, src]) => loadSource(`/p/${file}`, src))
   return checkFiles(loaded, config).diagnostics.map(

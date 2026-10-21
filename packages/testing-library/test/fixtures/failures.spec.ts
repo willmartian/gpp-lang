@@ -1,12 +1,14 @@
-// Tests' gpp templates that must fail, the way @gpp-lang/playwright's
-// test/fixtures/broken.gpp must. Each scenario passes only when it fails with
-// the message in its name.
+/*
+ * Tests' gpp templates that must fail, the way @gpp-lang/playwright's
+ * test/fixtures/broken.gpp must. Each scenario passes only when it fails with
+ * the message in its name.
+ */
 
 import { expect, test } from 'vitest'
 import { editor } from '../../../../examples/storybook/stories/editor.ts'
 import { checked, mistake, play, read } from '../../src/feature.ts'
 
-// Like gpp, but each test passes only if its scenario fails with its name.
+/** Like gpp, but each test passes only if its scenario fails with its name. */
 function fails(strings: TemplateStringsArray, ...values: unknown[]): void {
   const { read: template, problem } = read(strings.raw)
   if (problem !== null) throw new Error(problem)

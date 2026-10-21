@@ -1,13 +1,15 @@
-// Starts Gherkin++'s language server for .gpp files, the ```gpp blocks in
-// Markdown files, and the gpp`…` templates, Storybook play functions, in
-// JavaScript and TypeScript. Running and debugging scenarios is Playwright's VS Code
-// extension's job: Gherkin++'s generated tests map back to the .gpp files, so
-// it puts its run and debug buttons beside each scenario.
-//
-// Which server: the one the gpp.path setting names; else the
-// workspace's own node_modules/gpp-lang, so the editor agrees with the tests it
-// runs, but only in a trusted workspace, since that's running the
-// workspace's code; else the one bundled with this extension.
+/*
+ * Starts Gherkin++'s language server for .gpp files, the ```gpp blocks in
+ * Markdown files, and the gpp`…` templates, Storybook play functions, in
+ * JavaScript and TypeScript. Running and debugging scenarios is Playwright's VS Code
+ * extension's job: Gherkin++'s generated tests map back to the .gpp files, so
+ * it puts its run and debug buttons beside each scenario.
+ *
+ * Which server: the one the gpp.path setting names; else the
+ * workspace's own node_modules/gpp-lang, so the editor agrees with the tests it
+ * runs, but only in a trusted workspace, since that's running the
+ * workspace's code; else the one bundled with this extension.
+ */
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,8 +22,10 @@ let client: LanguageClient | undefined
 
 export async function activate(context: ExtensionContext): Promise<void> {
   const server = findServer(context)
-  // The bundled server runs on VS Code's own Node; any other on gpp.node,
-  // since it may be Gherkin++'s source, which needs a Node that runs TypeScript.
+  /**
+   * The bundled server runs on VS Code's own Node; any other on gpp.node,
+   * since it may be Gherkin++'s source, which needs a Node that runs TypeScript.
+   */
   const folder = workspace.workspaceFolders?.[0]
   const runtime = server.bundled
     ? undefined
@@ -37,11 +41,11 @@ export async function activate(context: ExtensionContext): Promise<void> {
         language,
       })),
     ],
-    // gpp.config.ts says which files make up each project, and their backends.
+    /** gpp.config.ts says which files make up each project, and their backends. */
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher('**/{*.gpp,*.md,*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}}'),
     },
-    // Loading gpp.config.ts runs it, so not in an untrusted workspace.
+    /** Loading gpp.config.ts runs it, so not in an untrusted workspace. */
     initializationOptions: { trusted: workspace.isTrusted },
   }
   client = new LanguageClient('gpp', 'Gherkin++', serverOptions, clientOptions)
@@ -60,8 +64,10 @@ export function deactivate(): Thenable<void> | undefined {
   return client?.stop()
 }
 
-// gpp.node: a command on PATH, like "node", or a path, relative to the
-// workspace folder, like a script that sets up the environment first.
+/**
+ * gpp.node: a command on PATH, like "node", or a path, relative to the
+ * workspace folder, like a script that sets up the environment first.
+ */
 function resolveNode(setting: string | undefined, root: string): string {
   if (!setting) return 'node'
   return setting.includes('/') || setting.includes('\\') ? path.resolve(root, setting) : setting

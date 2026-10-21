@@ -1,7 +1,9 @@
-// The driver that runs the language's words in a browser, with Playwright.
-//
-// Playwright's getBy* locators implement Testing Library's queries, and its
-// expect retries until a check passes, which is what the words ask of a driver.
+/*
+ * The driver that runs the language's words in a browser, with Playwright.
+ *
+ * Playwright's getBy* locators implement Testing Library's queries, and its
+ * expect retries until a check passes, which is what the words ask of a driver.
+ */
 
 import type { Context, Driver } from '@gpp-lang/core'
 import type { expect, Locator, Page } from '@playwright/test'
@@ -76,7 +78,7 @@ export const playwright: Driver<BrowserContext, Locator> = {
 
   expect(ctx, target, state, not, once) {
     const e = not ? ctx.expect(target).not : ctx.expect(target)
-    // Checking once is a check that times out straight away; it still looks.
+    /** Checking once is a check that times out straight away; it still looks. */
     const o = once ? { timeout: 1 } : {}
     switch (state.is) {
       case 'visible':
@@ -110,7 +112,7 @@ export const playwright: Driver<BrowserContext, Locator> = {
     return target.all()
   },
 
-  // expect.poll retries for as long as the project's expect timeout.
+  /** expect.poll retries for as long as the project's expect timeout. */
   async retry(ctx, attempt) {
     let last: unknown
     const passes = async () => {

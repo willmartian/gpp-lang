@@ -1,5 +1,7 @@
-// What Render renders here: a function that makes an element, as the plain
-// DOM editor's do.
+/*
+ * What Render renders here: a function that makes an element, as the plain
+ * DOM editor's do.
+ */
 import { afterEach } from 'vitest'
 import { renderWith } from '../../src/index.ts'
 

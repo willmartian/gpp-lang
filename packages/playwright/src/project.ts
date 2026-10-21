@@ -1,6 +1,8 @@
-// A project as a Playwright run sees it: the files its gpp.config.ts says
-// Playwright runs, loaded with every Define in the project, and what the
-// checker found in them.
+/*
+ * A project as a Playwright run sees it: the files its gpp.config.ts says
+ * Playwright runs, loaded with every Define in the project, and what the
+ * checker found in them.
+ */
 
 import path from 'node:path'
 import type { GppFile, Report, Scenario, Vocabulary } from '@gpp-lang/core'
@@ -8,17 +10,17 @@ import { backendOf, check, isScript, LoadError, leftovers } from '@gpp-lang/core
 import { load, projectFiles } from '@gpp-lang/core/node'
 import { playwright } from './config.ts'
 
-// What a generated test file is told about its project.
+/** What a generated test file is told about its project. */
 export interface Project {
-  // the config's directory
+  /** the config's directory */
   root: string
-  // the files Playwright runs, as globs from the root
+  /** the files Playwright runs, as globs from the root */
   files: string[]
   outputDir: string
 }
 
 export interface Loaded {
-  // every .gpp file and Markdown file, with the Features of those Playwright runs
+  /** every .gpp file and Markdown file, with the Features of those Playwright runs */
   files: GppFile[]
   broken: Map<string, LoadError>
   vocabulary: Vocabulary[]

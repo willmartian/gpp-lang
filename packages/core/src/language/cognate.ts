@@ -1,25 +1,27 @@
-// A small Cognate-flavoured interpreter.
-//
-// Cognate reads like prose because only capitalised words are code: lowercase
-// words are comments, and statements run right to left, so a verb written
-// first runs last, after everything it acts on has been evaluated.
-//
-//     Click the Button "Sign in"
-//
-// pushes "Sign in", Button turns it into a locator, Click clicks it. That is
-// the whole trick Gherkin++ is built on.
-//
-// Lexical rules follow CognaC (cognate-lang/cognate, src/lexer.l), except:
-//
-//   - Commas, colons and full stops standing on their own are prose
-//     punctuation and skipped, so "Then I See "Welcome"." still parses.
-//   - Each line is one statement; there are no semicolons.
-//   - Blocks are a colon ending a line plus an indented body, as in Gherkin,
-//     not parentheses. Define is a section keyword, like Gherkin's: its
-//     colon comes first, "Define: Add", and its body is indented under it.
-//   - Comments are Gherkin's: a line starting with #.
-//   - In a test's gpp template, ${0}, ${1}… stand for what its ${…} hold,
-//     in order (sections.ts), and leave what they hold. Nowhere else has them.
+/*
+ * A small Cognate-flavoured interpreter.
+ *
+ * Cognate reads like prose because only capitalised words are code: lowercase
+ * words are comments, and statements run right to left, so a verb written
+ * first runs last, after everything it acts on has been evaluated.
+ *
+ *     Click the Button "Sign in"
+ *
+ * pushes "Sign in", Button turns it into a locator, Click clicks it. That is
+ * the whole trick Gherkin++ is built on.
+ *
+ * Lexical rules follow CognaC (cognate-lang/cognate, src/lexer.l), except:
+ *
+ *   - Commas, colons and full stops standing on their own are prose
+ *     punctuation and skipped, so "Then I See "Welcome"." still parses.
+ *   - Each line is one statement; there are no semicolons.
+ *   - Blocks are a colon ending a line plus an indented body, as in Gherkin,
+ *     not parentheses. Define is a section keyword, like Gherkin's: its
+ *     colon comes first, "Define: Add", and its body is indented under it.
+ *   - Comments are Gherkin's: a line starting with #.
+ *   - In a test's gpp template, ${0}, ${1}… stand for what its ${…} hold,
+ *     in order (sections.ts), and leave what they hold. Nowhere else has them.
+ */
 
 import type { Context, Doc, Form, Type } from './types.ts'
 import { AnyType, article, formsFor, Interpolated, NumberType, signature, TableType, TextType, type } from './types.ts'
@@ -49,8 +51,10 @@ export type Node = Located &
     | { type: 'block'; body: Program }
   )
 
-// What a Define takes, from its header: "Cart (Source)" is a Cart called
-// Source, and a bare "Cart" is a Cart called Cart.
+/**
+ * What a Define takes, from its header: "Cart (Source)" is a Cart called
+ * Source, and a bare "Cart" is a Cart called Cart.
+ */
 export type Param = Located & { kind: string; name: string }
 
 export type Statement = Node[]
@@ -66,8 +70,10 @@ type Lexeme =
   | { type: '(' }
   | { type: ')' }
 
-// Tokens carry their length, for editors, and their line and that line's
-// indentation, which is what blocks are made of.
+/**
+ * Tokens carry their length, for editors, and their line and that line's
+ * indentation, which is what blocks are made of.
+ */
 export type Token = Lexeme & Located & { length: number; line: number; indent: number }
 
 // ---------------------------------------------------------------- lexing
@@ -79,7 +85,7 @@ const SYMBOL = /\\[A-Za-z0-9\-?!'+/*>=<^.]+/y
 const STRING = /"((?:\\[abfnrtv\\"]|[^\n"\\])*)"/y
 const PROSE = /[,:.]+(?=[\s;]|$)/y
 const SLOT = /\$\{(\d+)\}/y
-// a colon that opens a block is the last thing on its line
+/** a colon that opens a block is the last thing on its line */
 const LINE_END = /[ \t]*(?:\n|$)/y
 
 const ESCAPES: Record<string, string> = {
@@ -94,8 +100,10 @@ const ESCAPES: Record<string, string> = {
   '"': '"',
 }
 
-// slots: whether ${0} and the like stand for a template's ${…}, as they do in
-// a script's steps.
+/**
+ * slots: whether ${0} and the like stand for a template's ${…}, as they do in
+ * a script's steps.
+ */
 export function lex(src: string, slots = false): Token[] {
   const tokens: Token[] = []
   let i = 0
@@ -132,7 +140,7 @@ export function lex(src: string, slots = false): Token[] {
       throw new GppError('One statement per line: put what comes after the ; on a line of its own', i)
     }
     if (c === '(' || c === ')') {
-      // Only a Define's header has them; the parser says so anywhere else.
+      /** Only a Define's header has them; the parser says so anywhere else. */
       push({ type: c }, 1)
       i++
       continue
@@ -157,8 +165,10 @@ export function lex(src: string, slots = false): Token[] {
     }
     const prose = at(PROSE)
     if (prose) {
-      // Punctuation between words isn't code, unless it's the colon that
-      // ends a line; the parser decides whether that opens a block.
+      /*
+       * Punctuation between words isn't code, unless it's the colon that
+       * ends a line; the parser decides whether that opens a block.
+       */
       if (prose[0].endsWith(':') && at(LINE_END, i + prose[0].length)) push({ type: ':' }, prose[0].length)
       i += prose[0].length
       continue
@@ -169,7 +179,7 @@ export function lex(src: string, slots = false): Token[] {
       i += symbol[0].length
       continue
     }
-    // a lowercase word: a comment
+    /** a lowercase word: a comment */
     const informal = at(INFORMAL)
     if (informal) {
       i += informal[0].length
@@ -177,12 +187,14 @@ export function lex(src: string, slots = false): Token[] {
     }
     const m = at(IDENT)
     if (m) {
-      // "Sign-in," or "Visit." — let trailing prose punctuation go
+      /** "Sign-in," or "Visit." — let trailing prose punctuation go */
       const name = m[0].replace(/[,:.]+$/, '') || m[0]
       push({ type: 'word', name }, name.length)
       i += name.length
-      // The colon in "Define: Add" is a keyword's, as in "Feature:", so it's
-      // kept for the parser wherever it is on the line.
+      /*
+       * The colon in "Define: Add" is a keyword's, as in "Feature:", so it's
+       * kept for the parser wherever it is on the line.
+       */
       if (/^define$/i.test(name) && src[i] === ':') {
         push({ type: ':' }, 1)
         i++
@@ -199,10 +211,12 @@ export function lex(src: string, slots = false): Token[] {
 
 type Line = { number: number; indent: number; tokens: Token[] }
 
-// A program is a list of statements, one per line; a statement is a list of
-// nodes; a block node holds a program of its own. A line ending in a colon
-// takes the more-indented lines after it as a block, placed at the end of
-// that line.
+/**
+ * A program is a list of statements, one per line; a statement is a list of
+ * nodes; a block node holds a program of its own. A line ending in a colon
+ * takes the more-indented lines after it as a block, placed at the end of
+ * that line.
+ */
 export function parse(src: string, { slots = false }: { slots?: boolean } = {}): Program {
   const lines: Line[] = []
   for (const t of lex(src, slots)) {
@@ -224,8 +238,10 @@ export function parse(src: string, { slots = false }: { slots?: boolean } = {}):
       const define = isDefine(line.tokens) ? line.tokens[1] : null
       const colon = define ?? (last?.type === ':' ? last : null)
       const statement = statementOf(line.tokens)
-      // A trailing colon with nothing indented under it was just prose; a
-      // Define with nothing under it is a mistake.
+      /**
+       * A trailing colon with nothing indented under it was just prose; a
+       * Define with nothing under it is a mistake.
+       */
       const next = lines[i]
       if (colon && next && next.indent > indent) {
         statement.push({ type: 'block', body: body(next.indent), pos: colon.pos })
@@ -245,7 +261,7 @@ export function parse(src: string, { slots = false }: { slots?: boolean } = {}):
   return program
 }
 
-// "Define: Add", a Define's header: a section keyword, like "Feature:".
+/** "Define: Add", a Define's header: a section keyword, like "Feature:". */
 const isDefine = (tokens: Token[]) =>
   tokens[0]?.type === 'word' && /^define$/i.test(tokens[0].name) && tokens[1]?.type === ':'
 
@@ -281,8 +297,10 @@ function statementOf(tokens: Token[]): Statement {
   return statement
 }
 
-// What a Define takes, after its name: each capitalised word is a kind, and
-// a word in ( ) after one names it. Lowercase words are prose, as anywhere.
+/**
+ * What a Define takes, after its name: each capitalised word is a kind, and
+ * a word in ( ) after one names it. Lowercase words are prose, as anywhere.
+ */
 function paramsOf(tokens: Token[]): Param[] {
   const params: Param[] = []
   const wrong = (t: Token) =>
@@ -335,10 +353,12 @@ export class Sym {
   }
 }
 
-// A Defined word: its body, and the kinds it takes, named, in reading order.
-//
-// Its header's kinds are looked up when it's first called, not when it's
-// Defined, since a noun it takes may be Defined in a later file.
+/**
+ * A Defined word: its body, and the kinds it takes, named, in reading order.
+ *
+ * Its header's kinds are looked up when it's first called, not when it's
+ * Defined, since a noun it takes may be Defined in a later file.
+ */
 export class Definition {
   name: string
   block: Block
@@ -356,10 +376,12 @@ export class Definition {
   }
 }
 
-// Every Define of one word, most particular first: those that take more,
-// then those whose kinds are narrower (a Cart before an Element, anything
-// before Any). A call runs the first whose kinds are on the stack. The checker
-// orders them the same way, and says when two could always both fit.
+/**
+ * Every Define of one word, most particular first: those that take more,
+ * then those whose kinds are narrower (a Cart before an Element, anything
+ * before Any). A call runs the first whose kinds are on the stack. The checker
+ * orders them the same way, and says when two could always both fit.
+ */
 export class Definitions {
   list: Definition[]
 
@@ -374,8 +396,10 @@ export class Definitions {
 export const specificity = (d: { params: { type: Type }[] }) =>
   d.params.reduce((n, p) => n + (p.type.base ? 2 : p.type === AnyType ? 0 : 1), 0)
 
-// What a noun leaves: a value, labelled with the noun's kind. Words that take
-// the kind check the label; any other word gets the value itself.
+/**
+ * What a noun leaves: a value, labelled with the noun's kind. Words that take
+ * the kind check the label; any other word gets the value itself.
+ */
 export class Kinded implements Describable {
   kind: string
   value: unknown
@@ -391,8 +415,10 @@ export class Kinded implements Describable {
 
 export const unwrap = (v: unknown) => (v instanceof Kinded ? v.value : v)
 
-// The kind a noun, a Define that leaves one value, makes of what it leaves.
-// Only the checker knows what that value is, so here its base is Any.
+/**
+ * The kind a noun, a Define that leaves one value, makes of what it leaves.
+ * Only the checker knows what that value is, so here its base is Any.
+ */
 function nounKind(name: string): Type<Kinded> {
   return {
     name,
@@ -403,7 +429,7 @@ function nounKind(name: string): Type<Kinded> {
   }
 }
 
-// Anything that knows how to name itself in an error message.
+/** Anything that knows how to name itself in an error message. */
 export interface Describable {
   describe(): string
 }
@@ -423,25 +449,27 @@ type Word = readonly Form[] | Definitions | { value: unknown }
 
 export class Env {
   parent: Env | null
-  // Keyed in lowercase, since only a word's first letter has to be a capital.
+  /** Keyed in lowercase, since only a word's first letter has to be a capital. */
   words = new Map<string, Word>()
-  // How each word was written where it was made, for editors to offer.
+  /** How each word was written where it was made, for editors to offer. */
   spellings = new Map<string, string>()
-  // The kinds a Define's header can name, keyed in lowercase.
+  /** The kinds a Define's header can name, keyed in lowercase. */
   kinds = new Map<string, Type>()
-  // What builtins are for, keyed in lowercase.
+  /** What builtins are for, keyed in lowercase. */
   docs = new Map<string, Doc>()
 
   constructor(parent: Env | null = null) {
     this.parent = parent
   }
-  // A builtin, in one or more forms.
+  /** A builtin, in one or more forms. */
   word(name: string, ...forms: Form[]): this {
     return this.set(name, forms)
   }
-  // What some builtins are for, for people. They're listed in the order
-  // they're documented, so a word made again, like the quantifier None after
-  // the role, moves to where it was documented last.
+  /**
+   * What some builtins are for, for people. They're listed in the order
+   * they're documented, so a word made again, like the quantifier None after
+   * the role, moves to where it was documented last.
+   */
   doc(doc: Doc, ...names: string[]): this {
     for (const name of names) {
       this.docs.delete(name.toLowerCase())
@@ -453,15 +481,17 @@ export class Env {
     const key = name.toLowerCase()
     for (let e: Env | null = this; e; e = e.parent) if (e.docs.has(key)) return e.docs.get(key)
   }
-  // A Defined word.
-  // Another Define of a word adds to it, here; one in an inner scope hides it.
+  /**
+   * A Defined word.
+   * Another Define of a word adds to it, here; one in an inner scope hides it.
+   */
   def(name: string, definition: Definition): this {
     const here = this.words.get(name.toLowerCase())
     if (!(here instanceof Definitions)) return this.set(name, new Definitions(definition))
     here.list.push(definition)
     return this
   }
-  // A kind a Define can take, like Text or Element. A noun makes one too.
+  /** A kind a Define can take, like Text or Element. A noun makes one too. */
   kind(t: Type): this {
     this.kinds.set(t.name.toLowerCase(), t)
     return this
@@ -472,11 +502,11 @@ export class Env {
     const word = this.lookup(name)
     if (word instanceof Definitions) return nounKind(word.list[0].name)
   }
-  // The built-in kinds, nearest first.
+  /** The built-in kinds, nearest first. */
   *builtinKinds(): Generator<Type> {
     for (let e: Env | null = this; e; e = e.parent) yield* e.kinds.values()
   }
-  // A value, like what a Define was given, under the name its header gives it.
+  /** A value, like what a Define was given, under the name its header gives it. */
   bind(name: string, value: unknown): this {
     return this.set(name, { value })
   }
@@ -489,12 +519,12 @@ export class Env {
     const key = name.toLowerCase()
     for (let e: Env | null = this; e; e = e.parent) if (e.words.has(key)) return e.words.get(key)
   }
-  // A builtin's forms, or undefined if the word isn't a builtin.
+  /** A builtin's forms, or undefined if the word isn't a builtin. */
   forms(name: string): readonly Form[] | undefined {
     const word = this.lookup(name)
     return Array.isArray(word) ? word : undefined
   }
-  // Every word in scope, as it was spelled.
+  /** Every word in scope, as it was spelled. */
   *names(): Generator<string> {
     for (let e: Env | null = this; e; e = e.parent) yield* e.spellings.values()
   }
@@ -503,8 +533,10 @@ export class Env {
 // ---------------------------------------------------------------- stack
 
 export class Stack extends Array<unknown> {
-  // Pops one value of the given type, for Define, which is syntax, not a
-  // word; words say what they take in their forms instead.
+  /**
+   * Pops one value of the given type, for Define, which is syntax, not a
+   * word; words say what they take in their forms instead.
+   */
   take<T>(word: string, t: Type<T>): T {
     if (!this.length) throw new GppError(`${word} expected ${t.phrase}, but there was nothing left`)
     const v = this.pop()
@@ -522,8 +554,10 @@ export async function run(program: Program, env: Env, stack: Stack, ctx: Context
       try {
         await evaluate(node, env, stack, ctx)
       } catch (err) {
-        // Outermost wins: an error deep inside a Defined word is reported at
-        // the word the step actually wrote.
+        /*
+         * Outermost wins: an error deep inside a Defined word is reported at
+         * the word the step actually wrote.
+         */
         if (err instanceof Object) (err as { pos?: number }).pos = node.pos
         throw err
       }
@@ -542,9 +576,11 @@ export async function call(
   await run(block.body, env, stack, ctx)
 }
 
-// A Definition as a form, so it's called like any word, taking what its
-// header says off the stack. Its body runs on a stack of its own, so it can't
-// reach into its caller's; what it leaves goes on its caller's.
+/**
+ * A Definition as a form, so it's called like any word, taking what its
+ * header says off the stack. Its body runs on a stack of its own, so it can't
+ * reach into its caller's; what it leaves goes on its caller's.
+ */
 function formOf(d: Definition, stack: Stack): Form<Context> {
   return {
     inputs: d.params.map((p) => p.type),
@@ -557,14 +593,16 @@ function formOf(d: Definition, stack: Stack): Form<Context> {
   }
 }
 
-// Whether a Define left what a noun leaves: one value, of a built-in kind
-// other than Any. The checker decides the same, from types.
+/**
+ * Whether a Define left what a noun leaves: one value, of a built-in kind
+ * other than Any. The checker decides the same, from types.
+ */
 function isNoun(left: unknown[], env: Env): boolean {
   if (left.length !== 1) return false
   return [...env.builtinKinds()].some((k) => k !== AnyType && k.test(unwrap(left[0])))
 }
 
-// The kinds a Define's header names, or the first that isn't one.
+/** The kinds a Define's header names, or the first that isn't one. */
 export function resolve(params: Param[], env: Env): { name: string; type: Type }[] {
   return params.map((p) => {
     const t = env.kindOf(p.kind)
@@ -578,15 +616,19 @@ export function notAKind(name: string, builtins: Iterable<Type>): string {
   return `${name} isn't a type a Define can take. The types are ${kinds}, and nouns: Defines that leave one of those`
 }
 
-// Whether a value is what a form's input takes, and what the form is given.
-// A kind's input takes the labelled value; any other, the value itself.
+/**
+ * Whether a value is what a form's input takes, and what the form is given.
+ * A kind's input takes the labelled value; any other, the value itself.
+ */
 const accepts = (t: Type, v: unknown) => (t.base ? t.test(v) : t.test(unwrap(v)))
 const given = (t: Type, v: unknown) => (t.base ? v : unwrap(v))
 
 const BlockType = type('Block', 'an indented block after a colon', (v): v is Block => v instanceof Block)
 
-// Calls the first form whose inputs are on top of the stack. If none are,
-// says what was wanted at the first place every form had given up.
+/**
+ * Calls the first form whose inputs are on top of the stack. If none are,
+ * says what was wanted at the first place every form had given up.
+ */
 export async function apply(name: string, forms: readonly Form[], stack: Stack, ctx: Context): Promise<void> {
   const fits = (f: Form) => f.inputs.every((t, i) => i < stack.length && accepts(t, stack[stack.length - 1 - i]))
   const form = forms.find(fits)
@@ -685,8 +727,10 @@ function distance(a: string, b: string): number {
 
 // ---------------------------------------------------------------- core words
 
-// Deliberately small: no conditionals, loops or arithmetic. A spec should read
-// the same every time it runs, so there's nothing in it to branch on.
+/**
+ * Deliberately small: no conditionals, loops or arithmetic. A spec should read
+ * the same every time it runs, so there's nothing in it to branch on.
+ */
 export function core(): Env {
   const form = formsFor<Context>()
   return (

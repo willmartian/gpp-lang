@@ -1,25 +1,29 @@
-// How a file divides into its Defines and its Gherkin, and, for editors,
-// where on each line the code is. Every part is a copy of the whole file with
-// the other lines blanked, so line numbers in errors stay true.
+/*
+ * How a file divides into its Defines and its Gherkin, and, for editors,
+ * where on each line the code is. Every part is a copy of the whole file with
+ * the other lines blanked, so line numbers in errors stay true.
+ */
 
 import { dialects } from '@cucumber/gherkin'
 import { gppFences, isMarkdown } from './markdown.ts'
 import { isScript, templates } from './templates.ts'
 
-// Something about how a file divides that makes it a mistake, and where.
+/** Something about how a file divides that makes it a mistake, and where. */
 export interface Problem {
   line: number
   column: number
   message: string
 }
 
-// A file's parts: its Defines, and its Gherkin, a Feature each.
+/** A file's parts: its Defines, and its Gherkin, a Feature each. */
 export interface Sections {
   preambles: string[]
   documents: string[]
   problems: Problem[]
-  // For a script, what its templates are: a story's steps, or Features, as
-  // a test's are. A backend says which of these its templates are.
+  /**
+   * For a script, what its templates are: a story's steps, or Features, as
+   * a test's are. A backend says which of these its templates are.
+   */
   templates?: Templates
 }
 
@@ -34,9 +38,11 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const featureKeywords = [...new Set(Object.values(dialects).flatMap((d) => d.feature))]
 const FEATURE = new RegExp(`^\\s*(?:${featureKeywords.map(escapeRegExp).join('|')}):`)
 
-// Splits a file at its Feature line, taking the tags and comments just above
-// it along. Both halves keep every line, blanked where they belong to the
-// other, so line numbers in errors stay true.
+/**
+ * Splits a file at its Feature line, taking the tags and comments just above
+ * it along. Both halves keep every line, blanked where they belong to the
+ * other, so line numbers in errors stay true.
+ */
 export function split(src: string): { preamble: string; gherkin: string | null } {
   const lines = src.split('\n')
   let start = lines.findIndex((l) => FEATURE.test(l))
@@ -49,8 +55,10 @@ export function split(src: string): { preamble: string; gherkin: string | null }
   }
 }
 
-// Whether a block starts like the middle of a Feature: with any Gherkin
-// keyword but Feature, a tag or a table.
+/**
+ * Whether a block starts like the middle of a Feature: with any Gherkin
+ * keyword but Feature, a tag or a table.
+ */
 function carriesOn(first: string, language: string): boolean {
   const d = dialects[language] ?? dialects.en
   const sections = [...d.background, ...d.scenario, ...d.scenarioOutline, ...d.rule, ...d.examples].map((k) => `${k}:`)
@@ -59,18 +67,20 @@ function carriesOn(first: string, language: string): boolean {
   return /^[@|]/.test(trimmed) || [...sections, ...steps].some((k) => trimmed.startsWith(k))
 }
 
-// A Markdown file's ```gpp blocks, in order. A block with a Feature line
-// starts a new Feature, and anything above that line in it is Defines. A
-// block that starts like Gherkin carries on the Feature before it, so prose
-// can sit between the scenarios of one Feature. Any other block is Defines,
-// and every file shares them, as it does a .gpp file's.
+/**
+ * A Markdown file's ```gpp blocks, in order. A block with a Feature line
+ * starts a new Feature, and anything above that line in it is Defines. A
+ * block that starts like Gherkin carries on the Feature before it, so prose
+ * can sit between the scenarios of one Feature. Any other block is Defines,
+ * and every file shares them, as it does a .gpp file's.
+ */
 function markdownSections(src: string): Sections {
   const lines = src.split('\n')
   const language = /^\s*#\s*language:\s*(\S+)/m.exec(src)?.[1] ?? 'en'
   const preambles: Set<number>[] = []
   const documents: Set<number>[] = []
   const problems: Problem[] = []
-  // A block's lines that a view of it keeps, as lines of the whole file.
+  /** A block's lines that a view of it keeps, as lines of the whole file. */
   const kept = (view: string, start: number) => new Set(view.split('\n').flatMap((l, i) => (l ? [start + i] : [])))
 
   for (const fence of gppFences(src)) {
@@ -97,16 +107,18 @@ function markdownSections(src: string): Sections {
   return { preambles: preambles.filter((p) => p.size).map(view), documents: documents.map(view), problems }
 }
 
-// A script's gpp templates. A template's view keeps its text where it is.
-//
-// Each ${…} becomes ${0}, ${1}… in order, padded to its width so what follows
-// stays where it was. One over several lines takes the rest of its last line
-// up to its first. Whether anything takes one is up to the backend's words.
-//
-// A template is either a Feature, as a test's is, or the steps of a Feature
-// of one Scenario, as a story's are, named for the story it's in, with the
-// Feature and Scenario lines on the two lines above its first step, which the
-// view has blanked.
+/**
+ * A script's gpp templates. A template's view keeps its text where it is.
+ *
+ * Each ${…} becomes ${0}, ${1}… in order, padded to its width so what follows
+ * stays where it was. One over several lines takes the rest of its last line
+ * up to its first. Whether anything takes one is up to the backend's words.
+ *
+ * A template is either a Feature, as a test's is, or the steps of a Feature
+ * of one Scenario, as a story's are, named for the story it's in, with the
+ * Feature and Scenario lines on the two lines above its first step, which the
+ * view has blanked.
+ */
 function scriptSections(src: string): Sections {
   const lines = src.split('\n')
   const starts: number[] = []
@@ -160,11 +172,13 @@ function scriptSections(src: string): Sections {
   return { preambles: [], documents, problems, ...(found.length > 0 && { templates: kind }) }
 }
 
-// What a script's templates are: a story's steps, or Features.
+/** What a script's templates are: a story's steps, or Features. */
 export type Templates = 'steps' | 'features'
 
-// Whether a template is a test's, a Feature, rather than a story's steps: its
-// first line that isn't blank, a comment or a tag starts with Feature:.
+/**
+ * Whether a template is a test's, a Feature, rather than a story's steps: its
+ * first line that isn't blank, a comment or a tag starts with Feature:.
+ */
 export function isFeatureTemplate(text: string): boolean {
   const first = text.split('\n').find((l) => l.trim() && !/^\s*[#@]/.test(l))
   return first !== undefined && FEATURE.test(first)
@@ -173,9 +187,11 @@ export function isFeatureTemplate(text: string): boolean {
 const STEP = /^(?:Given|When|Then|And|But|\*)\s/
 const DOC_STRING = /^(?:"""|```)/
 
-// The first line of a template that isn't a step, a table or DocString under
-// one, or a comment, as a Scenario's lines are. Gherkin's own message for one
-// lists its grammar.
+/**
+ * The first line of a template that isn't a step, a table or DocString under
+ * one, or a comment, as a Scenario's lines are. Gherkin's own message for one
+ * lists its grammar.
+ */
 function notAStep(view: string[], first: number, last: number): Problem | null {
   let inDocString = false
   for (let i = first; i <= last; i++) {
@@ -193,13 +209,15 @@ function notAStep(view: string[], first: number, last: number): Problem | null {
   return null
 }
 
-// The story a template is in: the last export above it.
+/** The story a template is in: the last export above it. */
 const storyName = (before: string) => [...before.matchAll(/export\s+const\s+([\w$]+)/g)].at(-1)?.[1] ?? 'Story'
 
 // ---------------------------------------------------------------- editors
 
-// Where each line's code is, for editors: all of a Define line, the text after
-// a step's keyword, nothing on the rest. keyword is a step's, if it has one.
+/**
+ * Where each line's code is, for editors: all of a Define line, the text after
+ * a step's keyword, nothing on the rest. keyword is a step's, if it has one.
+ */
 export interface CodeLine {
   offset: number
   text: string
@@ -208,7 +226,7 @@ export interface CodeLine {
 
 export function codeLines(src: string, file = ''): (CodeLine | null)[] {
   const { preambles, documents } = sections(file, src)
-  // Each line as its part has it: a template's line without the code around it.
+  /** Each line as its part has it: a template's line without the code around it. */
   const lines = src.split('\n').map(() => '')
   const kept = (views: string[]) => {
     const keep = lines.map(() => false)
@@ -235,7 +253,7 @@ export function codeLines(src: string, file = ''): (CodeLine | null)[] {
     if (!trimmed || trimmed.startsWith('#')) return null
     if (defines[i]) return { offset: 0, text: line }
     if (!gherkin[i]) return null
-    // Doc strings can hold anything, including lines that look like steps.
+    /** Doc strings can hold anything, including lines that look like steps. */
     const fence = /^("""|```)/.exec(trimmed)?.[1]
     if (fence && (docString === null || docString === fence)) {
       docString = docString === null ? fence : null

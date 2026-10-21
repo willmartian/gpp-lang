@@ -1,5 +1,7 @@
-// Gherkin++ that must fail, the way @gpp-lang/playwright's test/fixtures/broken.gpp must.
-// Each story passes only when its template fails with the message given.
+/*
+ * Gherkin++ that must fail, the way @gpp-lang/playwright's test/fixtures/broken.gpp must.
+ * Each story passes only when its template fails with the message given.
+ */
 
 import type { Meta, StoryObj } from '@storybook/html-vite'
 import { fn } from 'storybook/test'
@@ -16,7 +18,7 @@ export default {
 
 type Story = StoryObj<EditorArgs>
 
-// A play function that passes only if play fails with this message.
+/** A play function that passes only if play fails with this message. */
 function fails(message: string, play: Play): Play {
   return async (context) => {
     try {

@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import type { AnyDriver } from '../src/index.ts'
 import { loadSource, runSteps, settle, words } from '../src/index.ts'
 
-// A driver that writes down what it's asked to do, finding things as strings.
+/** A driver that writes down what it's asked to do, finding things as strings. */
 function recorder() {
   const done: string[] = []
   const driver: AnyDriver = {

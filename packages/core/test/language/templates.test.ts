@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { LoadError, loadSource, templates } from '../../src/index.ts'
 
-// The text of each gpp template in some JavaScript.
+/** The text of each gpp template in some JavaScript. */
 const texts = (src: string) => templates(src).map((t) => src.slice(t.start, t.end))
 
 test('gpp templates are found, and other templates are not', () => {
@@ -56,7 +56,7 @@ test('each template is a scenario, named for its story, with its steps where the
   )
 })
 
-// The problems a script that can't be read has, as line:column message.
+/** The problems a script that can't be read has, as line:column message. */
 function problems(src: string): string[] {
   try {
     loadSource('a.stories.ts', src)

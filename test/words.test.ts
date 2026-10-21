@@ -8,8 +8,10 @@ import { discover, load } from '@gpp-lang/core/node'
 import { playwright } from '@gpp-lang/playwright/config'
 import { listWords } from 'gpp-lang'
 
-// The listing for some .gpp files, given as name → contents, in a project
-// that runs them with Playwright.
+/**
+ * The listing for some .gpp files, given as name → contents, in a project
+ * that runs them with Playwright.
+ */
 function listWordsOf(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-words-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)

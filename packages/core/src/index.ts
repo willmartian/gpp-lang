@@ -1,6 +1,8 @@
-// @gpp-lang/core: the language, its words and its checker, and the driver a
-// backend, like @gpp-lang/playwright or @gpp-lang/storybook, implements to run
-// them. It runs anywhere, a browser too; @gpp-lang/core/node has what needs Node.
+/*
+ * `@gpp-lang/core`: the language, its words and its checker, and the driver a
+ * backend, like @gpp-lang/playwright or @gpp-lang/storybook, implements to run
+ * them. It runs anywhere, a browser too; @gpp-lang/core/node has what needs Node.
+ */
 
 export type { Backend, Config } from './config.ts'
 export { backendOf, globToRegExp } from './config.ts'

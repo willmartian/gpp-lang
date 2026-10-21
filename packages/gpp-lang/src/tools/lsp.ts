@@ -1,28 +1,30 @@
-// The language server, for any editor that speaks LSP: run it as `gpp-lang lsp`.
-//
-// It works on .gpp files, on the ```gpp blocks in Markdown files, and on the
-// gpp`…` templates in .js and .ts files, which are Storybook play functions.
-// It keeps every project checked as you type, since Defines are shared
-// between a project's files, and answers from that. A project is the files
-// under a gpp.config.ts, each checked on its own, so two can Define the same
-// word, and its config says which backend's words each file has. Loading the
-// config runs it, so a client that says the workspace isn't trusted gets no
-// mistakes but files that don't parse, and answers from the shared words.
-//
-//   - diagnostics: the checker's mistakes, and files that don't parse
-//   - hover: a word's signatures; a Define's are inferred
-//   - go to definition: a Define'd word's Define
-//   - references: everywhere a Define'd or built-in word is used
-//   - symbols: a file's Defines and scenarios, and a search across the
-//     project's, for tools that look things up by name
-//   - completion: every word in scope, with the ones that fit first. What
-//     fits is worked out from the code to the cursor's left, which runs after
-//     whatever is written at the cursor: after "Click the", something on the
-//     page.
-//   - semantic tokens: the capitalised words that are code, so an editor
-//     can pick them out of the prose without a grammar for Gherkin++. Not in
-//     scripts, whose own language's tokens they'd replace: a client that can
-//     is told which documents to ask about.
+/*
+ * The language server, for any editor that speaks LSP: run it as `gpp-lang lsp`.
+ *
+ * It works on .gpp files, on the ```gpp blocks in Markdown files, and on the
+ * gpp`…` templates in .js and .ts files, which are Storybook play functions.
+ * It keeps every project checked as you type, since Defines are shared
+ * between a project's files, and answers from that. A project is the files
+ * under a gpp.config.ts, each checked on its own, so two can Define the same
+ * word, and its config says which backend's words each file has. Loading the
+ * config runs it, so a client that says the workspace isn't trusted gets no
+ * mistakes but files that don't parse, and answers from the shared words.
+ *
+ *   - diagnostics: the checker's mistakes, and files that don't parse
+ *   - hover: a word's signatures; a Define's are inferred
+ *   - go to definition: a Define'd word's Define
+ *   - references: everywhere a Define'd or built-in word is used
+ *   - symbols: a file's Defines and scenarios, and a search across the
+ *     project's, for tools that look things up by name
+ *   - completion: every word in scope, with the ones that fit first. What
+ *     fits is worked out from the code to the cursor's left, which runs after
+ *     whatever is written at the cursor: after "Click the", something on the
+ *     page.
+ *   - semantic tokens: the capitalised words that are code, so an editor
+ *     can pick them out of the prose without a grammar for Gherkin++. Not in
+ *     scripts, whose own language's tokens they'd replace: a client that can
+ *     is told which documents to ask about.
+ */
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -71,17 +73,17 @@ export function startServer(): void {
 
   let roots: string[] = []
   let onDisk: string[] = []
-  // Whether the client trusts the workspace, so its configs may run.
+  /** Whether the client trusts the workspace, so its configs may run. */
   let trusted = true
-  // Each project's config, by its root, and why any that didn't load didn't.
+  /** Each project's config, by its root, and why any that didn't load didn't. */
   let configs = new Map<string, Config>()
   let configErrors = new Map<string, string>()
-  // Each project, by its root, checked.
+  /** Each project, by its root, checked. */
   let checked = new Map<string, Checked>()
-  // Whether the client is told which documents have semantic tokens.
+  /** Whether the client is told which documents have semantic tokens. */
   let registersTokens = false
   let steps = new Map<string, Step>()
-  // Every file's text, open or not, and what it loaded as.
+  /** Every file's text, open or not, and what it loaded as. */
   let sources = new Map<string, string>()
   let loaded: GppFile[] = []
   let published = new Set<string>()
@@ -127,7 +129,7 @@ export function startServer(): void {
     configErrors = errors
   }
 
-  // A file's project: the directory of the nearest gpp.config.ts, if any.
+  /** A file's project: the directory of the nearest gpp.config.ts, if any. */
   const projectOf = (file: string): string | null => {
     const config = findConfig(path.dirname(file))
     return config && path.dirname(config)
@@ -214,7 +216,7 @@ export function startServer(): void {
     await rediscover()
     refresh()
   })
-  // Files, and configs, may have come or gone.
+  /** Files, and configs, may have come or gone. */
   const reload = () => rediscover().then(soon, (err: unknown) => connection.console.error(`Gherkin++: ${String(err)}`))
   documents.onDidChangeContent(soon)
   documents.onDidSave(reload)
@@ -224,14 +226,18 @@ export function startServer(): void {
   // ---------------------------------------------------------------- words
 
   const key = (file: string, line: number) => `${file}:${line}`
-  // Open files as they are in the editor, others as they were last read.
+  /** Open files as they are in the editor, others as they were last read. */
   const textOf = (file: string) => documents.get(toUri(file))?.getText() ?? sources.get(file)
-  // What the checker should be asked about a line: its step, or, elsewhere,
-  // the line itself, which in a Define's body sees what the header takes.
+  /**
+   * What the checker should be asked about a line: its step, or, elsewhere,
+   * the line itself, which in a Define's body sees what the header takes.
+   */
   const stepAt = (file: string, line: number): Step | Line => steps.get(key(file, line + 1)) ?? { file, line: line + 1 }
 
-  // A word where it's written: its name, the step it's in, and whether it's
-  // the name a Define declares.
+  /**
+   * A word where it's written: its name, the step it's in, and whether it's
+   * the name a Define declares.
+   */
   interface Written {
     name: string
     file: string
@@ -250,7 +256,7 @@ export function startServer(): void {
     declares: /^\s*Define:?\s*$/i.test(code.text.slice(0, t.pos)),
   })
 
-  // The code on a line, and the word the cursor is on, if any.
+  /** The code on a line, and the word the cursor is on, if any. */
   function wordAt(uri: string, position: Position): (Written & { range: Range }) | null {
     const file = toPath(uri)
     const code = codeLines(textOf(file) ?? '', file)[position.line]
@@ -266,8 +272,10 @@ export function startServer(): void {
     }
   }
 
-  // The Define a written word is: the one it declares, or the one that use
-  // runs, which for a word with several Defines depends on what it's given.
+  /**
+   * The Define a written word is: the one it declares, or the one that use
+   * runs, which for a word with several Defines depends on what it's given.
+   */
   function defineOf(w: Written, info: WordInfo): Place | undefined {
     if (info.kind !== 'define') return
     const places = info.places ?? []
@@ -279,7 +287,7 @@ export function startServer(): void {
     const at = wordAt(textDocument.uri, position)
     const info = at && analysisOf(at.file)?.word(at.name, at.step)
     if (!at || !info) return null
-    // A use of a word with several Defines shows the one it runs.
+    /** A use of a word with several Defines shows the one it runs. */
     let shown = info.signatures
     let places = info.places ?? []
     const place = defineOf(at, info)
@@ -300,16 +308,18 @@ export function startServer(): void {
     const info = at && analysisOf(at.file)?.word(at.name, at.step)
     const place = info && defineOf(at, info)
     if (!info || !place) return null
-    // The name after "Define", as references point at it.
+    /** The name after "Define", as references point at it. */
     const text = (textOf(place.file) ?? '').split('\n')[place.line - 1] ?? ''
     const character = place.column - 1 + (/^Define:?\s+/i.exec(text.slice(place.column - 1))?.[0].length ?? 0)
     const start = { line: place.line - 1, character }
     return { uri: toUri(place.file), range: { start, end: { ...start, character: character + info.name.length } } }
   })
 
-  // What a word is, so that uses of the same one can be matched: a Define by
-  // where it's Defined, a builtin by name. What a Define was given isn't
-  // matched, since it's only there in that Define.
+  /**
+   * What a word is, so that uses of the same one can be matched: a Define by
+   * where it's Defined, a builtin by name. What a Define was given isn't
+   * matched, since it's only there in that Define.
+   */
   function identity(w: Written): string | null {
     const info = analysisOf(w.file)?.word(w.name, w.step)
     if (!info) return null
@@ -341,8 +351,10 @@ export function startServer(): void {
     return found
   })
 
-  // A file's Defines, then its Features with their scenarios. An Outline's rows
-  // are one scenario each to the checker, but one symbol here.
+  /**
+   * A file's Defines, then its Features with their scenarios. An Outline's rows
+   * are one scenario each to the checker, but one symbol here.
+   */
   function symbolsIn(file: string): FileSymbol[] {
     const symbols: FileSymbol[] = []
     // A script's outline is its own language's.
@@ -411,8 +423,10 @@ export function startServer(): void {
     const c = position.character - (code?.offset ?? 0)
     if (!code || c < 0) return []
     const before = code.text.slice(0, c)
-    // Not inside a string, and not in the middle of a lowercase word, which
-    // is prose. Offer everything only when asked outright.
+    /*
+     * Not inside a string, and not in the middle of a lowercase word, which
+     * is prose. Offer everything only when asked outright.
+     */
     if ((before.match(/"/g)?.length ?? 0) % 2) return []
     const partial = WORD_CHARS.exec(before)?.[0] ?? ''
     if (partial ? !/^[A-Z]/.test(partial) : context?.triggerKind !== CompletionTriggerKind.Invoked) return []
@@ -507,7 +521,7 @@ export function startServer(): void {
 
 // ---------------------------------------------------------------- helpers
 
-// A Define, or a Feature and its scenarios, by name and line.
+/** A Define, or a Feature and its scenarios, by name and line. */
 interface FileSymbol {
   name: string
   kind: Kind
@@ -515,15 +529,17 @@ interface FileSymbol {
   children?: { name: string; line: number }[]
 }
 
-// A word's signatures, then, for a builtin, what it's for and an example.
+/** A word's signatures, then, for a builtin, what it's for and an example. */
 function signatures(info: WordInfo): string {
   const code = (lines: string, lang = '') => `\`\`\`${lang}\n${lines}\n\`\`\``
   const doc = info.doc ? [info.doc.summary, code(info.doc.examples[0], 'gpp')] : []
   return [code(info.signatures.join('\n')), ...doc].join('\n\n')
 }
 
-// A line's tokens, or as many as can be made out while it's being typed. A
-// test's template has ${0} where its ${…} are (sections.ts).
+/**
+ * A line's tokens, or as many as can be made out while it's being typed. A
+ * test's template has ${0} where its ${…} are (sections.ts).
+ */
 function tokensOf(code: CodeLine): Token[] {
   try {
     return lex(code.text, true)
@@ -537,7 +553,7 @@ function tokensOf(code: CodeLine): Token[] {
   }
 }
 
-// From where a diagnostic points to the end of the word or string there.
+/** From where a diagnostic points to the end of the word or string there. */
 function rangeAt(src: string, line: number, column: number): Range {
   const text = src.split('\n')[line - 1] ?? ''
   const start = column - 1

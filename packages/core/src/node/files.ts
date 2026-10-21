@@ -1,6 +1,8 @@
-// Finding .gpp files on disk, loading them, and picking out scenarios as a
-// command line names them. language/ works on sources already read, so it
-// runs in a browser too, as Storybook's play functions do.
+/*
+ * Finding .gpp files on disk, loading them, and picking out scenarios as a
+ * command line names them. language/ works on sources already read, so it
+ * runs in a browser too, as Storybook's play functions do.
+ */
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -11,9 +13,11 @@ import { isScript, templates } from '../language/templates.ts'
 
 export const SKIP = new Set(['node_modules', 'test-results', 'playwright-report'])
 
-// Every .gpp file under the paths, and every Markdown file with an ```gpp
-// block, except under those in ignore (absolute). With scripts, every script
-// with a gpp`…` template too, for the tools that check Storybook's.
+/**
+ * Every .gpp file under the paths, and every Markdown file with an ```gpp
+ * block, except under those in ignore (absolute). With scripts, every script
+ * with a gpp`…` template too, for the tools that check Storybook's.
+ */
 export function discover(paths: string[], cwd = process.cwd(), ignore: string[] = [], scripts = false): string[] {
   const found: string[] = []
   const ignored = (p: string) => ignore.some((i) => p === i || p.startsWith(i + path.sep))
@@ -35,9 +39,11 @@ export function load(file: string): GppFile {
   return loadSource(file, fs.readFileSync(file, 'utf8'))
 }
 
-// Which scenarios to run, as a command line names them: a directory or file
-// runs everything in it, "file.gpp:12" the scenario on line 12. An empty
-// list runs everything.
+/**
+ * Which scenarios to run, as a command line names them: a directory or file
+ * runs everything in it, "file.gpp:12" the scenario on line 12. An empty
+ * list runs everything.
+ */
 export function selects(selections: string[], scenario: Scenario, cwd = process.cwd()): boolean {
   if (!selections.length) return true
   return selections.some((selection) => {

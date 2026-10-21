@@ -1,6 +1,8 @@
-// Reading and checking tests' gpp templates, without a DOM. What they do in
-// one is tested through Vitest itself: test/fixtures, and
-// examples/testing-library.
+/*
+ * Reading and checking tests' gpp templates, without a DOM. What they do in
+ * one is tested through Vitest itself: test/fixtures, and
+ * examples/testing-library.
+ */
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
@@ -8,7 +10,7 @@ import { testingLibraryWords } from '../src/config.ts'
 import type { Read } from '../src/feature.ts'
 import { checked, mistake, read } from '../src/feature.ts'
 
-// A template as a tag would be given it: its strings, around each ${…}.
+/** A template as a tag would be given it: its strings, around each ${…}. */
 const strings = (src: string) => src.split(`\${…}`)
 
 function readOk(src: string): Read {
@@ -19,7 +21,7 @@ function readOk(src: string): Read {
 
 const problem = (src: string) => read(strings(src)).problem
 
-// Each scenario's first mistake, or null.
+/** Each scenario's first mistake, or null. */
 function mistakes(src: string): (string | null)[] {
   const template = readOk(src)
   const report = checked(template, [])

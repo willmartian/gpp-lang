@@ -1,15 +1,17 @@
-// The docs site. Its pages are the repo's own Markdown, so there's one copy
-// of the docs, read on GitHub or here. Links between pages are rewritten to
-// the site, and links to anything else in the repo go to GitHub. The Built-in
-// words page adds an entry for each built-in word, from the docs the words declare.
-//
-//     pnpm docs        # serve on localhost:8080, rebuilding on change
-//     pnpm docs:build  # write site/_site
-//
-// It runs in site/, so paths here are relative to it.
-//
-// GitHub Pages serves it under /gpp-lang/, which CI passes as --pathprefix;
-// HtmlBasePlugin adds it to every absolute URL in the HTML.
+/*
+ * The docs site. Its pages are the repo's own Markdown, so there's one copy
+ * of the docs, read on GitHub or here. Links between pages are rewritten to
+ * the site, and links to anything else in the repo go to GitHub. The Built-in
+ * words page adds an entry for each built-in word, from the docs the words declare.
+ *
+ *     pnpm docs        # serve on localhost:8080, rebuilding on change
+ *     pnpm docs:build  # write site/_site
+ *
+ * It runs in site/, so paths here are relative to it.
+ *
+ * GitHub Pages serves it under /gpp-lang/, which CI passes as --pathprefix;
+ * HtmlBasePlugin adds it to every absolute URL in the HTML.
+ */
 
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
@@ -44,7 +46,7 @@ const FONTS = [
   'iosevka-aile/files/iosevka-aile-latin-600-normal.woff2',
 ]
 
-// The parts of Eleventy's config API this file uses.
+/** The parts of Eleventy's config API this file uses. */
 interface EleventyConfig {
   addTemplate(file: string, content: string, data: Record<string, unknown>): void
   addGlobalData(name: string, value: unknown): void
@@ -59,7 +61,7 @@ export default function (config: EleventyConfig) {
   for (const page of PAGES) {
     const content = readFileSync(path.join(ROOT, page.file), 'utf8')
     const title = /^# (.*)$/m.exec(content)?.[1] ?? page.nav
-    // The page's sections, for the sidebar; the Built-in words page's groups are sections too.
+    /** The page's sections, for the sidebar; the Built-in words page's groups are sections too. */
     const toc = headings(content)
     if (page.layout === 'words.njk') toc.push(...groups.map(({ name, id }) => ({ text: name, id })))
     config.addTemplate(page.file, content, {
@@ -104,20 +106,22 @@ export default function (config: EleventyConfig) {
 
   return {
     dir: { input: '.', includes: '_includes', output: '_site' },
-    // The pages are plain Markdown, and the docs show {{ }} as they are.
+    /** The pages are plain Markdown, and the docs show {{ }} as they are. */
     markdownTemplateEngine: false,
   }
 }
 
-// The version users install, from the CLI's package: every package shares it.
+/** The version users install, from the CLI's package: every package shares it. */
 function version(): string {
   const pkg: unknown = JSON.parse(readFileSync(path.join(ROOT, 'packages/gpp-lang/package.json'), 'utf8'))
   if (typeof pkg === 'object' && pkg && 'version' in pkg && typeof pkg.version === 'string') return pkg.version
   throw new Error('packages/gpp-lang/package.json has no version')
 }
 
-// The built-in words, by group, for words.njk: the shared words, and those
-// only a backend has, saying which.
+/**
+ * The built-in words, by group, for words.njk: the shared words, and those
+ * only a backend has, saying which.
+ */
 function words() {
   const all = [
     ...entries(vocabulary()),
@@ -131,7 +135,7 @@ function words() {
     entries: all
       .filter((e) => e.doc.group === name)
       .map(({ names, doc, forms, backend }: Entry & { backend?: string }) => ({
-        // * has no letters to make an id of.
+        /** * has no letters to make an id of. */
         id: slug(doc.title ?? names[0]) || 'asterisk',
         title: doc.title,
         backend,
@@ -143,7 +147,7 @@ function words() {
   })).filter((g) => g.entries.length)
 }
 
-// A page's level-two headings, outside its code blocks.
+/** A page's level-two headings, outside its code blocks. */
 function headings(content: string) {
   const code = new Set<number>()
   for (const f of fences(content)) for (let i = f.start - 1; i <= f.end; i++) code.add(i)
@@ -153,7 +157,7 @@ function headings(content: string) {
   })
 }
 
-// An id as GitHub makes one, so a link to a heading works in both places.
+/** An id as GitHub makes one, so a link to a heading works in both places. */
 function slug(text: string): string {
   return text
     .toLowerCase()
@@ -161,8 +165,10 @@ function slug(text: string): string {
     .replace(/\s/g, '-')
 }
 
-// A link in a page, from where it is on the site. Pages link to each other as
-// files in the repo do.
+/**
+ * A link in a page, from where it is on the site. Pages link to each other as
+ * files in the repo do.
+ */
 function link(href: string, source: string): string {
   if (/^([a-z]+:|#|\/)/i.test(href)) return href
   const [target, anchor] = href.split('#')

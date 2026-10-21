@@ -10,8 +10,10 @@ import { discover, findConfig, projectFiles } from '@gpp-lang/core/node'
 const packages = path.join(import.meta.dirname, '..', 'packages')
 const bin = path.join(packages, 'gpp-lang', 'bin', 'gpp-lang.ts')
 
-// A gpp.config.mjs that runs .gpp files with Playwright and stories with
-// Storybook, from this repo's packages, wherever it is.
+/**
+ * A gpp.config.mjs that runs .gpp files with Playwright and stories with
+ * Storybook, from this repo's packages, wherever it is.
+ */
 const source = (file: string) => JSON.stringify(pathToFileURL(path.join(packages, file)).href)
 const config = [
   `import { defineConfig } from ${source('core/src/node.ts')}`,
@@ -20,7 +22,7 @@ const config = [
   'export default defineConfig({ backends: [playwright(), storybook()] })',
 ].join('\n')
 
-// A project of files, given as path → contents, with a gpp.config.mjs.
+/** A project of files, given as path → contents, with a gpp.config.mjs. */
 function project(files: Record<string, string>): string {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-project-')))
   for (const [name, src] of Object.entries({ 'gpp.config.mjs': config, ...files })) {

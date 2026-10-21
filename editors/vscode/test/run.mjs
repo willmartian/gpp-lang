@@ -1,9 +1,11 @@
-// Opens VS Code on a small workspace with this extension loaded, and runs
-// test/suite.cjs inside it. Without a display (CI, or to keep the window out
-// of the way), run it under xvfb-run -a.
-//
-// It uses the VS Code on PATH when it can find its Electron binary, which is
-// how NixOS lays it out, or $GPP_VSCODE; otherwise it downloads one.
+/*
+ * Opens VS Code on a small workspace with this extension loaded, and runs
+ * test/suite.cjs inside it. Without a display (CI, or to keep the window out
+ * of the way), run it under xvfb-run -a.
+ *
+ * It uses the VS Code on PATH when it can find its Electron binary, which is
+ * how NixOS lays it out, or $GPP_VSCODE; otherwise it downloads one.
+ */
 
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'

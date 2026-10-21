@@ -1,6 +1,8 @@
-// Gherkin++'s own end-to-end tests: each example against its own app, and the
-// fixtures, which must all fail, against the demo's. Each is a project of its
-// own, with its own gpp.config.ts and words, so their Defines don't clash.
+/*
+ * Gherkin++'s own end-to-end tests: each example against its own app, and the
+ * fixtures, which must all fail, against the demo's. Each is a project of its
+ * own, with its own gpp.config.ts and words, so their Defines don't clash.
+ */
 
 import { defineGppConfig } from '@gpp-lang/playwright'
 import { defineConfig } from '@playwright/test'

@@ -1,15 +1,17 @@
-// What the generated tests run (see generate.ts). Each generated file declares
-// its scenarios as Playwright tests and hands each one a body from here, so a
-// generated file says only which tests there are, and everything they do is
-// read from the .gpp files when they run.
-//
-// The project is loaded and checked once per worker, the first time a test
-// needs it. A scenario with a mistake the checker can see fails straight away,
-// without starting a browser, and so does a broken Define, as a test of its own.
-//
-// Each Gherkin step becomes a test.step whose location is the step's line in
-// the .gpp or Markdown file, so reports and failures point at the Gherkin, not
-// at Gherkin++'s own code.
+/*
+ * What the generated tests run (see generate.ts). Each generated file declares
+ * its scenarios as Playwright tests and hands each one a body from here, so a
+ * generated file says only which tests there are, and everything they do is
+ * read from the .gpp files when they run.
+ *
+ * The project is loaded and checked once per worker, the first time a test
+ * needs it. A scenario with a mistake the checker can see fails straight away,
+ * without starting a browser, and so does a broken Define, as a test of its own.
+ *
+ * Each Gherkin step becomes a test.step whose location is the step's line in
+ * the .gpp or Markdown file, so reports and failures point at the Gherkin, not
+ * at Gherkin++'s own code.
+ */
 
 import type { Diagnostic, Scenario, Step, Vocabulary } from '@gpp-lang/core'
 import { GppError, runSteps, settle } from '@gpp-lang/core'
@@ -20,8 +22,10 @@ import { playwright } from './driver.ts'
 import type { Loaded, Project } from './project.ts'
 import { loadProject, where } from './project.ts'
 
-// Tags that mean something to Playwright itself, applied as the test starts.
-// @only is the generated file's, since it changes which tests are declared.
+/**
+ * Tags that mean something to Playwright itself, applied as the test starts.
+ * `@only` is the generated file's, since it changes which tests are declared.
+ */
 const MODIFIERS: Record<string, () => void> = {
   '@skip': () => test.skip(),
   '@fixme': () => test.fixme(),
@@ -31,7 +35,7 @@ const MODIFIERS: Record<string, () => void> = {
 
 type Body = (args: PlaywrightTestArgs) => Promise<void>
 
-// The project as this worker has loaded it, once.
+/** The project as this worker has loaded it, once. */
 const projects = new Map<string, Loaded>()
 
 function loaded(project: Project): Loaded {
@@ -41,8 +45,10 @@ function loaded(project: Project): Loaded {
   return known
 }
 
-// The tests a generated file can declare, for a project. Called as the file
-// loads, so a base URL from the command line applies to its tests.
+/**
+ * The tests a generated file can declare, for a project. Called as the file
+ * loads, so a base URL from the command line applies to its tests.
+ */
 export function project(p: Project) {
   if (process.env.GPP_BASE_URL) test.use({ baseURL: process.env.GPP_BASE_URL })
 
@@ -52,7 +58,7 @@ export function project(p: Project) {
   return {
     test,
 
-    // The scenario on this line of this file.
+    /** The scenario on this line of this file. */
     scenario(file: string, line: number): Body {
       return async ({ page }) => {
         const project = loaded(p)
@@ -65,8 +71,10 @@ export function project(p: Project) {
       }
     },
 
-    // A scenario the checker found a mistake in, which fails with it, without
-    // asking for a page, so no browser starts.
+    /**
+     * A scenario the checker found a mistake in, which fails with it, without
+     * asking for a page, so no browser starts.
+     */
     mistake(file: string, line: number): Body {
       return async () => {
         const project = loaded(p)
@@ -78,7 +86,7 @@ export function project(p: Project) {
       }
     },
 
-    // The broken Define on this line, as a test that fails with its mistake.
+    /** The broken Define on this line, as a test that fails with its mistake. */
     define(file: string, line: number): Body {
       return async () => {
         const problem = loaded(p).report.vocabulary.find((d) => d.file === file && d.line === line)
@@ -86,7 +94,7 @@ export function project(p: Project) {
       }
     },
 
-    // A file that can't be read as Gherkin++, as a test that fails with why.
+    /** A file that can't be read as Gherkin++, as a test that fails with why. */
     broken(file: string): Body {
       return async () => {
         const err = loaded(p).broken.get(file)
@@ -116,8 +124,10 @@ export function runScenario(scenario: Scenario, vocabulary: Vocabulary[], ctx: B
   })
 }
 
-// Makes the error's top frame the offending word in the .gpp file, which
-// is where Playwright's reporters look for a code frame to show.
+/**
+ * Makes the error's top frame the offending word in the .gpp file, which
+ * is where Playwright's reporters look for a code frame to show.
+ */
 function pointAt(err: unknown, step: Step): unknown {
   if (!(err instanceof Error)) return err
   const column = step.column + ((err as { pos?: number }).pos ?? 0)

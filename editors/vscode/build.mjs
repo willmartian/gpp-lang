@@ -1,5 +1,7 @@
-// Bundles the extension and Gherkin++'s language server, each into one file, so
-// the extension needs nothing installed to work.
+/*
+ * Bundles the extension and Gherkin++'s language server, each into one file, so
+ * the extension needs nothing installed to work.
+ */
 import { build } from 'esbuild'
 
 const common = { bundle: true, platform: 'node', format: 'cjs', target: 'node20', sourcemap: true, logLevel: 'warning' }

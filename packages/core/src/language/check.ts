@@ -1,22 +1,24 @@
-// The checker: runs every step on a stack of types instead of values, so
-// mistakes show up before a browser starts.
-//
-// It uses the forms the runtime uses, and picks between them the same way:
-// the first whose inputs are on top of the stack. With no conditionals or
-// loops, every step is straight-line code, so one pass is the whole story.
-//
-// A Define's header says what it takes: "Define: Add Text (Item)" takes Text,
-// called Item in its body, so Add : Text ->. Its body is checked with those,
-// and can't take anything else from its caller. What it leaves is worked out.
-//
-// A Define that leaves one thing of a built-in kind is a noun, and makes a
-// kind of its own: "Define: Cart" leaving an Element makes Cart, a narrower
-// Element, which other Defines' headers can take.
-//
-// A word can have several Defines, told apart by what they take. A use runs
-// the first that fits, most particular first, as the runtime does
-// (Definitions in cognate.ts). Two that could always both fit are a mistake
-// in the Defines, so a use never has to guess.
+/*
+ * The checker: runs every step on a stack of types instead of values, so
+ * mistakes show up before a browser starts.
+ *
+ * It uses the forms the runtime uses, and picks between them the same way:
+ * the first whose inputs are on top of the stack. With no conditionals or
+ * loops, every step is straight-line code, so one pass is the whole story.
+ *
+ * A Define's header says what it takes: "Define: Add Text (Item)" takes Text,
+ * called Item in its body, so Add : Text ->. Its body is checked with those,
+ * and can't take anything else from its caller. What it leaves is worked out.
+ *
+ * A Define that leaves one thing of a built-in kind is a noun, and makes a
+ * kind of its own: "Define: Cart" leaving an Element makes Cart, a narrower
+ * Element, which other Defines' headers can take.
+ *
+ * A word can have several Defines, told apart by what they take. A use runs
+ * the first that fits, most particular first, as the runtime does
+ * (Definitions in cognate.ts). Two that could always both fit are a mistake
+ * in the Defines, so a use never has to guess.
+ */
 
 import type { Env, Node, Param, Program } from './cognate.ts'
 import { GppError, notAKind, parse, specificity, unknownWord } from './cognate.ts'
@@ -31,44 +33,48 @@ export interface Diagnostic {
   line: number
   column: number
   message: string
-  // the Define it's in, if any
+  /** the Define it's in, if any */
   define?: string
 }
 
 export interface Report {
-  // mistakes in Defines and the rest of the vocabulary, once each
+  /** mistakes in Defines and the rest of the vocabulary, once each */
   vocabulary: Diagnostic[]
-  // each scenario's first mistake
+  /** each scenario's first mistake */
   scenarios: Map<Scenario, Diagnostic>
 }
 
 export interface CheckOptions {
-  // the builtin words, whose forms the checker reads
+  /** the builtin words, whose forms the checker reads */
   words: Env
-  // the end-of-step rule: what's wrong with leaving values of these types, if anything
+  /** the end-of-step rule: what's wrong with leaving values of these types, if anything */
   settle: (stack: { name: string; shown: string }[]) => string | null
-  // how messages name a file, like relative to the project; by default, as
-  // it was loaded
+  /**
+   * how messages name a file, like relative to the project; by default, as
+   * it was loaded
+   */
   name?: (file: string) => string
-  // what a template's ${…} is, for a backend whose words take one
+  /** what a template's ${…} is, for a backend whose words take one */
   interpolation?: Type<unknown>
 }
 
 // ---------------------------------------------------------------- static values
 
-// The keyword words, for their forms; the checker runs steps itself.
+/** The keyword words, for their forms; the checker runs steps itself. */
 const KEYWORDS = keywords(async () => {})
 
 const SymbolType = type('Symbol', 'a symbol', (v): v is unknown => false)
 
-// A value a Define's body takes from its caller. members is what it can
-// still be, narrowed by each use; null until something uses it.
+/**
+ * A value a Define's body takes from its caller. members is what it can
+ * still be, narrowed by each use; null until something uses it.
+ */
 class Var {
   members: readonly string[] | null = null
   phrase = 'a value'
 }
 
-// A block, waiting for Define to take it.
+/** A block, waiting for Define to take it. */
 class BlockOf {
   body: Program
   scope: Scope
@@ -83,7 +89,7 @@ class BlockOf {
 
 type Ty = Type<unknown> | Var | BlockOf
 
-// A value on the checker's stack: its type, and how to show it in a message.
+/** A value on the checker's stack: its type, and how to show it in a message. */
 interface Val {
   ty: Ty
   shown: string
@@ -94,23 +100,23 @@ const membersOf = (ty: Ty): readonly string[] | null =>
 
 const nameOf = (ty: Ty): string => membersOf(ty)?.join(' | ') ?? 'Any'
 
-// A variable is shown as what it's been narrowed to so far.
+/** A variable is shown as what it's been narrowed to so far. */
 const show = (v: Val): string => (v.ty instanceof Var ? v.ty.phrase : v.shown)
 
-// What a word's input slot accepts. key tells slots apart when comparing forms.
+/** What a word's input slot accepts. key tells slots apart when comparing forms. */
 interface Want {
   members: readonly string[] | null
   phrase: string
   key: unknown
 }
 
-// One way a word can be called: a builtin form, or a Define's inferred effect.
+/** One way a word can be called: a builtin form, or a Define's inferred effect. */
 interface Way {
   inputs: Want[]
   outputs: (args: Val[]) => Val[]
-  // the Define it is, for a Define's
+  /** the Define it is, for a Define's */
   def?: Def
-  // what's wrong, for a form that's always a mistake
+  /** what's wrong, for a form that's always a mistake */
   mistake?: (given: string[]) => string
 }
 
@@ -143,20 +149,20 @@ export interface Place {
 interface Def {
   name: string
   block: BlockOf
-  // where its Define is
+  /** where its Define is */
   at: Place
-  // its header, and, once checked, the kinds it names
+  /** its header, and, once checked, the kinds it names */
   header: Param[]
   params: { name: string; type: Type<unknown> }[]
   state: 'unchecked' | 'checking' | 'done'
-  // what its body leaves, once checked
+  /** what its body leaves, once checked */
   outputs?: Val[]
-  // the kind it makes, if it's a noun
+  /** the kind it makes, if it's a noun */
   noun?: Type<unknown>
   error?: Diagnostic
 }
 
-// A word the checker knows, under the name it was written with.
+/** A word the checker knows, under the name it was written with. */
 type Known = { name: string } & (
   | { kind: 'forms'; forms: readonly Form[] }
   | { kind: 'define'; defs: Def[] }
@@ -190,7 +196,7 @@ class Scope {
       if (s.builtins) yield* s.builtins.names()
     }
   }
-  // Everything visible from here, nearest first, each name once.
+  /** Everything visible from here, nearest first, each name once. */
   all(): Known[] {
     const seen = new Set<string>()
     return [...this.names()].flatMap((name) => {
@@ -203,10 +209,12 @@ class Scope {
   }
 }
 
-// The stack a statement runs on. An open stack belongs to an editor's guess
-// at what comes next: reaching below its bottom takes a value that isn't
-// written yet, which becomes one of its inputs. Otherwise the stack is
-// closed; there's nothing below.
+/**
+ * The stack a statement runs on. An open stack belongs to an editor's guess
+ * at what comes next: reaching below its bottom takes a value that isn't
+ * written yet, which becomes one of its inputs. Otherwise the stack is
+ * closed; there's nothing below.
+ */
 class Sim {
   open: boolean
   stack: Val[] = []
@@ -215,11 +223,11 @@ class Sim {
   constructor(open: boolean) {
     this.open = open
   }
-  // What's i from the top, or undefined if that's below the bottom.
+  /** What's i from the top, or undefined if that's below the bottom. */
   peek(i: number): Val | undefined {
     return this.stack[this.stack.length - 1 - i]
   }
-  // A new value from the caller, for a slot below the bottom.
+  /** A new value from the caller, for a slot below the bottom. */
   fromCaller(want?: Want): Val {
     const v = new Var()
     if (want) {
@@ -237,31 +245,35 @@ export function check(files: GppFile[], options: CheckOptions): Report {
   return analyze(files, options).report
 }
 
-// Everything an editor wants to know about a word.
+/** Everything an editor wants to know about a word. */
 export interface WordInfo {
   name: string
   kind: 'builtin' | 'define' | 'value'
-  // what a builtin is for
+  /** what a builtin is for */
   doc?: Doc
-  // "Click : Element ->", one per form
+  /** "Click : Element ->", one per form */
   signatures: string[]
-  // the base types each form leaves, or null for a form that leaves anything
+  /** the base types each form leaves, or null for a form that leaves anything */
   outputs: (readonly string[] | null)[]
-  // where it's Defined, for a Define: its first Define, and each of them, in
-  // the order of signatures
+  /**
+   * where it's Defined, for a Define: its first Define, and each of them, in
+   * the order of signatures
+   */
   at?: Place
   places?: Place[]
 }
 
-// A line of a file, for an editor asking about a Define's body.
+/** A line of a file, for an editor asking about a Define's body. */
 export interface Line {
   file: string
   line: number
 }
 
-// A checked project, which can also be asked about words and types, for
-// an editor. Where a step or a line is given, it's the scope that step, or
-// that line of a Define's body, sees: in a body, what its header takes.
+/**
+ * A checked project, which can also be asked about words and types, for
+ * an editor. Where a step or a line is given, it's the scope that step, or
+ * that line of a Define's body, sees: in a body, what its header takes.
+ */
 export class Analysis {
   report: Report
   private checker: Checker
@@ -283,14 +295,16 @@ export class Analysis {
     return known && this.checker.info(known)
   }
 
-  // What a value would need to be, written after the code in left: in
-  // "Fill the Field "Email" with ", Fill needs its text. null when it
-  // could be anything, or left can't be read.
+  /**
+   * What a value would need to be, written after the code in left: in
+   * "Fill the Field "Email" with ", Fill needs its text. null when it
+   * could be anything, or left can't be read.
+   */
   expected(left: string, at?: Step | Line): { members: readonly string[] | null; phrase: string } | null {
     return this.checker.expected(left, this.checker.scopeFor(at))
   }
 
-  // Where the Define is that a use of a word, at this place, runs.
+  /** Where the Define is that a use of a word, at this place, runs. */
   chosen(file: string, line: number, column: number): Place | undefined {
     return this.checker.chosen.get(placeKey({ file, line, column }))?.at
   }
@@ -310,12 +324,12 @@ class Checker {
   defs: Def[] = []
   report: Report = { vocabulary: [], scenarios: new Map() }
   vocabulary!: Scope
-  // what each step, and each line of a Define, sees, for an editor
+  /** what each step, and each line of a Define, sees, for an editor */
   stepScopes = new Map<Step, Scope>()
   lineScopes = new Map<string, Scope>()
-  // answering an editor, which wants a best guess rather than a mistake
+  /** answering an editor, which wants a best guess rather than a mistake */
   guessing = false
-  // which Define each use of a Defined word runs, by where the use is
+  /** which Define each use of a Defined word runs, by where the use is */
   chosen = new Map<string, Def>()
 
   constructor(options: CheckOptions) {
@@ -324,7 +338,7 @@ class Checker {
   }
 
   check(files: GppFile[]): Report {
-    // Every file's Defines share one scope, as they do when the tests run.
+    /** Every file's Defines share one scope, as they do when the tests run. */
     const vocabulary = new Scope(new Scope(null, this.options.words))
     this.vocabulary = vocabulary
     for (const v of files.flatMap((f) => f.vocabulary)) {
@@ -337,8 +351,10 @@ class Checker {
         this.report.vocabulary.push(this.diagnose(err, origin))
       }
     }
-    // Defines are checked once all of them are known, since a Define can use
-    // one from a later file. Unused ones are checked too.
+    /*
+     * Defines are checked once all of them are known, since a Define can use
+     * one from a later file. Unused ones are checked too.
+     */
     for (const def of this.defs) {
       this.checkDefine(def)
       if (def.error) this.report.vocabulary.push(def.error)
@@ -355,7 +371,7 @@ class Checker {
 
   scenario(scenario: Scenario, vocabulary: Scope): Diagnostic | undefined {
     const scope = new Scope(vocabulary)
-    // The scenario's own stack, where each keyword leaves its mode.
+    /** The scenario's own stack, where each keyword leaves its mode. */
     const modes = new Sim(false)
     for (const step of scenario.steps) {
       const origin = stepOrigin(step)
@@ -387,7 +403,7 @@ class Checker {
   }
 
   settle(sim: Sim) {
-    // A noun's value is settled as what it is underneath.
+    /** A noun's value is settled as what it is underneath. */
     const problem = this.options.settle(
       sim.stack.map((v) => ({ name: nameOf(isType(v.ty) ? root(v.ty) : v.ty), shown: show(v) })),
     )
@@ -440,8 +456,10 @@ class Checker {
   }
 
   expected(left: string, scope: Scope): { members: readonly string[] | null; phrase: string } | null {
-    // Whatever's written next runs before left does, so left finds it on
-    // top of the stack: the first thing left takes from below is it.
+    /**
+     * Whatever's written next runs before left does, so left finds it on
+     * top of the stack: the first thing left takes from below is it.
+     */
     let program: Program
     try {
       program = parse(left, { slots: true })
@@ -471,7 +489,7 @@ class Checker {
     return { file: origin.file, line, column, message: err.message, define }
   }
 
-  // Statements run in order, each right to left, as they do for real.
+  /** Statements run in order, each right to left, as they do for real. */
   run(program: Program, scope: Scope, sim: Sim, origin: Origin) {
     for (const statement of program) {
       for (let n = statement.length - 1; n >= 0; n--) {
@@ -505,8 +523,10 @@ class Checker {
         if (!(block.ty instanceof BlockOf)) {
           throw new Mistake(`Define ${node.name} expected an indented block after a colon, but got ${block.shown}`)
         }
-        // Its header is checked with its body, once every Define is known,
-        // since it may take a noun Defined later.
+        /**
+         * Its header is checked with its body, once every Define is known,
+         * since it may take a noun Defined later.
+         */
         const def: Def = {
           name: node.name,
           block: block.ty,
@@ -537,7 +557,7 @@ class Checker {
     }
   }
 
-  // What a Define's header takes, checked.
+  /** What a Define's header takes, checked. */
   params(def: Def): { name: string; type: Type<unknown> }[] {
     const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
     return def.header.map((p, i) => {
@@ -545,8 +565,10 @@ class Checker {
       if (def.header.findIndex((q) => same(q.name, p.name)) < i) {
         throw at(`Two things are called ${p.name}. Name them, as in ${p.kind} (Source) and ${p.kind} (Target)`)
       }
-      // The name hides the word in the body. That's the point for a noun
-      // taken by its own name, a Cart called Cart; anything else is a mistake.
+      /**
+       * The name hides the word in the body. That's the point for a noun
+       * taken by its own name, a Cart called Cart; anything else is a mistake.
+       */
       const hidden = def.block.scope.lookup(p.name)
       if (hidden && !(hidden.kind === 'define' && same(p.name, p.kind))) {
         throw at(
@@ -564,7 +586,7 @@ class Checker {
     })
   }
 
-  // A kind a header names: a built-in one, or a noun's.
+  /** A kind a header names: a built-in one, or a noun's. */
   kindOf(name: string, scope: Scope): Type<unknown> {
     const builtin = this.options.words.kindOf(name)
     if (builtin) return builtin
@@ -584,8 +606,10 @@ class Checker {
     return def.noun
   }
 
-  // The kind a Define makes of what it leaves, if it's a noun: one thing, of
-  // a built-in kind other than Any. The runtime decides the same, from values.
+  /**
+   * The kind a Define makes of what it leaves, if it's a noun: one thing, of
+   * a built-in kind other than Any. The runtime decides the same, from values.
+   */
   nounOf(def: Def, outputs: Val[]): Type<unknown> | undefined {
     if (outputs.length !== 1 || !isType(outputs[0].ty)) return
     const have = root(outputs[0].ty).members
@@ -596,8 +620,10 @@ class Checker {
     return { name: def.name, phrase: article(def.name), members: [def.name], base, test: (v): v is unknown => false }
   }
 
-  // Each word's Defines, two at a time: a noun can't share its name, since
-  // it's a kind, and two that could always both fit leave a use guessing.
+  /**
+   * Each word's Defines, two at a time: a noun can't share its name, since
+   * it's a kind, and two that could always both fit leave a use guessing.
+   */
   overloads(vocabulary: Scope) {
     for (const known of vocabulary.words.values()) {
       if (known.kind !== 'define') continue
@@ -637,8 +663,10 @@ class Checker {
     }
   }
 
-  // A Define's way: what its header takes, and what its body leaves.
-  // A word's Defines, most particular first, as the runtime orders them.
+  /**
+   * A Define's way: what its header takes, and what its body leaves.
+   * A word's Defines, most particular first, as the runtime orders them.
+   */
   defineWays(defs: Def[]): Way[] {
     return defs
       .map((def) => ({ def, way: this.defineWay(def) }))
@@ -661,8 +689,10 @@ class Checker {
     return { inputs, outputs: () => outputs, def }
   }
 
-  // Runs a Define's body with what its header takes, by name, and nothing
-  // below that.
+  /**
+   * Runs a Define's body with what its header takes, by name, and nothing
+   * below that.
+   */
   checkDefine(def: Def) {
     if (def.state === 'done') return
     if (def.state === 'checking') throw new Mistake(`${def.name} uses itself, so it would never finish`)
@@ -671,7 +701,7 @@ class Checker {
       def.params = this.params(def)
       const scope = new Scope(def.block.scope)
       for (const p of def.params) scope.set({ name: p.name, kind: 'value', val: { ty: p.type, shown: p.name } })
-      // Its header and body see what the header takes.
+      /** Its header and body see what the header takes. */
       const { origin } = def.block
       for (const line of [def.at.line, ...def.block.body.flatMap((s) => (s[0] ? [origin.at(s[0].pos).line] : []))]) {
         this.lineScopes.set(`${origin.file}:${line}`, scope)
@@ -687,8 +717,10 @@ class Checker {
     }
   }
 
-  // Calls the way the runtime would pick: the first whose inputs are on top
-  // of the stack.
+  /**
+   * Calls the way the runtime would pick: the first whose inputs are on top
+   * of the stack.
+   */
   call(name: string, ways: Way[], sim: Sim) {
     const fits = ways.flatMap((way) => {
       const fit = this.fit(way, sim)
@@ -696,10 +728,12 @@ class Checker {
     })
     if (!fits.length) throw this.mismatch(name, ways, sim)
 
-    // On an open stack, a form with an optional last input, like a query's
-    // Scope, would always fit by taking it from below, or by deciding a
-    // variable must be one. Unless it's known to be there, prefer the form
-    // without it.
+    /**
+     * On an open stack, a form with an optional last input, like a query's
+     * Scope, would always fit by taking it from below, or by deciding a
+     * variable must be one. Unless it's known to be there, prefer the form
+     * without it.
+     */
     const shorter = fits.filter(
       (f) => !fits.some((g) => g !== f && g.unsure < f.unsure && isPrefix(g.way.inputs, f.way.inputs)),
     )
@@ -707,8 +741,10 @@ class Checker {
     const known = chosen.fresh === 0 && chosen.binds.size === 0
     if (shorter.length > 1 && !known) {
       if (this.guessing) {
-        // For an editor's guess, any of them will do: each input may be any
-        // of what they'd take there.
+        /**
+         * For an editor's guess, any of them will do: each input may be any
+         * of what they'd take there.
+         */
         const way = anyOf(shorter.map((f) => f.way))
         const fit = this.fit(way, sim)
         // A checker bug: each of them fits, so any of them together does.
@@ -732,9 +768,11 @@ class Checker {
     return chosen.way
   }
 
-  // Whether a way's inputs are on top of the stack, and what that would
-  // narrow the stack's variables to. fresh counts inputs taken from a caller;
-  // unsure counts those plus inputs that are variables.
+  /**
+   * Whether a way's inputs are on top of the stack, and what that would
+   * narrow the stack's variables to. fresh counts inputs taken from a caller;
+   * unsure counts those plus inputs that are variables.
+   */
   fit(way: Way, sim: Sim): { binds: Map<Var, Want>; fresh: number; unsure: number } | null {
     const binds = new Map<Var, Want>()
     let fresh = 0
@@ -761,8 +799,10 @@ class Checker {
     return { binds, fresh, unsure }
   }
 
-  // Says what was wanted at the first place every way had given up, as the
-  // runtime does.
+  /**
+   * Says what was wanted at the first place every way had given up, as the
+   * runtime does.
+   */
   mismatch(name: string, ways: Way[], sim: Sim): Mistake {
     let live = ways
     for (let i = 0; ; i++) {
@@ -790,10 +830,12 @@ function accepts(want: Want, v: Val): boolean {
 
 const isType = (ty: Ty): ty is Type<unknown> => !(ty instanceof Var) && !(ty instanceof BlockOf)
 
-// Whether two Defines of a word could always both fit: 'same' if they take
-// the same kinds, 'ambiguous' if each is narrower somewhere. They can't both
-// fit if they take different numbers of things, or if at some place neither
-// kind is within the other; and if one is narrower throughout, it's chosen.
+/**
+ * Whether two Defines of a word could always both fit: 'same' if they take
+ * the same kinds, 'ambiguous' if each is narrower somewhere. They can't both
+ * fit if they take different numbers of things, or if at some place neither
+ * kind is within the other; and if one is narrower throughout, it's chosen.
+ */
 function clash(a: Def, b: Def): 'same' | 'ambiguous' | null {
   if (a.params.length !== b.params.length) return null
   let aNarrower = false
@@ -811,21 +853,23 @@ function clash(a: Def, b: Def): 'same' | 'ambiguous' | null {
   return !aNarrower && !bNarrower ? 'same' : aNarrower && bNarrower ? 'ambiguous' : null
 }
 
-// Whether every value of kind x is one of kind y: a Cart is an Element, and
-// everything is Any.
+/**
+ * Whether every value of kind x is one of kind y: a Cart is an Element, and
+ * everything is Any.
+ */
 function within(x: Type<unknown>, y: Type<unknown>): boolean {
   if (y.name === AnyType.name || x.name.toLowerCase() === y.name.toLowerCase()) return true
   return !!x.base && within(x.base, y)
 }
 
-// What a noun's kind is underneath: Element, for a Cart.
+/** What a noun's kind is underneath: Element, for a Cart. */
 const root = (t: Type<unknown>): Type<unknown> => (t.base ? root(t.base) : t)
 
 function anyOf(ways: Way[]): Way {
   const length = Math.max(...ways.map((w) => w.inputs.length))
   const inputs = Array.from({ length }, (_, i): Want => {
     const here = ways.flatMap((w) => (w.inputs[i] ? [w.inputs[i]] : []))
-    // Any value, if any of them takes any value.
+    /** Any value, if any of them takes any value. */
     const known = here.flatMap((w) => (w.members === null ? [] : [w.members]))
     const members = known.length < here.length ? null : [...new Set(known.flat())]
     return { members, phrase: [...new Set(here.map((w) => w.phrase))].join(', or '), key: undefined }
@@ -839,7 +883,7 @@ function isPrefix(short: Want[], long: Want[]): boolean {
 
 // ---------------------------------------------------------------- output
 
-// A diagnostic as a person reads it: where, the line, and what's wrong.
+/** A diagnostic as a person reads it: where, the line, and what's wrong. */
 export function format(d: Diagnostic, source: string, name = (file: string) => file): string {
   const text = source.split('\n')[d.line - 1] ?? ''
   const indent = text.length - text.trimStart().length

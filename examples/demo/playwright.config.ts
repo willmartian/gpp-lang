@@ -1,5 +1,7 @@
-// The demo as a project of its own: a grocery list behind a sign-in page. Run it
-// with `pnpm test:e2e`, here or from the repo's root.
+/*
+ * The demo as a project of its own: a grocery list behind a sign-in page. Run it
+ * with `pnpm test:e2e`, here or from the repo's root.
+ */
 
 import { defineGppConfig } from '@gpp-lang/playwright'
 import { defineConfig } from '@playwright/test'

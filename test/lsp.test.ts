@@ -22,7 +22,7 @@ const feature = [
   '',
 ].join('\n')
 
-// Outside its ```gpp block, Markdown is prose, whatever it says.
+/** Outside its ```gpp block, Markdown is prose, whatever it says. */
 const readme = [
   '# Groceries', //                    0
   '', //                               1
@@ -37,7 +37,7 @@ const readme = [
   '',
 ].join('\n')
 
-// A word with two Defines, told apart by where the Milk goes.
+/** A word with two Defines, told apart by where the Milk goes. */
 const shop = [
   'Define: Cart', //                                     0
   '  the Region "Cart"', //                              1
@@ -54,7 +54,7 @@ const shop = [
   '',
 ].join('\n')
 
-// Storybook play functions, which use the project's Defines too.
+/** Storybook play functions, which use the project's Defines too. */
 const stories = [
   "import { gpp } from '@gpp-lang/storybook'", //                0
   '', //                                                         1
@@ -72,8 +72,10 @@ const stories = [
 const packages = path.join(import.meta.dirname, '..', 'packages')
 const bin = path.join(packages, 'gpp-lang', 'bin', 'gpp-lang.ts')
 
-// A gpp.config.mjs that runs .gpp files and Markdown with Playwright and
-// stories with Storybook, from this repo's packages, wherever it is.
+/**
+ * A gpp.config.mjs that runs .gpp files and Markdown with Playwright and
+ * stories with Storybook, from this repo's packages, wherever it is.
+ */
 const source = (file: string) => JSON.stringify(pathToFileURL(path.join(packages, file)).href)
 const config = [
   `import { defineConfig } from ${source('core/src/node.ts')}`,
@@ -106,7 +108,7 @@ test('the language server', async (t) => {
   const shopUri = pathToFileURL(path.join(dir, 'shop.gpp')).href
   const storiesUri = pathToFileURL(path.join(dir, 'editor.stories.ts')).href
 
-  // As an editor's language client starts it.
+  /** As an editor's language client starts it. */
   const child = spawn(process.execPath, [bin, 'lsp', '--stdio', `--clientProcessId=${process.pid}`], {
     stdio: ['pipe', 'pipe', 'inherit'],
   })
@@ -114,7 +116,7 @@ test('the language server', async (t) => {
     new rpc.StreamMessageReader(child.stdout),
     new rpc.StreamMessageWriter(child.stdin),
   )
-  // Every publish, and a way to wait for the next one about a.gpp that passes a test.
+  /** Every publish, and a way to wait for the next one about a.gpp that passes a test. */
   const published: Published[] = []
   const waiters: (() => void)[] = []
   connection.onNotification('textDocument/publishDiagnostics', (p: Published) => {
@@ -319,7 +321,7 @@ test('the language server', async (t) => {
     const tokens = await connection.sendRequest<{ data: number[] }>('textDocument/semanticTokens/full', {
       textDocument: { uri },
     })
-    // Line 2, "    When I Add "Milk"": When, I, Add, "Milk" — and nothing for prose.
+    /** Line 2, "    When I Add "Milk"": When, I, Add, "Milk" — and nothing for prose. */
     const decoded: [number, number, number][] = []
     for (let i = 0, line = 0, char = 0; i < tokens.data.length; i += 5) {
       const [dl, dc, length] = tokens.data.slice(i, i + 3)
@@ -375,7 +377,7 @@ test('the language server', async (t) => {
       textDocument: { uri: readmeUri },
     })
     const lines = new Set<number>()
-    // Each token's line is relative to the one before.
+    /** Each token's line is relative to the one before. */
     let line = 0
     for (let i = 0; i < tokens.data.length; i += 5) {
       line += tokens.data[i]

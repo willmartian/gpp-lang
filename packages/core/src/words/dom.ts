@@ -1,12 +1,14 @@
-// A driver made of Testing Library, for backends that run in a DOM:
-// @gpp-lang/storybook's play functions, in a browser, and
-// @gpp-lang/testing-library's tests, in jsdom or happy-dom. Each gives it the
-// Testing Library it has, so this needs none of its own.
-//
-// Things are looked for in the whole page a backend gives, not only where the
-// component is, so a dialog or menu rendered in a portal is found the way a
-// user finds it. Checks and actions retry, as Playwright's do, for as long as
-// Testing Library's asyncUtilTimeout.
+/*
+ * A driver made of Testing Library, for backends that run in a DOM:
+ * `@gpp-lang/storybook`'s play functions, in a browser, and
+ * `@gpp-lang/testing-library`'s tests, in jsdom or happy-dom. Each gives it the
+ * Testing Library it has, so this needs none of its own.
+ *
+ * Things are looked for in the whole page a backend gives, not only where the
+ * component is, so a dialog or menu rendered in a portal is found the way a
+ * user finds it. Checks and actions retry, as Playwright's do, for as long as
+ * Testing Library's asyncUtilTimeout.
+ */
 
 import { GppError } from '../language/cognate.ts'
 import type { Context } from '../language/types.ts'
@@ -14,9 +16,11 @@ import type { Action, Driver, Name, Query, State } from './driver.ts'
 
 type AllBy = (container: HTMLElement, name: Name, options?: { exact?: boolean }) => HTMLElement[]
 
-// What the driver uses of Testing Library: @testing-library/dom's queries and
-// config, and @testing-library/user-event, or storybook/test's, which are the
-// same.
+/**
+ * What the driver uses of Testing Library: @testing-library/dom's queries and
+ * config, and @testing-library/user-event, or storybook/test's, which are the
+ * same.
+ */
 export interface TestingLibrary {
   queryAllByRole(container: HTMLElement, role: string, options?: { name?: Name }): HTMLElement[]
   queryAllByLabelText: AllBy
@@ -40,17 +44,21 @@ export interface TestingLibrary {
 
 export interface DomBackend<C extends Context> {
   library: TestingLibrary
-  // The whole page, portals and all.
+  /** The whole page, portals and all. */
   page(ctx: C): HTMLElement
-  // Runs attempt until it doesn't throw, as Testing Library's waitFor does,
-  // or, without it, by trying every 50ms for its asyncUtilTimeout.
+  /**
+   * Runs attempt until it doesn't throw, as Testing Library's waitFor does,
+   * or, without it, by trying every 50ms for its asyncUtilTimeout.
+   */
   retry?(attempt: () => unknown): Promise<void>
 }
 
 // ---------------------------------------------------------------- handles
 
-// How to find something, done again each time it's used, as Playwright's
-// locators are. Within a root, it looks inside whatever the root finds.
+/**
+ * How to find something, done again each time it's used, as Playwright's
+ * locators are. Within a root, it looks inside whatever the root finds.
+ */
 export class Target {
   label: string
   root: Target | null
@@ -61,24 +69,24 @@ export class Target {
     this.root = root
     this.search = search
   }
-  // What it finds, inside container, as the page is now.
+  /** What it finds, inside container, as the page is now. */
   in(container: HTMLElement): HTMLElement[] {
     const containers = this.root ? this.root.in(container) : [container]
     return [...new Set(containers.flatMap((c) => this.search(c)))]
   }
 }
 
-// One element, as all() gives them out.
+/** One element, as all() gives them out. */
 const fixed = (element: HTMLElement, label: string) => new Target(label, null, () => [element])
 
 const say = (name: Name) => (typeof name === 'string' ? JSON.stringify(name) : String(name))
 
-// Text as a person reads it: whitespace runs read as one space.
+/** Text as a person reads it: whitespace runs read as one space. */
 const textOf = (el: HTMLElement) => (el.textContent ?? '').replace(/\s+/g, ' ').trim()
 
 const matches = (name: Name, text: string) => (typeof name === 'string' ? text === name : name.test(text))
 
-// Playwright's hasText: part of the text, ignoring case.
+/** Playwright's hasText: part of the text, ignoring case. */
 const has = (name: Name, text: string) =>
   typeof name === 'string' ? text.toLowerCase().includes(name.toLowerCase()) : name.test(text)
 
@@ -124,19 +132,23 @@ function search(
 
 // ---------------------------------------------------------------- states
 
-// Playwright's visible: a box with some size, and not visibility: hidden.
-// Where nothing has a box, as in jsdom, it's what CSS hides instead.
+/**
+ * Playwright's visible: a box with some size, and not visibility: hidden.
+ * Where nothing has a box, as in jsdom, it's what CSS hides instead.
+ */
 function visible(el: HTMLElement): boolean {
   if (!laidOut(el)) return styled(el)
   const box = el.getBoundingClientRect()
   return box.width > 0 && box.height > 0 && el.checkVisibility({ visibilityProperty: true })
 }
 
-// Whether the page has layout at all: a browser's does, jsdom's doesn't.
+/** Whether the page has layout at all: a browser's does, jsdom's doesn't. */
 const laidOut = (el: HTMLElement) => el.ownerDocument.documentElement.getBoundingClientRect().width > 0
 
-// Visible as far as CSS says, with no layout to ask: not hidden, and not in
-// anything with display: none or the hidden attribute.
+/**
+ * Visible as far as CSS says, with no layout to ask: not hidden, and not in
+ * anything with display: none or the hidden attribute.
+ */
 function styled(el: HTMLElement): boolean {
   const view = el.ownerDocument.defaultView
   if (!view || view.getComputedStyle(el).visibility === 'hidden') return false
@@ -158,7 +170,7 @@ const isField = (el: HTMLElement) =>
 
 const fieldValue = (el: HTMLElement) => (isField(el) ? el.value : '')
 
-// What a state says, after "to".
+/** What a state says, after "to". */
 function phrase(state: State): string {
   switch (state.is) {
     case 'value':
@@ -176,9 +188,11 @@ function phrase(state: State): string {
   }
 }
 
-// Whether a state holds of what was found, or null when it can't be told
-// either way, like whether nothing at all is checked. saw is what was there
-// instead, for the message.
+/**
+ * Whether a state holds of what was found, or null when it can't be told
+ * either way, like whether nothing at all is checked. saw is what was there
+ * instead, for the message.
+ */
 function observe(found: HTMLElement[], state: State): { holds: boolean | null; saw: string } {
   if (state.is === 'count') return { holds: found.length === state.count, saw: `found ${found.length}` }
   if (state.is === 'texts') {
@@ -221,8 +235,10 @@ function observe(found: HTMLElement[], state: State): { holds: boolean | null; s
   }
 }
 
-// Runs attempt until it doesn't throw, or Testing Library's timeout passes,
-// and then throws what it last threw.
+/**
+ * Runs attempt until it doesn't throw, or Testing Library's timeout passes,
+ * and then throws what it last threw.
+ */
 async function poll(lib: TestingLibrary, attempt: () => unknown): Promise<void> {
   const end = Date.now() + lib.getConfig().asyncUtilTimeout
   for (;;) {
@@ -238,8 +254,10 @@ async function poll(lib: TestingLibrary, attempt: () => unknown): Promise<void> 
 
 // ---------------------------------------------------------------- keys
 
-// A key as Playwright names it, like "Enter" or "Control+Shift+A", as
-// userEvent.keyboard spells it: {Control>}{Shift>}{A}{/Shift}{/Control}.
+/**
+ * A key as Playwright names it, like "Enter" or "Control+Shift+A", as
+ * userEvent.keyboard spells it: {Control>}{Shift>}{A}{/Shift}{/Control}.
+ */
 function keystroke(key: string): string {
   const parts = key.length > 1 ? key.split(/\+(?=.)/) : [key]
   const last = parts.pop() ?? key
@@ -251,7 +269,7 @@ function keystroke(key: string): string {
     .join('')}`
 }
 
-// Text to type, with what userEvent reads as keys escaped.
+/** Text to type, with what userEvent reads as keys escaped. */
 const typed = (text: string) => text.replace(/[{[]/g, '$&$&')
 
 // ---------------------------------------------------------------- the driver
@@ -261,8 +279,10 @@ export function domDriver<C extends Context>(backend: DomBackend<C>): Driver<C, 
   const { userEvent } = lib
   const retry = (attempt: () => unknown) => (backend.retry ? backend.retry(attempt) : poll(lib, attempt))
 
-  // The one element an action acts on, once it's there and a person could
-  // use it, as Playwright waits for before acting.
+  /**
+   * The one element an action acts on, once it's there and a person could
+   * use it, as Playwright waits for before acting.
+   */
   async function one(ctx: C, target: Target, enabled: boolean): Promise<HTMLElement> {
     let element: HTMLElement | undefined
     await retry(() => {

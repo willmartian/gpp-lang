@@ -3,6 +3,10 @@
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/), checked by
 commitlint. Code is formatted and linted with Biome (`pnpm format`).
 
+Comments on declarations, including interface fields and object properties, are JSDoc
+(`/** … */`), so hover shows them. Other comments of more than one line are `/* … */`
+blocks. `//` is for one-line notes inside code.
+
 ## Layout
 
 A [pnpm](https://pnpm.io) workspace:

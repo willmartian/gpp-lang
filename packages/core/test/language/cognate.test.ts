@@ -19,7 +19,7 @@ import {
 const form = formsFor<Context>()
 const PairType = type('Pair', 'a pair', (v): v is unknown[] => Array.isArray(v))
 
-// Records what each word saw, so tests can watch the order things run in.
+/** Records what each word saw, so tests can watch the order things run in. */
 async function evaluate(src: string) {
   const seen: unknown[] = []
   const env = new Env(core())
@@ -42,7 +42,7 @@ async function evaluate(src: string) {
 
 const text = (t: Token) => ('name' in t ? t.name : 'value' in t ? t.value : t.type)
 
-// A GppError at pos, whose message matches.
+/** A GppError at pos, whose message matches. */
 const at =
   (pos: number, message = /./) =>
   (err: unknown) =>
