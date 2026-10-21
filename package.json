@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@12.3.4",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22.18"
   },
   "scripts": {
     "build": "tsc -b packages/gpp-lang/tsconfig.build.json packages/playwright/tsconfig.build.json packages/storybook/tsconfig.build.json packages/testing-library/tsconfig.build.json",

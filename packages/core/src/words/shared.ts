@@ -1,6 +1,7 @@
-// The language's words. Every backend has them all, on a driver of its own
-// (driver.ts), which a step finds in its context, so the words are made once,
-// and the checker reads the same ones that run.
+// The language's shared words. Every backend has them all, on a driver of its
+// own (driver.ts), which a step finds in its context, so the words are made
+// once, and the checker reads the same ones that run. A backend adds words of
+// its own, like Playwright's for the page, in its Backend (config.ts).
 //
 // Queries are Testing Library's, spelled as Cognate words: a role name
 // (Button, Heading, Checkbox…) takes the accessible name to its right and
@@ -14,25 +15,11 @@
 // checked then. Likewise "the Checkbox "Terms" should be Checked": Checked
 // runs first and leaves a Matcher, the Checkbox query lands on top of it, and
 // the step's end pairs them up.
-//
-// A template plays on one page, already open, so its words have no Visit,
-// Reload, Back, At or Titled, and say why when used.
 
 import type { Stack } from '../language/cognate.ts'
 import { core, describe, Env, GppError, unwrap } from '../language/cognate.ts'
 import type { Context, Doc, Form } from '../language/types.ts'
-import {
-  article,
-  ComponentType,
-  called,
-  formsFor,
-  mistake,
-  NumberType,
-  oneOf,
-  TableType,
-  TextType,
-  type,
-} from '../language/types.ts'
+import { article, called, formsFor, mistake, NumberType, oneOf, TableType, TextType, type } from '../language/types.ts'
 import type { Action, AnyDriver, Name, Query, QueryKind, State } from './driver.ts'
 
 // The driver a step runs with: its context's.
@@ -49,10 +36,6 @@ const driver: AnyDriver = {
   expect: (ctx, target, state, not, once) => driverOf(ctx).expect(ctx, target, state, not, once),
   all: (ctx, target) => driverOf(ctx).all(ctx, target),
   retry: (ctx, attempt) => driverOf(ctx).retry(ctx, attempt),
-  visit: (ctx, where) => driverOf(ctx).visit(ctx, where),
-  reload: (ctx) => driverOf(ctx).reload(ctx),
-  back: (ctx) => driverOf(ctx).back(ctx),
-  expectPage: (ctx, state, not) => driverOf(ctx).expectPage(ctx, state, not),
 }
 
 // ---------------------------------------------------------------- values
@@ -473,26 +456,6 @@ function actions(env: Env): Env {
   return env
 }
 
-// ---------------------------------------------------------------- rendering
-
-// Rendering what a test's gpp template has in a ${…} (sections.ts), with the
-// renderer its backend puts in the step's context. Elsewhere there's no ${…},
-// so Render says why, though it still lists how a test uses it.
-function rendering(env: Env, why: string | null): Env {
-  const render = form([ComponentType], async (ctx, component) => {
-    if (!ctx.render) throw new Error('Render ran without a renderer: a backend gives one in its context')
-    await ctx.render(component.value)
-  })
-  return env.word('Render', render, ...(why === null ? [] : [mistake([], () => why)])).doc(
-    {
-      group: 'Doing',
-      summary: `Renders what a test's gpp template has in a \${…}, like a React element.`,
-      examples: [`Given I Render \${<Editor title="" />}`],
-    },
-    'Render',
-  )
-}
-
 // ---------------------------------------------------------------- checks
 
 type TextState = Extract<State, { text: Name }>['is']
@@ -733,105 +696,14 @@ export async function settle(stack: Stack, ctx: Context): Promise<void> {
   for (const e of pending.reverse()) await e.check(false)
 }
 
-// ---------------------------------------------------------------- the page
-
-const Path = called(TextType, 'a "/path" or URL')
-const PAGE_WORDS = ['Visit', 'Reload', 'Back', 'At', 'Titled']
-
-// Going somewhere on the page.
-function navigation(env: Env): Env {
-  return env
-    .word(
-      'Visit',
-      form([Path], (ctx, where) => driver.visit(ctx, where)),
-    )
-    .word(
-      'Reload',
-      form([], (ctx) => driver.reload(ctx)),
-    )
-    .word(
-      'Back',
-      form([], (ctx) => driver.back(ctx)),
-    )
-    .doc({ group: 'Doing', summary: 'Goes to a path on the app, or a URL.', examples: ['Given I Visit "/"'] }, 'Visit')
-    .doc({ group: 'Doing', summary: 'Reloads the page.', examples: ['When I Reload the page'] }, 'Reload')
-    .doc(
-      { group: 'Doing', summary: "Goes back, as the browser's back button does.", examples: ['When I go Back'] },
-      'Back',
-    )
-}
-
-// Checks on the page itself.
-function pageChecks(env: Env): Env {
-  return env
-    .word(
-      'At',
-      form(
-        [Path],
-        CheckType,
-        (ctx, where) =>
-          new Expectation(`At ${JSON.stringify(where)}`, (not) => driver.expectPage(ctx, { is: 'at', where }, not)),
-      ),
-    )
-    .word(
-      'Titled',
-      form(
-        [NameType],
-        CheckType,
-        (ctx, title) =>
-          new Expectation(`Titled ${say(title)}`, (not) =>
-            driver.expectPage(ctx, { is: 'titled', title: nameOf(title) }, not),
-          ),
-      ),
-    )
-    .doc(
-      {
-        group: 'Checking',
-        summary: "Checks the page's path, or its whole URL.",
-        examples: ['Then I should be At "/dashboard"'],
-      },
-      'At',
-    )
-    .doc(
-      {
-        group: 'Checking',
-        summary: "Checks the page's title.",
-        examples: ['Then the page should be Titled "Dashboard"'],
-      },
-      'Titled',
-    )
-}
-
 // ---------------------------------------------------------------- the vocabulary
 
-const vocabularies = new Map<string, Env>()
+let vocabulary: Env | undefined
 
-// Every word, as .gpp files and Markdown have them, or as a template does,
-// where the page's words say why there are none. A test's template, with
-// render, also has Render. Made once, since they're the same wherever they run.
-export function words({ template = false, render = false }: { template?: boolean; render?: boolean } = {}): Env {
-  const key = `${template} ${render}`
-  const known = vocabularies.get(key)
-  if (known) return known
-  const env = queries(new Env(core()))
-  if (!template) navigation(env)
-  actions(env)
-  rendering(
-    env,
-    render
-      ? null
-      : template
-        ? 'A story renders itself from its args, so its template has no Render'
-        : `Only a test's gpp template can Render: it has a \${…} to render`,
-  )
-  checks(env)
-  if (!template) pageChecks(env)
-  else
-    for (const word of PAGE_WORDS)
-      env.word(
-        word,
-        mistake([], () => `A template plays on one page, already open, so it has no ${word}`),
-      )
-  vocabularies.set(key, env)
-  return env
+// Every shared word. Made once, since they're the same wherever they run; a
+// backend's words are an Env under this one.
+export function words(): Env {
+  if (vocabulary) return vocabulary
+  vocabulary = checks(actions(queries(new Env(core()))))
+  return vocabulary
 }

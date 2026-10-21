@@ -57,7 +57,6 @@ export const testingLibrary: Driver<Context, Target> = domDriver<Context>({
   async retry(attempt) {
     await waitFor(attempt, { onTimeout: (err) => err })
   },
-  onePage: 'A test plays on one page, already open',
 })
 
 // What Render does, with the renderer from renderWith.

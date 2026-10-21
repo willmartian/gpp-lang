@@ -4,9 +4,10 @@
 // gpp`…` templates in .js and .ts files, which are Storybook play functions.
 // It keeps every project checked as you type, since Defines are shared
 // between a project's files, and answers from that. A project is the files
-// under the nearest package.json, each checked on its own, so two can Define
-// the same word. Nothing of the workspace's runs, so it's the same whether the
-// workspace is trusted or not.
+// under a gpp.config.ts, each checked on its own, so two can Define the same
+// word, and its config says which backend's words each file has. Loading the
+// config runs it, so a client that says the workspace isn't trusted gets no
+// mistakes but files that don't parse, and answers from the shared words.
 //
 //   - diagnostics: the checker's mistakes, and files that don't parse
 //   - hover: a word's signatures; a Define's are inferred
@@ -26,9 +27,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import type { Analysis, Checked, CodeLine, GppFile, Line, Place, Step, Token, WordInfo } from '@gpp-lang/core'
+import type { Analysis, Checked, CodeLine, Config, GppFile, Line, Place, Step, Token, WordInfo } from '@gpp-lang/core'
 import { checkFiles, codeLines, gppLines, isScript, LoadError, lex, loadSource } from '@gpp-lang/core'
-import { discover, projectRoot } from '@gpp-lang/core/node'
+import { discover, findConfig, findConfigs, loadConfig } from '@gpp-lang/core/node'
 import type {
   CompletionItem,
   DocumentSymbol,
@@ -70,6 +71,11 @@ export function startServer(): void {
 
   let roots: string[] = []
   let onDisk: string[] = []
+  // Whether the client trusts the workspace, so its configs may run.
+  let trusted = true
+  // Each project's config, by its root, and why any that didn't load didn't.
+  let configs = new Map<string, Config>()
+  let configErrors = new Map<string, string>()
   // Each project, by its root, checked.
   let checked = new Map<string, Checked>()
   // Whether the client is told which documents have semantic tokens.
@@ -87,6 +93,8 @@ export function startServer(): void {
     roots = (params.workspaceFolders ?? []).map((f) => toPath(f.uri))
     if (!roots.length && params.rootUri) roots = [toPath(params.rootUri)]
     registersTokens = params.capabilities.textDocument?.semanticTokens?.dynamicRegistration === true
+    const options: unknown = params.initializationOptions
+    trusted = !(typeof options === 'object' && options !== null && 'trusted' in options && options.trusted === false)
     return {
       capabilities: {
         textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -103,15 +111,31 @@ export function startServer(): void {
 
   // ---------------------------------------------------------------- checking
 
-  function rediscover() {
+  async function rediscover() {
     onDisk = discover(roots, roots[0], [], true)
+    if (!trusted) return
+    const loaded = new Map<string, Config>()
+    const errors = new Map<string, string>()
+    for (const file of findConfigs(roots)) {
+      try {
+        loaded.set(path.dirname(file), await loadConfig(file))
+      } catch (err) {
+        errors.set(file, err instanceof Error ? err.message : String(err))
+      }
+    }
+    configs = loaded
+    configErrors = errors
   }
 
-  // A file's project: the root it's checked with. Without a package.json, the
-  // workspace folder it's in.
-  const projectOf = (file: string) =>
-    projectRoot(path.dirname(file), roots.find((root) => file.startsWith(root + path.sep)) ?? path.dirname(file))
-  const analysisOf = (file: string): Analysis | undefined => checked.get(projectOf(file))?.analysisOf(file)
+  // A file's project: the directory of the nearest gpp.config.ts, if any.
+  const projectOf = (file: string): string | null => {
+    const config = findConfig(path.dirname(file))
+    return config && path.dirname(config)
+  }
+  const analysisOf = (file: string): Analysis | undefined => {
+    const root = projectOf(file)
+    return root === null ? undefined : checked.get(root)?.analysisOf(file)
+  }
 
   function refresh() {
     sources = new Map()
@@ -149,11 +173,16 @@ export function startServer(): void {
       }
     }
 
+    for (const [file, message] of configErrors) add(file, 1, 1, message)
     const members = new Map<string, GppFile[]>()
-    for (const f of loaded) members.set(projectOf(f.file), [...(members.get(projectOf(f.file)) ?? []), f])
+    for (const f of loaded) {
+      const root = projectOf(f.file)
+      if (root !== null) members.set(root, [...(members.get(root) ?? []), f])
+      else if (f.features.length) add(f.file, f.features[0].line, 1, 'No gpp.config.ts at or above this file runs it')
+    }
     checked = new Map()
     for (const [root, files] of members) {
-      const c = checkFiles(files, (file) => path.relative(roots[0], file))
+      const c = checkFiles(files, (trusted && configs.get(root)) || null, (file) => path.relative(roots[0], file))
       checked.set(root, c)
       for (const d of c.diagnostics) add(d.file, d.line, d.column, d.message)
     }
@@ -182,22 +211,15 @@ export function startServer(): void {
       const documentSelector = [{ language: 'gpp' }, { language: 'markdown' }]
       await connection.client.register(SemanticTokensRegistrationType.type, { documentSelector, legend, full: true })
     }
-    rediscover()
+    await rediscover()
     refresh()
   })
+  // Files, and configs, may have come or gone.
+  const reload = () => rediscover().then(soon, (err: unknown) => connection.console.error(`Gherkin++: ${String(err)}`))
   documents.onDidChangeContent(soon)
-  documents.onDidSave(() => {
-    rediscover()
-    soon()
-  })
-  documents.onDidOpen(() => {
-    rediscover()
-    soon()
-  })
-  connection.onDidChangeWatchedFiles(() => {
-    rediscover()
-    soon()
-  })
+  documents.onDidSave(reload)
+  documents.onDidOpen(reload)
+  connection.onDidChangeWatchedFiles(reload)
 
   // ---------------------------------------------------------------- words
 

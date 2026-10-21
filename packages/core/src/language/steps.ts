@@ -96,7 +96,14 @@ export function keywords<C extends Context>(settle: (stack: Stack, ctx: C) => Pr
       .word('Then', ...keyword('Then'))
       .word('And', conjunction)
       .word('But', conjunction)
-      .doc({ group: 'Steps', summary: 'Starts a step that sets the scene.', examples: ['Given I Visit "/"'] }, 'Given')
+      .doc(
+        {
+          group: 'Steps',
+          summary: 'Starts a step that sets the scene.',
+          examples: ['Given I Check the Checkbox "Remember me"'],
+        },
+        'Given',
+      )
       .doc(
         { group: 'Steps', summary: 'Starts a step that does something.', examples: ['When I Click the Button "Add"'] },
         'When',
@@ -124,7 +131,7 @@ export function keywords<C extends Context>(settle: (stack: Stack, ctx: C) => Pr
         {
           group: 'Steps',
           summary: 'Starts a step like the one above it, or, first, a step of no kind.',
-          examples: ['* I Visit "/"'],
+          examples: ['* I Click the Button "Add"'],
         },
         '*',
       )

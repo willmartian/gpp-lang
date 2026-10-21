@@ -10,30 +10,42 @@ npx playwright install chromium
 
 ## Config
 
+`gpp.config.ts` says which files Playwright runs. They have the shared words and
+[Playwright's own](words.md#each-backends-words), for the page.
+
+```ts
+// gpp.config.ts
+import { defineConfig } from 'gpp-lang'
+import { playwright } from '@gpp-lang/playwright/config'
+
+export default defineConfig({ backends: [playwright({ files: ['features/**/*.gpp'] })] })
+```
+
+`files` are globs from the config's directory. By default, every `.gpp` file and Markdown file.
+The Playwright config hands the gpp config to `defineGppConfig`:
+
 ```ts
 // playwright.config.ts
 import { defineConfig } from '@playwright/test'
 import { defineGppConfig } from '@gpp-lang/playwright'
+import gpp from './gpp.config.ts'
 
 export default defineConfig({
-  ...defineGppConfig({ features: ['features'], ignore: ['features/drafts'] }),
+  ...defineGppConfig(gpp),
   use: { baseURL: 'http://localhost:3000' },
 })
 ```
 
 | Option | Default | Is |
 | --- | --- | --- |
-| `features` | everything under `root` | where the `.gpp` files and Markdown are |
-| `ignore` | nothing | files and directories to leave out |
-| `outputDir` | `.gpp-tests` | where the generated tests go |
-| `root` | the config's directory | what the paths are relative to |
+| `outputDir` | `.gpp-tests` | where the generated tests go, from the gpp config's directory |
 
 - `defineGppConfig` writes a stub test per `.gpp` file to `outputDir` when Playwright loads
   its config. Stubs only list scenarios, so they never go stale. Gitignore `outputDir`.
 - Projects, retries, sharding, UI mode and the trace viewer all work. Failures point at the
   word that failed.
-- For sets of features with words of their own, give each Playwright project its own
-  `defineGppConfig` and `outputDir`.
+- For sets of features with words of their own, give each its own `gpp.config.ts`, and its
+  Playwright project its own `defineGppConfig`.
 
 ## Running
 

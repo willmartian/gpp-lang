@@ -8,6 +8,14 @@ npm install --save-dev gpp-lang @gpp-lang/testing-library @testing-library/dom @
 ```
 
 ```ts
+// gpp.config.ts
+import { defineConfig } from 'gpp-lang'
+import { testingLibrary } from '@gpp-lang/testing-library/config'
+
+export default defineConfig({ backends: [testingLibrary()] })
+```
+
+```ts
 // a setup file
 import { renderWith } from '@gpp-lang/testing-library'
 import { render } from '@testing-library/react'

@@ -363,6 +363,9 @@ importers:
       '@gpp-lang/playwright':
         specifier: workspace:*
         version: link:../packages/playwright
+      '@gpp-lang/testing-library':
+        specifier: workspace:*
+        version: link:../packages/testing-library
       '@types/markdown-it':
         specifier: ^14.2.0
         version: 14.2.0

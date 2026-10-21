@@ -18,7 +18,8 @@ in JavaScript and TypeScript.
 The extension uses your workspace's `node_modules/gpp-lang` when it has one, so the editor
 agrees with your tests, and its own copy otherwise. Untrusted workspaces always get its own.
 
-Each `package.json` starts a separate project, so two packages can `Define` the same word.
+Each `gpp.config.ts` starts a separate project, so two can `Define` the same word. Loading it
+runs it, so in an untrusted workspace Gherkin++ only shows files that don't parse.
 
 ## Settings
 

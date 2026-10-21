@@ -27,6 +27,15 @@ npm install --save-dev gpp-lang @gpp-lang/testing-library @testing-library/dom @
 
 ## Setup
 
+```ts
+// gpp.config.ts
+import { defineConfig } from 'gpp-lang'
+import { testingLibrary } from '@gpp-lang/testing-library/config'
+
+export default defineConfig({ backends: [testingLibrary()] })
+```
+
+`testingLibrary()` runs every `*.test.*` and `*.spec.*` file, or the globs in its `files`.
 A setup file says what `Render` renders with, here React Testing Library's `render`:
 
 ```ts
@@ -85,7 +94,7 @@ Babel config that makes CommonJS, like `@babel/preset-env`'s. Jest also needs
 
 ## Words
 
-The same [words](words.md), minus the [page ones](words.md#on-one-page), plus `Render`.
+The shared [words](words.md), and [`Render`](words.md#each-backends-words).
 
 - **Searches cover the whole page,** so dialogs in portals are found.
 - **Checks and actions retry** with Testing Library's `waitFor`, for its `asyncUtilTimeout`
@@ -95,7 +104,7 @@ The same [words](words.md), minus the [page ones](words.md#on-one-page), plus `R
 ## Defines
 
 Templates use the project's [Defines](defines.md#where-they-work): those in `.gpp` files
-and Markdown under the nearest `package.json` above the test file.
+and Markdown under the nearest `gpp.config.ts` above the test file.
 
 ## Checking
 

@@ -1,22 +1,15 @@
-// Which files are a project: those under the nearest package.json, as tools
-// usually draw the line, so a workspace's packages each have their own
-// Defines.
+// Which files are a project: those under its gpp.config.ts, but not those of
+// a project inside it, with a config of its own.
 
-import fs from 'node:fs'
 import path from 'node:path'
+import { findConfig } from './config.ts'
 import { discover } from './files.ts'
 
-// The directory of the nearest package.json at or above a file or directory,
-// or, when there's none, otherwise: where the tool was asked to look.
-export function projectRoot(from: string, otherwise: string): string {
-  for (let dir = path.resolve(from); ; dir = path.dirname(dir)) {
-    if (fs.existsSync(path.join(dir, 'package.json'))) return dir
-    if (dir === path.dirname(dir)) return path.resolve(otherwise)
-  }
-}
-
 // Every Gherkin++ file of the project at root: .gpp files, Markdown with ```gpp
-// blocks, and scripts with gpp templates, but not those of a package inside it.
+// blocks, and scripts with gpp templates.
 export function projectFiles(root: string): string[] {
-  return discover([root], root, [], true).filter((file) => projectRoot(path.dirname(file), root) === root)
+  return discover([root], root, [], true).filter((file) => {
+    const config = findConfig(path.dirname(file))
+    return config !== null && path.dirname(config) === root
+  })
 }

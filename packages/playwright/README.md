@@ -8,12 +8,21 @@ npm install --save-dev gpp-lang @gpp-lang/playwright @playwright/test
 ```
 
 ```ts
+// gpp.config.ts
+import { defineConfig } from 'gpp-lang'
+import { playwright } from '@gpp-lang/playwright/config'
+
+export default defineConfig({ backends: [playwright({ files: ['features/**/*.gpp'] })] })
+```
+
+```ts
 // playwright.config.ts
 import { defineConfig } from '@playwright/test'
 import { defineGppConfig } from '@gpp-lang/playwright'
+import gpp from './gpp.config.ts'
 
 export default defineConfig({
-  ...defineGppConfig({ features: ['features'] }),
+  ...defineGppConfig(gpp),
   use: { baseURL: 'http://localhost:3000' },
 })
 ```

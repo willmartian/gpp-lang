@@ -117,7 +117,7 @@ export const AnUnknownWord: Story = {
 
 export const NoPageToVisit: Story = {
   play: fails(
-    'A template plays on one page, already open, so it has no Visit',
+    'Unknown word Visit',
     gpp`
       When I Visit "/"
     `,

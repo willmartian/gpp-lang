@@ -4,10 +4,11 @@ import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import type { Diagnostic } from '@gpp-lang/core'
-import { check, leftovers, words } from '@gpp-lang/core'
+import { check, leftovers } from '@gpp-lang/core'
 import { discover, load } from '@gpp-lang/core/node'
+import { playwrightWords as words } from '@gpp-lang/playwright/config'
 
-// Checks some .gpp files, given as name → contents.
+// Checks some .gpp files, given as name → contents, with Playwright's words.
 function checkFiles(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-check-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)

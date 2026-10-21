@@ -69,7 +69,18 @@ const stories = [
   '',
 ].join('\n')
 
-const bin = path.join(import.meta.dirname, '..', 'packages', 'gpp-lang', 'bin', 'gpp-lang.ts')
+const packages = path.join(import.meta.dirname, '..', 'packages')
+const bin = path.join(packages, 'gpp-lang', 'bin', 'gpp-lang.ts')
+
+// A gpp.config.mjs that runs .gpp files and Markdown with Playwright and
+// stories with Storybook, from this repo's packages, wherever it is.
+const source = (file: string) => JSON.stringify(pathToFileURL(path.join(packages, file)).href)
+const config = [
+  `import { defineConfig } from ${source('core/src/node.ts')}`,
+  `import { playwright } from ${source('playwright/src/config.ts')}`,
+  `import { storybook } from ${source('storybook/src/config.ts')}`,
+  'export default defineConfig({ backends: [playwright(), storybook()] })',
+].join('\n')
 
 type Published = {
   uri: string
@@ -78,15 +89,15 @@ type Published = {
 
 test('the language server', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-lsp-'))
-  fs.writeFileSync(path.join(dir, 'package.json'), '{}')
+  fs.writeFileSync(path.join(dir, 'gpp.config.mjs'), config)
   fs.writeFileSync(path.join(dir, 'words.gpp'), words)
   fs.writeFileSync(path.join(dir, 'a.gpp'), feature)
   fs.writeFileSync(path.join(dir, 'README.md'), readme)
   fs.writeFileSync(path.join(dir, 'shop.gpp'), shop)
   fs.writeFileSync(path.join(dir, 'editor.stories.ts'), stories)
-  // A package of its own, so a project of its own, which Defines Add too, its own way.
+  // A config of its own, so a project of its own, which Defines Add too, its own way.
   fs.mkdirSync(path.join(dir, 'other'))
-  fs.writeFileSync(path.join(dir, 'other', 'package.json'), '{}')
+  fs.writeFileSync(path.join(dir, 'other', 'gpp.config.mjs'), config)
   fs.writeFileSync(path.join(dir, 'other', 'words.gpp'), 'Define: Add Text (Item)\n  Fill the Field "Name" with Item\n')
   fs.writeFileSync(path.join(dir, 'other', 'c.gpp'), 'Feature: Other\n  Scenario: S\n    When I Add "Tea"\n')
   const uri = pathToFileURL(path.join(dir, 'a.gpp')).href
@@ -385,7 +396,7 @@ test('the language server', async (t) => {
         ],
         [
           { line: 9, character: visiting.indexOf('Visit "/"') },
-          'A template plays on one page, already open, so it has no Visit',
+          "Unknown word Visit. Did you mean List? Capitalised words are code; if it's prose, write it in lowercase.",
         ],
       ],
     )

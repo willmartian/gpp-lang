@@ -48,8 +48,8 @@ test('a mistake is shown at its word, before anything runs', () => {
   )
 })
 
-test('the words for the page say why a template has none', () => {
-  assert.match(problem('When I Visit "/"') ?? '', /^A template plays on one page, already open, so it has no Visit/)
+test("Playwright's words for the page aren't a story's", () => {
+  assert.match(problem('When I Visit "/"') ?? '', /^Unknown word Visit/)
 })
 
 test('a line that is not a step says so', () => {

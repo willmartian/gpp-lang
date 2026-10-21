@@ -17,15 +17,14 @@
 // A template can't have ${…} in it: what a spec checks is written out, so it
 // reads the same as it runs, and the checker can see all of it.
 //
-// It's checked the first time it plays, against the language's words as a
-// template has them, with no page words, and the project's Defines, so a
-// mistake fails its own story before anything is clicked.
+// It's checked the first time it plays, against the shared words, which have
+// none for the page, and the project's Defines, so a mistake fails its own
+// story before anything is clicked.
 
 import type { GppFile, Scenario, Step } from '@gpp-lang/core'
 import {
   check,
   GppError,
-  INTERPOLATION,
   isFeatureTemplate,
   LoadError,
   leftovers,
@@ -57,7 +56,10 @@ export function useWords(files: Record<string, string>): void {
   defines = Object.entries(files).map(([file, src]) => ({ ...loadSource(file, src), features: [] }))
 }
 
-const template = () => words({ template: true })
+// The shared words, as config.ts's storybook() has them.
+const template = () => words()
+
+const INTERPOLATION = `A story's gpp template can't have \${…} in it: its args set the story up. Write what it checks out in full, so it reads as it runs.`
 
 // A template as a script of its own, as gpp-lang check reads it in a stories
 // file (templates.ts), with room above it for the Gherkin around it, and on

@@ -15,6 +15,9 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { HtmlBasePlugin } from '@11ty/eleventy'
 import { fences, GROUPS, words as vocabulary } from '@gpp-lang/core'
+import { playwright } from '@gpp-lang/playwright/config'
+import { testingLibrary } from '@gpp-lang/testing-library/config'
+import type { Entry } from 'gpp-lang'
 import { entries, shape, takes } from 'gpp-lang'
 import type MarkdownIt from 'markdown-it'
 import { highlight } from './highlight.ts'
@@ -113,18 +116,25 @@ function version(): string {
   throw new Error('packages/gpp-lang/package.json has no version')
 }
 
-// The built-in words, by group, for words.njk.
+// The built-in words, by group, for words.njk: the shared words, and those
+// only a backend has, saying which.
 function words() {
-  const all = entries(vocabulary())
+  const all = [
+    ...entries(vocabulary()),
+    ...[playwright(), testingLibrary()].flatMap((b) =>
+      entries(b.words, { own: true }).map((e) => ({ ...e, backend: b.name })),
+    ),
+  ]
   return GROUPS.map((name) => ({
     name,
     id: slug(name),
     entries: all
       .filter((e) => e.doc.group === name)
-      .map(({ names, doc, forms }) => ({
+      .map(({ names, doc, forms, backend }: Entry & { backend?: string }) => ({
         // * has no letters to make an id of.
         id: slug(doc.title ?? names[0]) || 'asterisk',
         title: doc.title,
+        backend,
         names,
         summary: doc.summary,
         forms: forms.map((f) => ({ shape: shape(f), takes: takes(f) })),

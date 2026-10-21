@@ -18,8 +18,9 @@ export interface Sections {
   preambles: string[]
   documents: string[]
   problems: Problem[]
-  // For a script: whether its templates are tests' Features, not stories' steps.
-  tests?: boolean
+  // For a script, what its templates are: a story's steps, or Features, as
+  // a test's are. A backend says which of these its templates are.
+  templates?: Templates
 }
 
 export function sections(file: string, src: string): Sections {
@@ -98,14 +99,14 @@ function markdownSections(src: string): Sections {
 
 // A script's gpp templates. A template's view keeps its text where it is.
 //
-// A test's template is a Feature, whose ${…} hold what Render renders. Each
-// becomes ${0}, ${1}… in order, padded to its width so what follows stays
-// where it was. One over several lines takes the rest of its last line up
-// to its first.
+// Each ${…} becomes ${0}, ${1}… in order, padded to its width so what follows
+// stays where it was. One over several lines takes the rest of its last line
+// up to its first. Whether anything takes one is up to the backend's words.
 //
-// A story's template is the steps of a Feature of one Scenario, named for the
-// story it's in, with the Feature and Scenario lines on the two lines above
-// its first step, which the view has blanked.
+// A template is either a Feature, as a test's is, or the steps of a Feature
+// of one Scenario, as a story's are, named for the story it's in, with the
+// Feature and Scenario lines on the two lines above its first step, which the
+// view has blanked.
 function scriptSections(src: string): Sections {
   const lines = src.split('\n')
   const starts: number[] = []
@@ -115,8 +116,9 @@ function scriptSections(src: string): Sections {
 
   const documents: string[] = []
   const problems: Problem[] = []
-  let tests = false
-  for (const t of templates(src)) {
+  let features = false
+  const found = templates(src)
+  for (const t of found) {
     const first = lineOf(t.start)
     const last = lineOf(t.end)
     const view = lines.map(() => '')
@@ -125,24 +127,19 @@ function scriptSections(src: string): Sections {
       const to = i === last ? t.end - starts[i] : lines[i].length
       view[i] = ' '.repeat(from) + lines[i].slice(from, to)
     }
-    if (isFeatureTemplate(view.join('\n'))) {
-      // From the last, so each one's place is as the source has it.
-      for (const [k, { start, end }] of [...t.interpolations.entries()].reverse()) {
-        const line = lineOf(start)
-        const lastLine = lineOf(end - 1)
-        const slot = `\${${k}}`
-        const rest = view[lastLine].slice(end - starts[lastLine])
-        for (let i = line + 1; i <= lastLine; i++) view[i] = ''
-        const width = line === lastLine ? end - start : slot.length + 1
-        view[line] = view[line].slice(0, start - starts[line]) + slot.padEnd(width) + rest
-      }
-      documents.push(view.join('\n'))
-      tests = true
-      continue
+    // From the last, so each one's place is as the source has it.
+    for (const [k, { start, end }] of [...t.interpolations.entries()].reverse()) {
+      const line = lineOf(start)
+      const lastLine = lineOf(end - 1)
+      const slot = `\${${k}}`
+      const rest = view[lastLine].slice(end - starts[lastLine])
+      for (let i = line + 1; i <= lastLine; i++) view[i] = ''
+      const width = line === lastLine ? end - start : slot.length + 1
+      view[line] = view[line].slice(0, start - starts[line]) + slot.padEnd(width) + rest
     }
-    const [interpolation] = t.interpolations
-    if (interpolation !== undefined) {
-      problems.push({ ...place(interpolation.start), message: INTERPOLATION })
+    if (isFeatureTemplate(view.join('\n'))) {
+      documents.push(view.join('\n'))
+      features = true
       continue
     }
     const top = view.findIndex((l, i) => i >= first && l.trim())
@@ -159,10 +156,12 @@ function scriptSections(src: string): Sections {
       documents.push(view.join('\n'))
     }
   }
-  return { preambles: [], documents, problems, tests }
+  const kind: Templates = features ? 'features' : 'steps'
+  return { preambles: [], documents, problems, ...(found.length > 0 && { templates: kind }) }
 }
 
-export const INTERPOLATION = `A story's gpp template can't have \${…} in it: its args set the story up. Write what it checks out in full, so it reads as it runs.`
+// What a script's templates are: a story's steps, or Features.
+export type Templates = 'steps' | 'features'
 
 // Whether a template is a test's, a Feature, rather than a story's steps: its
 // first line that isn't blank, a comment or a tag starts with Feature:.

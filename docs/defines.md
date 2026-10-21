@@ -79,7 +79,8 @@ Two Defines that could always both fit are a mistake, reported where they're def
 
 ## Where they work
 
-- A project is the files under the nearest `package.json`. Its Defines work in all of them:
-  `.gpp` files, Markdown and Storybook templates.
-- A nested package is a separate project.
-- Playwright only sees the Defines in its config's [`features`](playwright.md#config).
+- A project is the files under a `gpp.config.ts`. Its Defines work in all of them: `.gpp`
+  files, Markdown and templates.
+- A directory with a `gpp.config.ts` of its own is a separate project.
+- A Define can use a backend's [own words](words.md#each-backends-words), like `Visit`. Using
+  it in another backend's files is then a mistake.

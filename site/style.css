@@ -298,6 +298,10 @@ th {
   font-family: "Iosevka", ui-monospace, monospace;
   font-size: 0.88rem;
 }
+.entry .backend {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
 .entry p {
   margin-bottom: 0.5rem;
 }

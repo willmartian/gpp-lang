@@ -14,10 +14,11 @@
 // can take one, so the rest is checked as any Gherkin++ is.
 //
 // It's read as the test file loads, to declare its tests, and checked the
-// first time one runs, against the language's words as a test's template has
-// them, with no page words but with Render, and the project's Defines, so a
+// first time one runs, against the shared words and Render (config.ts), and
+// the project's Defines, so a
 // mistake fails its own test before anything renders.
 
+import path from 'node:path'
 import type { Diagnostic, GppFile, Report, Scenario, Step } from '@gpp-lang/core'
 import {
   check,
@@ -29,12 +30,10 @@ import {
   loadSource,
   runSteps,
   settle,
-  words,
 } from '@gpp-lang/core'
-import { load, projectFiles, projectRoot } from '@gpp-lang/core/node'
+import { findConfig, load, projectFiles } from '@gpp-lang/core/node'
+import { ComponentType, testingLibraryWords } from './config.ts'
 import { render, testingLibrary } from './driver.ts'
-
-const template = () => words({ template: true, render: true })
 
 // ---------------------------------------------------------------- reading
 
@@ -76,15 +75,18 @@ const frame = (text: string, index: number) => `    ${text}\n    ${' '.repeat(Ma
 // ---------------------------------------------------------------- the project
 
 // The project's Defines, from its .gpp files and Markdown: those under the
-// nearest package.json above the test file. Their scenarios are another
+// nearest gpp.config.ts above the test file. Their scenarios are another
 // backend's, and their mistakes are gpp-lang check's to report: a test fails
 // only on one it uses.
 let defines: GppFile[] | undefined
 
 function projectDefines(): GppFile[] {
-  defines ??= projectFiles(projectRoot(testDir(), process.cwd()))
-    .filter((f) => !isScript(f))
-    .map((f) => ({ ...load(f), features: [] }))
+  const config = findConfig(testDir())
+  defines ??= config
+    ? projectFiles(path.dirname(config))
+        .filter((f) => !isScript(f))
+        .map((f) => ({ ...load(f), features: [] }))
+    : []
   return defines
 }
 
@@ -92,8 +94,8 @@ function projectDefines(): GppFile[] {
 // or, without one, where the tests run.
 function testDir(): string {
   const { expect } = globalThis as { expect?: unknown }
-  const path = hasState(expect) ? expect.getState().testPath : undefined
-  return typeof path === 'string' ? path.replace(/[/\\][^/\\]*$/, '') : process.cwd()
+  const file = hasState(expect) ? expect.getState().testPath : undefined
+  return typeof file === 'string' ? path.dirname(file) : process.cwd()
 }
 
 const hasState = (v: unknown): v is { getState(): { testPath?: unknown } } =>
@@ -108,7 +110,7 @@ export function mistake({ source }: Read, report: Report, scenario: Scenario): D
 }
 
 export const checked = ({ file }: Read, vocabulary: GppFile[]): Report =>
-  check([...vocabulary, file], { words: template(), settle: leftovers })
+  check([...vocabulary, file], { words: testingLibraryWords(), interpolation: ComponentType, settle: leftovers })
 
 // Where a template is in its test file: the file, and the line its gpp\` is on.
 export interface Site {
@@ -134,7 +136,7 @@ export async function play(
   site: Site | null = null,
 ): Promise<void> {
   const ctx = { driver: testingLibrary, values, render }
-  const runner = { words: template(), vocabulary: vocabulary.flatMap((f) => f.vocabulary), settle }
+  const runner = { words: testingLibraryWords(), vocabulary: vocabulary.flatMap((f) => f.vocabulary), settle }
   await runSteps(scenario, runner, ctx, async (step, body) => {
     try {
       await body()

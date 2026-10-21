@@ -1,5 +1,5 @@
-// Every word a .gpp file can use, built in or Defined, with
-// what it takes and what it leaves. It's read from the same forms and
+// Every word a project can use: the shared words, each of its backends' own,
+// and its Defines, with what each takes and what it leaves. It's read from the same forms and
 // inferred Defines the checker uses, so it can't drift from what the words
 // do. Run it as `gpp-lang words`; the docs site shows the same entries.
 //
@@ -11,8 +11,8 @@
 // Words that share a doc, like the ARIA roles, are listed together.
 
 import path from 'node:path'
-import type { Analysis, Doc, Env, Form } from '@gpp-lang/core'
-import { GROUPS, keywords } from '@gpp-lang/core'
+import type { Checked, Config, Doc, Env, Form } from '@gpp-lang/core'
+import { GROUPS, keywords, words } from '@gpp-lang/core'
 
 const KEYWORDS = keywords(async () => {})
 
@@ -27,11 +27,12 @@ export interface Entry {
 
 // The built-in words and step keywords, one entry per doc, in the order of
 // GROUPS, then the order they were documented in. The tests see that every
-// builtin has a doc.
-export function entries(words: Env): Entry[] {
+// builtin has a doc. With own, only the words the Env itself adds, as a
+// backend's add to the shared words.
+export function entries(words: Env, { own = false }: { own?: boolean } = {}): Entry[] {
   const byDoc = new Map<Doc, Entry>()
-  for (const scope of [words, KEYWORDS]) {
-    for (let env: Env | null = scope; env; env = env.parent) {
+  for (const scope of own ? [words] : [words, KEYWORDS]) {
+    for (let env: Env | null = scope; env; env = own ? null : env.parent) {
       for (const [key, doc] of env.docs) {
         const forms = env.forms(key)
         if (!forms) continue
@@ -46,7 +47,7 @@ export function entries(words: Env): Entry[] {
   return [...byDoc.values()].sort((a, b) => GROUPS.indexOf(a.doc.group) - GROUPS.indexOf(b.doc.group))
 }
 
-export function listWords(words: Env, analysis: Analysis, cwd = process.cwd()): string {
+export function listWords(config: Config | null, checked: Checked, cwd = process.cwd()): string {
   const out = [
     'Built-in words',
     '',
@@ -55,15 +56,24 @@ export function listWords(words: Env, analysis: Analysis, cwd = process.cwd()): 
     "word, so it isn't listed.",
     '',
   ]
-
-  const all = entries(words)
-  for (const group of GROUPS) {
-    const these = all.filter((e) => e.doc.group === group)
-    if (!these.length) continue
-    out.push(`${group}:`, '')
-    for (const entry of these) out.push(...listed(entry), '')
+  const grouped = (all: Entry[]) => {
+    for (const group of GROUPS) {
+      const these = all.filter((e) => e.doc.group === group)
+      if (!these.length) continue
+      out.push(`${group}:`, '')
+      for (const entry of these) out.push(...listed(entry), '')
+    }
+  }
+  grouped(entries(words()))
+  for (const backend of config?.backends ?? []) {
+    const own = entries(backend.words, { own: true })
+    if (!own.length) continue
+    out.push(`Only in ${backend.name}'s files`, '')
+    grouped(own)
   }
 
+  // As the first backend infers them, since a Define may use its words.
+  const [analysis = checked.analysisOf('')] = checked.analyses.values()
   const defines = analysis.words().filter((w) => w.kind === 'define')
   out.push('Defined in this project', '')
   if (!defines.length) out.push('None yet.', '')

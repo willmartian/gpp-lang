@@ -29,6 +29,16 @@ npm install --save-dev gpp-lang @gpp-lang/storybook
 addons: ['@gpp-lang/storybook']
 ```
 
+```ts
+// gpp.config.ts
+import { defineConfig } from 'gpp-lang'
+import { storybook } from '@gpp-lang/storybook/config'
+
+export default defineConfig({ backends: [storybook()] })
+```
+
+`storybook()` runs every `*.stories.*` file, or the globs in its `files`.
+
 - **Each line is a step,** starting with Given, When, Then, And, But or `*`. Tables and
   DocStrings work. No `Feature:` or `Scenario:` line.
 - **The Interactions panel** shows each step and what it did.
@@ -38,7 +48,7 @@ addons: ['@gpp-lang/storybook']
 
 ## Words
 
-The same [words](words.md), minus the [page ones](words.md#on-one-page).
+The shared [words](words.md), and [none of its own](words.md#each-backends-words).
 
 - **Searches cover the whole page,** not just the canvas, so dialogs in portals are found.
 - **Checks and actions retry** for Testing Library's `asyncUtilTimeout` (one second by default).

@@ -5,17 +5,18 @@
 //     // playwright.config.ts
 //     import { defineConfig } from '@playwright/test'
 //     import { defineGppConfig } from '@gpp-lang/playwright'
+//     import gpp from './gpp.config.ts'
 //
 //     export default defineConfig({
-//       ...defineGppConfig({ features: ['features'] }),
+//       ...defineGppConfig(gpp),
 //       use: { baseURL: 'http://localhost:3000' },
 //     })
 //
-// defineGppConfig writes a test file for each .gpp file, and each Markdown
-// file with an ```gpp block, into its outputDir, and returns the testDir and
-// testMatch that find them. The testDir is the project's root, not the
-// outputDir, so Playwright says where tests are relative to the root:
-// features/cart.gpp, not ../features/cart.gpp.
+// defineGppConfig writes a test file for each file the gpp config says
+// Playwright runs, into its outputDir, and returns the testDir and testMatch
+// that find them. The testDir is the project's root, not the outputDir, so
+// Playwright says where tests are relative to the root: features/cart.gpp,
+// not ../features/cart.gpp.
 //
 // The files are written every time Playwright loads the config, so they're
 // never out of date, and they're no more than a list of the scenarios: what
@@ -25,23 +26,17 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import type { Feature, LoadError, Scenario } from '@gpp-lang/core'
+import { pathToFileURL } from 'node:url'
+import type { Config, Feature, LoadError, Scenario } from '@gpp-lang/core'
 import { escapeRegExp } from '@gpp-lang/core'
+import { NAME } from './config.ts'
 import type { Loaded, Project } from './project.ts'
 import { loadProject } from './project.ts'
 
-export interface GppConfig {
-  // Where the .gpp files and Markdown are. By default, everywhere under the root.
-  features?: string[]
-  // Files and directories to leave out, like fixtures that are meant to fail.
-  ignore?: string[]
-  // Where the generated tests go, for testDir. By default, .gpp-tests. Each
-  // defineGppConfig in a config needs its own.
+export interface GppOptions {
+  // Where the generated tests go, for testDir. By default, .gpp-tests in the
+  // gpp config's directory. Each defineGppConfig in a config needs its own.
   outputDir?: string
-  // What the paths are relative to. By default, the directory of the config
-  // that calls defineGppConfig, as Playwright's own paths are.
-  root?: string
 }
 
 // What a Playwright config, or one of its projects, needs to run the
@@ -52,46 +47,23 @@ export interface GppTests {
   testMatch: RegExp
 }
 
-export function defineGppConfig(config: GppConfig = {}): GppTests {
-  const root = path.resolve(config.root ?? callerDir())
-  const strings = (paths: string[] | undefined, what: string) => {
-    if (paths !== undefined && !(Array.isArray(paths) && paths.every((p) => typeof p === 'string'))) {
-      throw new Error(`defineGppConfig: ${what} should be a list of paths`)
-    }
-    return (paths ?? []).map((p) => path.resolve(root, p))
-  }
-  const features = strings(config.features, 'features')
+// The tests for a gpp config's Playwright backend: import the config, and
+// hand it here.
+export function defineGppConfig(config: Config, options: GppOptions = {}): GppTests {
+  const backend = config.backends.find((b) => b.name === NAME)
+  if (!backend) throw new Error(`defineGppConfig: the gpp config in ${config.root} has no playwright() backend`)
   const project: Project = {
-    root,
-    features: features.length ? features : [root],
-    ignore: strings(config.ignore, 'ignore'),
-    outputDir: path.resolve(root, config.outputDir ?? '.gpp-tests'),
+    root: config.root,
+    files: [...backend.files],
+    outputDir: path.resolve(config.root, options.outputDir ?? '.gpp-tests'),
   }
   // Playwright loads its config in every worker too, but only its first load,
   // in the main process, should write anything.
   if (process.env.TEST_WORKER_INDEX === undefined) generate(project, loadProject(project))
-  return { testDir: root, testMatch: new RegExp(`^${escapeRegExp(project.outputDir + path.sep)}.*\\.spec\\.js$`) }
-}
-
-// The directory of the file that called defineGppConfig: the config. Read
-// from the stack, as Playwright reads where each test is declared.
-function callerDir(): string {
-  const prepare = Error.prepareStackTrace
-  let caller: string | null | undefined
-  try {
-    Error.prepareStackTrace = (_err, frames) => {
-      caller = frames[0]?.getFileName()
-      return ''
-    }
-    const holder: { stack?: string } = {}
-    Error.captureStackTrace(holder, defineGppConfig)
-    // Reading the stack is what runs prepareStackTrace.
-    if (holder.stack === undefined) caller = undefined
-  } finally {
-    Error.prepareStackTrace = prepare
+  return {
+    testDir: project.root,
+    testMatch: new RegExp(`^${escapeRegExp(project.outputDir + path.sep)}.*\\.spec\\.js$`),
   }
-  if (!caller) throw new Error("defineGppConfig couldn't tell which file called it. Give it a root.")
-  return path.dirname(caller.startsWith('file:') ? fileURLToPath(caller) : caller)
 }
 
 // ---------------------------------------------------------------- generating

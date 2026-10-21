@@ -12,8 +12,9 @@
 // at Gherkin++'s own code.
 
 import type { Diagnostic, Scenario, Step, Vocabulary } from '@gpp-lang/core'
-import { GppError, runSteps, settle, words } from '@gpp-lang/core'
+import { GppError, runSteps, settle } from '@gpp-lang/core'
 import { expect, type PlaywrightTestArgs, test } from '@playwright/test'
+import { playwrightWords } from './config.ts'
 import type { BrowserContext } from './driver.ts'
 import { playwright } from './driver.ts'
 import type { Loaded, Project } from './project.ts'
@@ -99,7 +100,7 @@ export function project(p: Project) {
 }
 
 export function runScenario(scenario: Scenario, vocabulary: Vocabulary[], ctx: BrowserContext): Promise<void> {
-  return runSteps(scenario, { words: words(), vocabulary, settle }, ctx, (step, body) => {
+  return runSteps(scenario, { words: playwrightWords(), vocabulary, settle }, ctx, (step, body) => {
     const location = { file: step.file, line: step.line, column: step.column }
     return test.step(
       `${step.keyword}${step.text}`,

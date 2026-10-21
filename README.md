@@ -18,7 +18,22 @@ Runs as Playwright tests, Storybook play functions, or Vitest and Jest tests. [H
 
 ## Install
 
-Needs Node.js 22.13 or later. Install `gpp-lang` and one or both backends.
+Needs Node.js 22.18 or later. Install `gpp-lang` and a backend for each kind of test, then
+say which files each one runs in `gpp.config.ts`, at your project's root:
+
+```ts
+// gpp.config.ts
+import { defineConfig } from 'gpp-lang'
+import { playwright } from '@gpp-lang/playwright/config'
+import { storybook } from '@gpp-lang/storybook/config'
+
+export default defineConfig({
+  backends: [playwright({ files: ['features/**/*.gpp'] }), storybook()],
+})
+```
+
+Every backend has the shared words, and some add their own: Playwright's for the page,
+Testing Library's `Render`. A file only has its backend's.
 
 ### Playwright
 
@@ -34,9 +49,10 @@ npx playwright install chromium
 // playwright.config.ts
 import { defineConfig } from '@playwright/test'
 import { defineGppConfig } from '@gpp-lang/playwright'
+import gpp from './gpp.config.ts'
 
 export default defineConfig({
-  ...defineGppConfig({ features: ['features'] }),
+  ...defineGppConfig(gpp),
   use: { baseURL: 'http://localhost:3000' },
 })
 ```
@@ -102,7 +118,7 @@ gpp`
 
 ## Check
 
-Every backend shares the same words and [Defines](docs/defines.md).
+Every file in a project can use its [Defines](docs/defines.md).
 
 ```sh
 npx gpp-lang check        # check every spec, without running it

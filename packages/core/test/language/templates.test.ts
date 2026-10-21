@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { INTERPOLATION, LoadError, loadSource, templates } from '../../src/index.ts'
+import { LoadError, loadSource, templates } from '../../src/index.ts'
 
 // The text of each gpp template in some JavaScript.
 const texts = (src: string) => templates(src).map((t) => src.slice(t.start, t.end))
@@ -72,7 +72,6 @@ test("a template that isn't steps says where", () => {
     '5:3 Each line of a gpp template is a step, starting with Given, When, Then, And, But or *, unless the template starts with Feature:',
   ])
   assert.deepEqual(problems('\n\nconst a = gpp`\n  # nothing\n`'), ['3:15 A gpp template needs at least one step'])
-  assert.deepEqual(problems(`const a = gpp\`When I Click "\${x}"\``), [`1:29 ${INTERPOLATION}`])
 })
 
 const tests = [
@@ -116,6 +115,10 @@ test(`a test's template is a Feature, its \${…} numbered in their place`, () =
   )
 })
 
-test(`only a test's template can have a \${…}`, () => {
-  assert.deepEqual(problems(`a = gpp\`Given I Render \${x}\``), [`1:24 ${INTERPOLATION}`])
+test(`a story's template's \${…} are numbered too, for its backend's words to take or not`, () => {
+  const [story] = loadSource('a.stories.ts', `\n\nexport const S = { play: gpp\`When I Click \${x}\` }`).features
+  assert.deepEqual(
+    story.scenarios[0].steps.map((s) => `${s.keyword}${s.text}`),
+    [`When I Click \${0}`],
+  )
 })

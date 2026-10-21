@@ -37,13 +37,11 @@ export async function activate(context: ExtensionContext): Promise<void> {
         language,
       })),
     ],
-    // The Playwright config says which files make up each project.
+    // gpp.config.ts says which files make up each project, and their backends.
     synchronize: {
-      fileEvents: workspace.createFileSystemWatcher(
-        '**/{*.gpp,*.md,*.{js,jsx,ts,tsx,mjs,cjs,mts,cts},playwright.config.*}',
-      ),
+      fileEvents: workspace.createFileSystemWatcher('**/{*.gpp,*.md,*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}}'),
     },
-    // Loading the Playwright config runs it, so not in an untrusted workspace.
+    // Loading gpp.config.ts runs it, so not in an untrusted workspace.
     initializationOptions: { trusted: workspace.isTrusted },
   }
   client = new LanguageClient('gpp', 'Gherkin++', serverOptions, clientOptions)

@@ -4,7 +4,8 @@
   "description": "Gherkin++ scenarios, in .gpp files and Markdown, as Playwright tests.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts"
   },
   "files": [
     "dist",
@@ -16,6 +17,10 @@
       ".": {
         "types": "./dist/src/index.d.ts",
         "default": "./dist/src/index.js"
+      },
+      "./config": {
+        "types": "./dist/src/config.d.ts",
+        "default": "./dist/src/config.js"
       }
     }
   },
@@ -32,7 +37,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22.18"
   },
   "repository": {
     "type": "git",

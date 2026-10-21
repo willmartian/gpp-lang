@@ -13,12 +13,13 @@ import { test } from 'node:test'
 const cli = createRequire(import.meta.url).resolve('@playwright/test/cli')
 const packages = path.join(import.meta.dirname, '..', '..')
 
-// Installs this package in a scratch project, as a link to this repo's, so its
-// config imports it as any project's would.
+// Installs this package and gpp-lang in a scratch project, as links to this
+// repo's, so its configs import them as any project's would.
 function install(dir: string) {
   const scope = path.join(dir, 'node_modules', '@gpp-lang')
   fs.mkdirSync(scope, { recursive: true })
   fs.symlinkSync(path.join(packages, 'playwright'), path.join(scope, 'playwright'))
+  fs.symlinkSync(path.join(packages, 'gpp-lang'), path.join(dir, 'node_modules', 'gpp-lang'))
 }
 
 const cart = [
@@ -53,9 +54,15 @@ function scratch(): string {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-generate-')))
   install(dir)
   const files: Record<string, string> = {
+    'gpp.config.mjs': [
+      "import { playwright } from '@gpp-lang/playwright/config'",
+      "import { defineConfig } from 'gpp-lang'",
+      "export default defineConfig({ backends: [playwright({ files: ['features/**'] })] })",
+    ].join('\n'),
     'playwright.config.mjs': [
       "import { defineGppConfig } from '@gpp-lang/playwright'",
-      "export default { ...defineGppConfig({ features: ['features'] }) }",
+      "import gpp from './gpp.config.mjs'",
+      'export default { ...defineGppConfig(gpp) }',
     ].join('\n'),
     'features/cart.gpp': cart,
     'features/words.gpp': brokenDefine,

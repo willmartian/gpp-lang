@@ -19,10 +19,10 @@
 //     colon comes first, "Define: Add", and its body is indented under it.
 //   - Comments are Gherkin's: a line starting with #.
 //   - In a test's gpp template, ${0}, ${1}… stand for what its ${…} hold,
-//     in order (sections.ts), and leave a Component. Nowhere else has them.
+//     in order (sections.ts), and leave what they hold. Nowhere else has them.
 
 import type { Context, Doc, Form, Type } from './types.ts'
-import { AnyType, article, Component, formsFor, NumberType, signature, TableType, TextType, type } from './types.ts'
+import { AnyType, article, formsFor, Interpolated, NumberType, signature, TableType, TextType, type } from './types.ts'
 
 export class GppError extends Error {
   pos?: number
@@ -625,7 +625,7 @@ async function evaluate(node: Node, env: Env, stack: Stack, ctx: Context): Promi
     case 'slot': {
       if (!ctx.values || node.index >= ctx.values.length)
         throw new Error(`$\{${node.index}} ran without the value of the template's $\{…} number ${node.index}`)
-      return void stack.push(new Component(ctx.values[node.index]))
+      return void stack.push(new Interpolated(ctx.values[node.index]))
     }
     case 'block':
       return void stack.push(new Block(node.body, env))
@@ -691,7 +691,7 @@ export function core(): Env {
   const form = formsFor<Context>()
   return (
     new Env()
-      // "Given I Visit ..." — the one capital English can't do without.
+      // "When I Click ..." — the one capital English can't do without.
       .word(
         'I',
         form([], () => {}),
@@ -701,7 +701,11 @@ export function core(): Env {
         form([AnyType], (ctx, v) => (ctx.print ?? console.log)(describe(v))),
       )
       .doc(
-        { group: 'Other', summary: 'Does nothing, so a step can read as a sentence.', examples: ['Given I Visit "/"'] },
+        {
+          group: 'Other',
+          summary: 'Does nothing, so a step can read as a sentence.',
+          examples: ['When I Click the Button "Add"'],
+        },
         'I',
       )
       .doc(

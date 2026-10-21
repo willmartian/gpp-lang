@@ -25,7 +25,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "In an untrusted workspace, Gherkin++ uses the language server it ships with, never the workspace's, and doesn't load the workspace's Playwright config."
+      "description": "In an untrusted workspace, Gherkin++ uses the language server it ships with, never the workspace's, and doesn't load the workspace's gpp.config.ts, so it only shows files that don't parse."
     }
   },
   "contributes": {

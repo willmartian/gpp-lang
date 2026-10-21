@@ -4,6 +4,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { testingLibraryWords } from '../src/config.ts'
 import type { Read } from '../src/feature.ts'
 import { checked, mistake, read } from '../src/feature.ts'
 
@@ -94,11 +95,17 @@ test(`only Render takes what a \${…} holds`, () => {
   assert.match(left ?? '', /a \$\{…\}/)
 })
 
-test('the words for the page say why a test has none', () => {
+test("Playwright's words for the page aren't a test's", () => {
   const [visit] = mistakes(`
     Feature: Editor
       Scenario: Going somewhere
         Given I Visit "/"
   `)
-  assert.match(visit ?? '', /^A template plays on one page, already open, so it has no Visit/)
+  assert.match(visit ?? '', /^Unknown word Visit/)
+})
+
+test("Render's docs example checks", () => {
+  const [example] = testingLibraryWords().docOf('Render')?.examples ?? []
+  const steps = example.replace(/\$\{[^}]*\}/, `\${…}`)
+  assert.deepEqual(mistakes(`\n    Feature: Docs\n      Scenario: The example\n        ${steps}\n  `), [null])
 })

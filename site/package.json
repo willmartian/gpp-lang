@@ -12,8 +12,9 @@
     "@fontsource/iosevka-aile": "^5.3.0",
     "@gpp-lang/core": "workspace:*",
     "@gpp-lang/playwright": "workspace:*",
+    "@gpp-lang/testing-library": "workspace:*",
     "@types/markdown-it": "^14.2.0",
-    "shiki": "^4.5.0",
-    "gpp-lang": "workspace:*"
+    "gpp-lang": "workspace:*",
+    "shiki": "^4.5.0"
   }
 }

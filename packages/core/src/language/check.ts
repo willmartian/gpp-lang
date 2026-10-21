@@ -24,7 +24,7 @@ import type { GppFile, Scenario, Step, Vocabulary } from './load.ts'
 import { lineCol } from './load.ts'
 import { keywordForms, keywords, StepType } from './steps.ts'
 import type { Doc, Form, Type } from './types.ts'
-import { AnyType, article, ComponentType, NumberType, signature, TableType, TextType, type } from './types.ts'
+import { AnyType, article, NumberType, signature, TableType, TextType, type } from './types.ts'
 
 export interface Diagnostic {
   file: string
@@ -50,6 +50,8 @@ export interface CheckOptions {
   // how messages name a file, like relative to the project; by default, as
   // it was loaded
   name?: (file: string) => string
+  // what a template's ${…} is, for a backend whose words take one
+  interpolation?: Type<unknown>
 }
 
 // ---------------------------------------------------------------- static values
@@ -491,7 +493,9 @@ class Checker {
       case 'num':
         return void sim.stack.push({ ty: NumberType, shown: String(node.value) })
       case 'slot':
-        return void sim.stack.push({ ty: ComponentType, shown: `a \${…}` })
+        if (!this.options.interpolation)
+          throw new Mistake(`Nothing here takes a \${…}: this file's backend has no words for one`)
+        return void sim.stack.push({ ty: this.options.interpolation, shown: `a \${…}` })
       case 'sym':
         return void sim.stack.push({ ty: SymbolType, shown: `\\${node.value}` })
       case 'block':

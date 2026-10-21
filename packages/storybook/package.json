@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./preset": "./src/preset.ts"
+    "./preset": "./src/preset.ts",
+    "./config": "./src/config.ts"
   },
   "files": [
     "dist",
@@ -21,6 +22,10 @@
       "./preset": {
         "types": "./dist/src/preset.d.ts",
         "default": "./dist/src/preset.js"
+      },
+      "./config": {
+        "types": "./dist/src/config.d.ts",
+        "default": "./dist/src/config.js"
       }
     }
   },
@@ -39,7 +44,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22.18"
   },
   "repository": {
     "type": "git",

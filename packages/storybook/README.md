@@ -13,6 +13,14 @@ addons: ['@gpp-lang/storybook']
 ```
 
 ```ts
+// gpp.config.ts
+import { defineConfig } from 'gpp-lang'
+import { storybook } from '@gpp-lang/storybook/config'
+
+export default defineConfig({ backends: [storybook()] })
+```
+
+```ts
 // a story
 import { gpp } from '@gpp-lang/storybook'
 

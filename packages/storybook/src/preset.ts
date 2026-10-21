@@ -5,14 +5,14 @@
 //
 // A play function runs in a browser, which can't read the project's files, so
 // a Vite plugin reads them as Storybook builds, and a preview entry hands what
-// it read to the templates (preview.ts). The project is the nearest
-// package.json above .storybook, as for gpp-lang check. Changing one of its
-// files reloads the stories.
+// it read to the templates (preview.ts). The project is the directory of the
+// nearest gpp.config.ts above .storybook, as for gpp-lang check. Changing one
+// of its files reloads the stories.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { isScript } from '@gpp-lang/core'
-import { projectFiles, projectRoot } from '@gpp-lang/core/node'
+import { findConfig, projectFiles } from '@gpp-lang/core/node'
 import type { InlineConfig, Plugin } from 'vite'
 
 // .ts when run from source, .js once built.
@@ -23,8 +23,15 @@ const DEFINES = 'virtual:gpp-lang/defines'
 export async function viteFinal(config: InlineConfig, options: { configDir: string }): Promise<InlineConfig> {
   return {
     ...config,
-    plugins: [...(config.plugins ?? []), defines(projectRoot(options.configDir, path.dirname(options.configDir)))],
+    plugins: [...(config.plugins ?? []), defines(projectOf(options.configDir))],
   }
+}
+
+// The project .storybook is in: the directory of the nearest gpp.config.ts.
+function projectOf(configDir: string): string {
+  const config = findConfig(configDir)
+  if (!config) throw new Error(`@gpp-lang/storybook found no gpp.config.ts at or above ${configDir}`)
+  return path.dirname(config)
 }
 
 export async function previewAnnotations(entries: string[] = []): Promise<string[]> {

@@ -3,16 +3,18 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { analyze, leftovers, words as vocabulary } from '@gpp-lang/core'
+import { checkFiles } from '@gpp-lang/core'
 import { discover, load } from '@gpp-lang/core/node'
+import { playwright } from '@gpp-lang/playwright/config'
 import { listWords } from 'gpp-lang'
 
-// The listing for some .gpp files, given as name → contents.
+// The listing for some .gpp files, given as name → contents, in a project
+// that runs them with Playwright.
 function listWordsOf(files: Record<string, string>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gpp-words-'))
   for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src)
-  const words = vocabulary()
-  return listWords(words, analyze(discover([dir]).map(load), { words, settle: leftovers }), dir)
+  const config = { root: dir, backends: [playwright()] }
+  return listWords(config, checkFiles(discover([dir]).map(load), config), dir)
 }
 
 test('a built-in word is listed with what it does, its forms and an example', () => {
@@ -77,4 +79,11 @@ test('step keywords are listed as the words they are', () => {
     "  Starts a step like the one above it. A scenario can't start with one.",
     '  Step, Mode -> Mode    takes a step, then a Given, When or Then above it',
   ])
+})
+
+test("a backend's own words are listed after the shared ones, under it", () => {
+  const lines = listWordsOf({}).split('\n')
+  const own = lines.indexOf("Only in Playwright's files")
+  assert.ok(lines.indexOf('Click') < own)
+  assert.ok(own < lines.indexOf('Visit'))
 })

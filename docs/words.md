@@ -67,10 +67,16 @@ A step must use everything it makes. Anything left at the end must be a check.
 | `When the Button "Add"` | a mistake: the Button is never used |
 | `When I click the Button "Add"` | a mistake: `click` is prose, so the Button is never used |
 
-## On one page
+## Each backend's words
 
-Storybook and Testing Library templates run on one page that's already open, so they have no
-`Visit`, `Reload`, `Back`, `At` or `Titled`. Only Testing Library's have `Render`.
+Every backend has the shared words. Some add their own, which only the files they run have.
+`gpp.config.ts` says which backend runs each file.
+
+| Backend | Adds |
+| --- | --- |
+| [Playwright](playwright.md) | `Visit`, `Reload`, `Back`, `At` and `Titled`, for the page |
+| [Storybook](storybook.md) | nothing: a story renders itself, on a page that's already open |
+| [Testing Library](testing-library.md) | `Render` |
 
 ## More words
 

@@ -4,7 +4,6 @@
 // expect retries until a check passes, which is what the words ask of a driver.
 
 import type { Context, Driver } from '@gpp-lang/core'
-import { escapeRegExp } from '@gpp-lang/core'
 import type { expect, Locator, Page } from '@playwright/test'
 
 export interface BrowserContext extends Context {
@@ -111,23 +110,6 @@ export const playwright: Driver<BrowserContext, Locator> = {
     return target.all()
   },
 
-  async visit({ page }, where) {
-    await page.goto(where)
-  },
-
-  async reload({ page }) {
-    await page.reload()
-  },
-
-  async back({ page }) {
-    await page.goBack()
-  },
-
-  expectPage(ctx, state, not) {
-    const e = not ? ctx.expect(ctx.page).not : ctx.expect(ctx.page)
-    return state.is === 'at' ? e.toHaveURL(urlPattern(state.where)) : e.toHaveTitle(state.title)
-  },
-
   // expect.poll retries for as long as the project's expect timeout.
   async retry(ctx, attempt) {
     let last: unknown
@@ -146,10 +128,4 @@ export const playwright: Driver<BrowserContext, Locator> = {
       throw last ?? err
     }
   },
-}
-
-// "/dashboard" means that path on whatever host the page is on.
-function urlPattern(where: string): string | RegExp {
-  if (!where.startsWith('/')) return where
-  return new RegExp(`^[a-z]+://[^/]+${escapeRegExp(where)}(?:[?#].*)?$`)
 }

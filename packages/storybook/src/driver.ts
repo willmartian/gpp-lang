@@ -42,5 +42,4 @@ export const testingLibrary: Driver<StoryContext, Target> = domDriver<StoryConte
     userEvent,
   },
   page: (ctx) => ctx.canvasElement.ownerDocument.body,
-  onePage: 'A template plays on one page, already open',
 })

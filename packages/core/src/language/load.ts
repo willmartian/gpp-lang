@@ -19,6 +19,7 @@ import type { Step as AstStep, FeatureChild, PickleStepArgument, RuleChild } fro
 import { IdGenerator } from '@cucumber/messages'
 import type { Program } from './cognate.ts'
 import { GppError, parse } from './cognate.ts'
+import type { Templates } from './sections.ts'
 import { sections } from './sections.ts'
 import { isScript } from './templates.ts'
 
@@ -70,8 +71,8 @@ export interface GppFile {
   vocabulary: Vocabulary[]
   // a .gpp file's Feature; in Markdown, any number
   features: Feature[]
-  // a script whose gpp templates are tests', not stories'
-  tests?: boolean
+  // for a script, what its gpp templates are (sections.ts)
+  templates?: Templates
 }
 
 // A file that can't be read as Gherkin++ at all, and where.
@@ -89,13 +90,13 @@ export class LoadError extends Error {
 
 // Loads a file as it is right now, which in an editor may not be saved.
 export function loadSource(file: string, src: string): GppFile {
-  const { preambles, documents, problems, tests } = sections(file, src)
+  const { preambles, documents, problems, templates } = sections(file, src)
   if (problems.length) throw new LoadError(file, problems)
   return {
     file,
     vocabulary: preambles.flatMap((p) => loadVocabulary(file, p) ?? []),
     features: documents.flatMap((d) => loadFeature(file, d) ?? []),
-    ...(tests && { tests }),
+    ...(templates && { templates }),
   }
 }
 

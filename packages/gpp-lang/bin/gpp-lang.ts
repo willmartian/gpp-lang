@@ -5,16 +5,16 @@
 // gpp-lang lsp
 //
 // Checks the scenarios without running them, lists the words they can use, or
-// answers an editor. A project is the files under the nearest package.json,
-// which share their Defines. Running them is each backend's tool's job, like
-// Playwright's.
+// answers an editor. A project is the files under a gpp.config.ts, which share
+// their Defines, and the config says which backend runs each, and so which
+// words it has. Running them is each backend's tool's job, like Playwright's.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { styleText } from 'node:util'
-import type { Diagnostic, GppFile } from '@gpp-lang/core'
-import { checkFiles, format, LoadError, words } from '@gpp-lang/core'
-import { discover, load, projectFiles, projectRoot } from '@gpp-lang/core/node'
+import type { Config, Diagnostic, GppFile } from '@gpp-lang/core'
+import { checkFiles, format, LoadError } from '@gpp-lang/core'
+import { findConfig, findConfigs, load, loadConfig, projectFiles } from '@gpp-lang/core/node'
 import { Command, Option } from 'commander'
 import { listWords } from '../src/tools/words.ts'
 
@@ -51,8 +51,8 @@ ${style('bold', 'Examples:')}
   ${style('dim', '$')} gpp-lang check features/cart.gpp
 
 A project is the .gpp files, Markdown with \`\`\`gpp blocks and gpp templates under
-the nearest package.json, and every Define in a project can be used by all of
-its files.`,
+a gpp.config.ts, which says which backend runs each. Every Define in a project
+can be used by all of its files.`,
   )
 
 program
@@ -74,8 +74,8 @@ program
   .addHelpText(
     'after',
     `
-Lists the built-in words and the project's own Defines, with what each takes
-and leaves.`,
+Lists the shared words, each backend's own in the project's gpp.config.ts, and
+the project's Defines, with what each takes and leaves.`,
   )
   .action(async () => process.exit(await printWords()))
 
@@ -107,7 +107,7 @@ function named(paths: string[], cwd: string) {
 }
 
 // A project's files, and why those that don't load don't.
-function loadProject(root: string) {
+function loadProject(root: string): { files: GppFile[]; broken: LoadError[] } {
   const files: GppFile[] = []
   const broken: LoadError[] = []
   for (const file of projectFiles(root)) {
@@ -125,15 +125,18 @@ async function checkOnly(paths: string[]): Promise<number> {
   const cwd = process.cwd()
   const relative = (file: string) => path.relative(cwd, file)
   const shown = named(paths, cwd)
-  // Each project a named file is in, checked whole, since the named files may
+  // Each project with a named file, checked whole, since the named files may
   // use Defines from the rest of it.
-  const roots = new Set(
-    discover(paths.length ? paths : [cwd], cwd, [], true).map((f) => projectRoot(path.dirname(f), cwd)),
-  )
+  const configs = findConfigs(paths.length ? paths : [cwd], cwd)
+  if (!configs.length) {
+    console.log(`No gpp.config.ts at or under ${paths.length ? paths.join(', ') : 'this directory'}`)
+    return 1
+  }
   let problems = 0
   let count = 0
-  for (const root of roots) {
-    const { files, broken } = loadProject(root)
+  for (const file of configs) {
+    const config = await loadConfig(file)
+    const { files, broken } = loadProject(config.root)
     for (const err of broken.filter((e) => shown(e.file))) {
       // A file that doesn't parse: its message already says where.
       console.log(`${relative(err.file)}\n  ${err.message}\n`)
@@ -141,7 +144,7 @@ async function checkOnly(paths: string[]): Promise<number> {
     }
     // An Outline's rows share their steps, and so their mistakes.
     const seen = new Set<string>()
-    const diagnostics = checkFiles(files, relative).diagnostics.filter((d: Diagnostic) => {
+    const diagnostics = checkFiles(files, config, relative).diagnostics.filter((d: Diagnostic) => {
       const key = `${d.file}:${d.line}:${d.column}:${d.message}`
       return shown(d.file) && !seen.has(key) && seen.add(key)
     })
@@ -156,8 +159,11 @@ async function checkOnly(paths: string[]): Promise<number> {
 
 async function printWords(): Promise<number> {
   const cwd = process.cwd()
+  const file = findConfig(cwd)
+  const config: Config | null = file ? await loadConfig(file) : null
   // A file that doesn't parse has no Defines to list; check says why.
-  const { files } = loadProject(projectRoot(cwd, cwd))
-  console.log(listWords(words(), checkFiles(files, (file) => path.relative(cwd, file)).specs, cwd))
+  const { files } = config ? loadProject(config.root) : { files: [] }
+  const checked = checkFiles(files, config, (f) => path.relative(cwd, f))
+  console.log(listWords(config, checked, cwd))
   return 0
 }

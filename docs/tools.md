@@ -4,17 +4,19 @@
 
 | Command | Does |
 | --- | --- |
-| `gpp-lang check [paths...]` | checks the files under each path, or where it's run, without running them |
-| `gpp-lang words` | lists every word, and the project's own Defines |
+| `gpp-lang check [paths...]` | checks the projects under each path, or where it's run, without running them |
+| `gpp-lang words` | lists every word the project's backends have, and its own Defines |
 | `gpp-lang lsp` | starts the language server |
 
-`check` covers `.gpp` files, Markdown's ` ```gpp ` blocks and `gpp` templates in `.js`, `.ts`,
-`.jsx` and `.tsx` files.
+A project is the files under a `gpp.config.ts`, which says which backend runs each, and so
+which words it has. `check` covers `.gpp` files, Markdown's ` ```gpp ` blocks and `gpp`
+templates in `.js`, `.ts`, `.jsx` and `.tsx` files.
 
 ## Language server
 
-Works in `.gpp` files and Markdown. [`gpp` templates](storybook.md) get everything but
-symbols and semantic tokens.
+Works in `.gpp` files and Markdown. `gpp` templates get everything but symbols and semantic
+tokens. Loading `gpp.config.ts` runs it, so in a workspace an editor doesn't trust, the
+language server only shows files that don't parse.
 
 | Feature | Does |
 | --- | --- |
@@ -50,7 +52,7 @@ vim.filetype.add({ extension = { gpp = 'gpp' } })
 vim.lsp.config('gpp', {
   cmd = { 'npx', 'gpp-lang', 'lsp' },
   filetypes = { 'gpp' },
-  root_markers = { 'package.json', '.git' },
+  root_markers = { 'gpp.config.ts', '.git' },
 })
 vim.lsp.enable('gpp')
 ```

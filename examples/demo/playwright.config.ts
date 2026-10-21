@@ -3,9 +3,10 @@
 
 import { defineGppConfig } from '@gpp-lang/playwright'
 import { defineConfig } from '@playwright/test'
+import gpp from './gpp.config.ts'
 
 export default defineConfig({
-  ...defineGppConfig({ features: ['features'] }),
+  ...defineGppConfig(gpp),
   use: { baseURL: 'http://localhost:4173' },
   webServer: { command: 'node serve.ts', url: 'http://localhost:4173', reuseExistingServer: true },
 })

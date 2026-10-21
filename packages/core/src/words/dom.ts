@@ -45,9 +45,6 @@ export interface DomBackend<C extends Context> {
   // Runs attempt until it doesn't throw, as Testing Library's waitFor does,
   // or, without it, by trying every 50ms for its asyncUtilTimeout.
   retry?(attempt: () => unknown): Promise<void>
-  // Why there's nothing to visit, reload or go back from: the page is one
-  // that's already open.
-  onePage: string
 }
 
 // ---------------------------------------------------------------- handles
@@ -283,10 +280,6 @@ export function domDriver<C extends Context>(backend: DomBackend<C>): Driver<C, 
     return element
   }
 
-  const onePage = async (): Promise<never> => {
-    throw new GppError(backend.onePage)
-  }
-
   return {
     find(_, root, query) {
       const { label, search: find } = search(lib, query)
@@ -350,11 +343,5 @@ export function domDriver<C extends Context>(backend: DomBackend<C>): Driver<C, 
     retry(_, attempt) {
       return retry(attempt)
     },
-
-    // A template has no page words (words({ template: true })), so these never run.
-    visit: onePage,
-    reload: onePage,
-    back: onePage,
-    expectPage: onePage,
   }
 }

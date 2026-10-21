@@ -130,4 +130,8 @@ since the server's report can arrive late.
 Before changing or renaming a `Define`, use the `LSP` tool's find references on it to see
 everywhere it's used. To run the scenarios in
 a browser, use `npx playwright test`, where `features/cart.gpp:12` runs the scenario on line 12.
-Storybook runs `gpp` templates as play functions, with its own test runner.
+Storybook runs `gpp` templates as play functions, with its own test runner. Vitest and Jest run
+`gpp` templates that are Features, with `@gpp-lang/testing-library`. The project's
+`gpp.config.ts` says which backend runs each file, and so which words it has: only
+Playwright's have `Visit`, and only Testing Library's have `Render`. `npx gpp-lang words` lists
+them.
