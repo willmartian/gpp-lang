@@ -13,6 +13,9 @@ Things that came up while building Gherkin++ and haven't been done.
       API calls. When may only do what a user does. Then may only check what a user can see,
       except words marked as side-effect checks (an email was sent). Needs words to say which
       kind they are.
+- [ ] **`gpp-lang init`.** Writes a project's `gpp.config.ts`, with a backend for each of
+      `@gpp-lang/playwright`, `@gpp-lang/storybook` and `@gpp-lang/testing-library` the
+      project has installed, and adds `.gpp-tests/` to `.gitignore` for Playwright's.
 
 ## Decided against
 
