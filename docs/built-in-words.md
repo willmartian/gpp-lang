@@ -1,4 +1,4 @@
 # Built-in words
 
-Each line under a word is one way to use it ([signatures](words.md#types)).
-`npx gpp-lang words` prints the same, plus your [own words](defines.md).
+Each line under a word is one of its [signatures](writing-specs.md#types).
+`npx gpp-lang words` prints the same list, along with your project's own Defines.

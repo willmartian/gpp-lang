@@ -1,9 +1,8 @@
 # Storybook
 
-A `gpp` template is a story's [play function](https://storybook.js.org/docs/writing-stories/play-function).
-The args set the story up; the template is its steps. See
-[`examples/storybook`](../examples/storybook). For whole-app tests, see
-[Playwright](playwright.md); for components in Vitest or Jest, [Testing Library](testing-library.md).
+The Storybook backend turns a `gpp` template into a story's
+[play function](https://storybook.js.org/docs/writing-stories/play-function). The story's
+args set it up and the template says what to do with it.
 
 ```ts
 import { gpp } from '@gpp-lang/storybook'
@@ -18,7 +17,9 @@ export const SavingADraft: Story = {
 }
 ```
 
-Needs Storybook 10.
+## Setup
+
+You need Storybook 10.
 
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/storybook
@@ -37,32 +38,31 @@ import { storybook } from '@gpp-lang/storybook/config'
 export default defineConfig({ backends: [storybook()] })
 ```
 
-`storybook()` runs every `*.stories.*` file, or the globs in its `files`.
+By default it covers every `*.stories.*` file. Pass `files` to narrow that down.
 
-- **Each line is a step,** starting with Given, When, Then, And, But or `*`. Tables and
-  DocStrings work. No `Feature:` or `Scenario:` line.
-- **The Interactions panel** shows each step and what it did.
-- **Mistakes fail the story before anything is clicked,** with a caret under the word.
-- **No `${…}`.** Write values out, even when they repeat the args.
-- **Stories run as tests** with [Storybook's Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon).
+To run stories as tests, use
+[Storybook's Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon).
 
-## Words
+## Templates
 
-The shared [words](words.md), and [none of its own](words.md#each-backends-words).
+A template is a list of steps, without `Feature:` or `Scenario:`. Data tables and DocStrings
+work. `${…}` doesn't, so write values out even if they repeat the args.
 
-- **Searches cover the whole page,** not just the canvas, so dialogs in portals are found.
-- **Checks and actions retry** for Testing Library's `asyncUtilTimeout` (one second by default).
-- **`Fill` sets the text at once,** as in Playwright. `Type` types it key by key.
+If a template has a mistake, the story fails before anything is clicked, and the error points
+at the word. The Interactions panel shows each step as it runs.
 
-## Defines
+Templates can use the project's [Defines](writing-specs.md#where-defines-work). Play
+functions can't read files, so the addon bundles the Defines when Storybook builds, and
+reloads stories when you edit one. Any `Feature:` in those files is ignored here; only
+Playwright runs it.
 
-- Templates use the project's [Defines](defines.md#where-they-work), from its `.gpp` files.
-- The addon bundles them at build time, since play functions can't read files. Editing one
-  reloads the stories.
-- A `Feature:` in those files only runs under Playwright.
+## Differences from Playwright
 
-## Checking
+Storybook has only the shared words, since the story is already rendered on an open page.
 
-`gpp-lang check` checks templates in `.js` and `.ts` files. The
-[language server](tools.md#language-server) checks them as you type, with hover, completion,
-go to definition and references. VS Code highlights them.
+Queries search the whole page, not just the story's root, so dialogs rendered in portals are
+found. Checks and actions retry until Testing Library's `asyncUtilTimeout`, which is one second
+by default. `Fill` sets a field's text in one go, as Playwright does, and `Type` types it a
+key at a time.
+
+See [`examples/storybook`](../examples/storybook) for a working project.

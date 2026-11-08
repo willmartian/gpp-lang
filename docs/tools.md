@@ -2,41 +2,38 @@
 
 ## CLI
 
-| Command | Does |
-| --- | --- |
-| `gpp-lang check [paths...]` | checks the projects under each path, or where it's run, without running them |
-| `gpp-lang words` | lists every word the project's backends have, and its own Defines |
-| `gpp-lang lsp` | starts the language server |
+```sh
+npx gpp-lang check [paths...]  # check specs without running them
+npx gpp-lang words             # list every word the project can use
+npx gpp-lang lsp               # start the language server
+```
 
-A project is the files under a `gpp.config.ts`, which says which backend runs each, and so
-which words it has. `check` covers `.gpp` files, Markdown's ` ```gpp ` blocks and `gpp`
+`check` finds every `gpp.config.ts` under the given paths, or under the current directory,
+and checks the files each one covers: `.gpp` files, ` ```gpp ` blocks in Markdown, and `gpp`
 templates in `.js`, `.ts`, `.jsx` and `.tsx` files.
 
 ## Language server
 
-Works in `.gpp` files and Markdown. `gpp` templates get everything but symbols and semantic
-tokens. Loading `gpp.config.ts` runs it, so in a workspace an editor doesn't trust, the
-language server only shows files that don't parse.
+The language server reports mistakes as you type, and has hover, go to definition, find
+references, completion, document symbols and semantic highlighting. Completion suggests words
+that fit where the cursor is, so after `Click the` it offers elements.
 
-| Feature | Does |
-| --- | --- |
-| diagnostics | shows mistakes as you type |
-| hover | a word's types, what it does and an example |
-| go to definition | a word's Define |
-| find references | everywhere a word is used |
-| symbols | a file's Defines and scenarios |
-| completion | words that fit first: after `Click the`, elements |
-| semantic tokens | marks which words are code |
+All of it works in `.gpp` files and Markdown. In `gpp` templates, everything works except
+symbols and semantic highlighting.
+
+The server runs your `gpp.config.ts` to find out which words a file has. In an untrusted
+workspace it won't, and only reports syntax errors.
 
 ## VS Code
 
 Install [the Gherkin++ extension](https://marketplace.visualstudio.com/items?itemName=gpp-lang.gpp-vscode).
-It uses your project's `node_modules/gpp-lang` when there is one. For run and debug buttons,
-add [Playwright's extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
+It uses the `gpp-lang` in your project's `node_modules` if there is one. To get run and debug
+buttons on scenarios, also install
+[Playwright's extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
 
 ## Claude Code
 
-Teaches Claude the language and runs the language server.
+The plugin teaches Claude the language and gives it the language server.
 
 ```sh
 claude plugin marketplace add willmartian/gpp-lang

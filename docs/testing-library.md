@@ -1,9 +1,8 @@
 # Testing Library
 
-Runs a `gpp` template as tests, in Vitest or Jest, with
-[Testing Library](https://testing-library.com). A template is a Feature, with one test per
-Scenario. See [`examples/testing-library`](../examples/testing-library). For stories, see
-[Storybook](storybook.md); for whole-app tests, [Playwright](playwright.md).
+The Testing Library backend runs a `gpp` template as tests in Vitest or Jest, using
+[Testing Library](https://testing-library.com). Each template is a Feature, and each Scenario
+is a test.
 
 ```tsx
 // Editor.test.tsx
@@ -21,11 +20,11 @@ gpp`
 `
 ```
 
+## Setup
+
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/testing-library @testing-library/dom @testing-library/user-event
 ```
-
-## Setup
 
 ```ts
 // gpp.config.ts
@@ -35,8 +34,9 @@ import { testingLibrary } from '@gpp-lang/testing-library/config'
 export default defineConfig({ backends: [testingLibrary()] })
 ```
 
-`testingLibrary()` runs every `*.test.*` and `*.spec.*` file, or the globs in its `files`.
-A setup file says what `Render` renders with, here React Testing Library's `render`:
+By default it covers every `*.test.*` and `*.spec.*` file. Pass `files` to narrow that down.
+
+A setup file tells `Render` how to render. With React Testing Library:
 
 ```ts
 // gpp.setup.ts
@@ -52,15 +52,15 @@ renderWith(render)
 // vitest.config.ts
 test: {
   environment: 'jsdom',
-  globals: true,
+  globals: true, // gpp uses the describe, test and afterEach globals
   setupFiles: ['gpp.setup.ts'],
 }
 ```
 
-`gpp` declares tests with the `describe` and `test` globals, and Testing Library cleans up
-with `afterEach`, so `globals` must be on.
-
 ### Jest
+
+Install `jest-environment-jsdom`, and a Babel config that compiles to CommonJS, such as
+`@babel/preset-env`. Gherkin++ is ES modules only, so Jest has to compile it.
 
 ```js
 // jest.config.js
@@ -69,44 +69,31 @@ setupFilesAfterEnv: ['<rootDir>/gpp.setup.ts'],
 transformIgnorePatterns: ['node_modules/(?!(gpp-lang|@gpp-lang|@cucumber)/)'],
 ```
 
-Gherkin++ and `@cucumber/gherkin` are ES modules only, so Jest has to compile them, with a
-Babel config that makes CommonJS, like `@babel/preset-env`'s. Jest also needs
-`jest-environment-jsdom`.
-
 ## Templates
 
-- **A template is a Feature:** a `describe`, with a test for each Scenario and each row of a
-  Scenario Outline. Backgrounds, Rules and tables work as in any Feature.
-- **`${…}` is only for `Render`.** It holds what your renderer takes, like a React element.
-  Anywhere else, it's a mistake.
-- **Each test starts empty,** so each Scenario, or its Background, Renders what it tests.
-- **Mistakes fail the test before anything renders,** and failures point at the step in the
-  test file.
+A template becomes a `describe`, with a test for each Scenario and for each row of a Scenario
+Outline. Backgrounds, Rules and tables work as they do anywhere else.
+
+Every test starts with nothing rendered, so each Scenario or its Background has to `Render`
+something. `${…}` is only allowed after `Render`, and holds whatever your render function
+takes, like a React element.
+
+If a template has a mistake, the test fails before anything renders, and the error points at
+the step in your test file. Templates can use the project's
+[Defines](writing-specs.md#where-defines-work).
 
 ## Tags
 
-| Tag | Does |
-| --- | --- |
-| `@skip`, `@fixme` | `test.skip` |
-| `@only` | `test.only` |
-| `@fail` | `test.fails` in Vitest, `test.failing` in Jest |
-| any other | added to the test's name, for `-t` |
+`@skip` and `@fixme` become `test.skip`, and `@only` becomes `test.only`. `@fail` becomes
+`test.fails` in Vitest and `test.failing` in Jest. Any other tag is added to the test's name,
+so you can pick it out with `-t`.
 
-## Words
+## Differences from Playwright
 
-The shared [words](words.md), and [`Render`](words.md#each-backends-words).
+Testing Library files can't use Playwright's page words, and get `Render` instead.
 
-- **Searches cover the whole page,** so dialogs in portals are found.
-- **Checks and actions retry** with Testing Library's `waitFor`, for its `asyncUtilTimeout`
-  (one second by default).
-- **Hidden means hidden by CSS** in jsdom and happy-dom, which have no layout.
+Queries search the whole document, so dialogs rendered in portals are found. Checks and actions
+retry with `waitFor` until Testing Library's `asyncUtilTimeout`, which is one second by
+default. jsdom and happy-dom don't do layout, so `Hidden` only sees elements hidden by CSS.
 
-## Defines
-
-Templates use the project's [Defines](defines.md#where-they-work): those in `.gpp` files
-and Markdown under the nearest `gpp.config.ts` above the test file.
-
-## Checking
-
-`gpp-lang check` checks templates in `.js`, `.ts`, `.jsx` and `.tsx` files, as the
-[language server](tools.md#language-server) does as you type.
+See [`examples/testing-library`](../examples/testing-library) for a working project.

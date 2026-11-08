@@ -3,9 +3,9 @@
 
 ## Docs
 
-@docs/words.md
+@docs/writing-specs.md
 @docs/built-in-words.md
-@docs/defines.md
 @docs/tools.md
 @docs/playwright.md
 @docs/storybook.md
+@docs/testing-library.md
