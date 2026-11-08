@@ -1,6 +1,6 @@
 # 🥒 Gherkin++
 
-Gherkin without step definitions. Capitalised words are code.
+Gherkin without step definitions. Capitalised words are code, and type-checked.
 
 ```gherkin
 Feature: Signing in
@@ -13,21 +13,16 @@ Feature: Signing in
     Then I should See the Heading "Welcome back"
 ```
 
-Steps are type-checked before they run. No waits, conditionals or CSS selectors, so agents
-can write them and people can review them.
+No waits, conditionals or CSS selectors, so agents can write it and people can review it.
 
-Runs on Playwright, Storybook, or Vitest and Jest with Testing Library.
+## Install
 
-## Getting started
-
-Needs Node.js 22.18+. With Playwright:
+Needs Node.js 22.18+.
 
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/playwright @playwright/test
 npx playwright install chromium
 ```
-
-`gpp.config.ts`, at your project root, says which files each backend runs:
 
 ```ts
 // gpp.config.ts
@@ -51,17 +46,15 @@ export default defineConfig({
 })
 ```
 
-Gitignore `.gpp-tests/`, save the example as `features/sign-in.gpp`, then
-`npx playwright test`. For components, see [Storybook](docs/storybook.md) or
-[Testing Library](docs/testing-library.md).
+Gitignore `.gpp-tests/`, then `npx playwright test`.
 
 ## Docs
 
 - [Writing specs](docs/writing-specs.md)
 - [Built-in words](docs/built-in-words.md)
+- [CLI and editors](docs/tools.md)
 - [Playwright](docs/playwright.md)
 - [Storybook](docs/storybook.md)
 - [Testing Library](docs/testing-library.md)
-- [CLI and editors](docs/tools.md)
 
 [Contributing](CONTRIBUTING.md)
