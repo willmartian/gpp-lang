@@ -1,7 +1,6 @@
 # 🥒 Gherkin++
 
-Gherkin++ is Gherkin without step definitions. In a step, capitalised words are code and
-lowercase words are there for the reader.
+Gherkin without step definitions. Capitalised words are code.
 
 ```gherkin
 Feature: Signing in
@@ -14,26 +13,21 @@ Feature: Signing in
     Then I should See the Heading "Welcome back"
 ```
 
-`Click the Button "Sign in"` finds the button labelled "Sign in" and clicks it. Every step is
-type-checked before it runs, so `When I Click "Sign in"` is an error in your editor rather than
-a failing test.
+Steps are type-checked before they run. No waits, conditionals or CSS selectors, so agents
+can write them and people can review them.
 
-There are no waits, conditionals or CSS selectors. That makes it a good format for agents to
-write tests in: whoever reviews a spec only has to decide whether it tests the right thing.
-
-Specs run as Playwright tests, Storybook play functions, or Vitest and Jest tests with
-Testing Library.
+Runs on Playwright, Storybook, or Vitest and Jest with Testing Library.
 
 ## Getting started
 
-You need Node.js 22.18 or later. With Playwright:
+Needs Node.js 22.18+. With Playwright:
 
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/playwright @playwright/test
 npx playwright install chromium
 ```
 
-`gpp.config.ts`, at the root of your project, says which files each backend runs:
+`gpp.config.ts`, at your project root, says which files each backend runs:
 
 ```ts
 // gpp.config.ts
@@ -57,14 +51,9 @@ export default defineConfig({
 })
 ```
 
-Add `.gpp-tests/` to `.gitignore`, put the example above in `features/sign-in.gpp`, and run
-`npx playwright test`.
-
-To test components instead, see [Storybook](docs/storybook.md) or
-[Testing Library](docs/testing-library.md). A project can use several backends at once.
-
-`npx gpp-lang check` checks every spec without running it, and `npx gpp-lang words` lists
-the words you can use.
+Gitignore `.gpp-tests/`, save the example as `features/sign-in.gpp`, then
+`npx playwright test`. For components, see [Storybook](docs/storybook.md) or
+[Testing Library](docs/testing-library.md).
 
 ## Docs
 
@@ -74,7 +63,5 @@ the words you can use.
 - [Storybook](docs/storybook.md)
 - [Testing Library](docs/testing-library.md)
 - [CLI and editors](docs/tools.md)
-
-Backgrounds, Scenario Outlines, Rules, data tables and tags all work as they do in Cucumber.
 
 [Contributing](CONTRIBUTING.md)

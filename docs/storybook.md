@@ -1,8 +1,7 @@
 # Storybook
 
-The Storybook backend turns a `gpp` template into a story's
-[play function](https://storybook.js.org/docs/writing-stories/play-function). The story's
-args set it up and the template says what to do with it.
+A `gpp` template as a story's
+[play function](https://storybook.js.org/docs/writing-stories/play-function).
 
 ```ts
 import { gpp } from '@gpp-lang/storybook'
@@ -19,7 +18,7 @@ export const SavingADraft: Story = {
 
 ## Setup
 
-You need Storybook 10.
+Needs Storybook 10.
 
 ```sh
 npm install --save-dev gpp-lang @gpp-lang/storybook
@@ -35,34 +34,23 @@ addons: ['@gpp-lang/storybook']
 import { defineConfig } from 'gpp-lang'
 import { storybook } from '@gpp-lang/storybook/config'
 
-export default defineConfig({ backends: [storybook()] })
+export default defineConfig({ backends: [storybook()] }) // *.stories.*, or { files }
 ```
 
-By default it covers every `*.stories.*` file. Pass `files` to narrow that down.
-
-To run stories as tests, use
+Run stories as tests with
 [Storybook's Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon).
 
 ## Templates
 
-A template is a list of steps, without `Feature:` or `Scenario:`. Data tables and DocStrings
-work. `${…}` doesn't, so write values out even if they repeat the args.
+- Steps only: no `Feature:` or `Scenario:`.
+- No `${…}`. Write values out.
+- Mistakes fail the story before it runs.
+- [Defines](writing-specs.md#where-defines-work) work. Edit one and stories reload.
 
-If a template has a mistake, the story fails before anything is clicked, and the error points
-at the word. The Interactions panel shows each step as it runs.
+## Behaviour
 
-Templates can use the project's [Defines](writing-specs.md#where-defines-work). Play
-functions can't read files, so the addon bundles the Defines when Storybook builds, and
-reloads stories when you edit one. Any `Feature:` in those files is ignored here; only
-Playwright runs it.
+- Queries search the whole page, so portals are found.
+- Checks and actions retry for `asyncUtilTimeout` (1s by default).
+- `Fill` sets text at once. `Type` types key by key.
 
-## Differences from Playwright
-
-Storybook has only the shared words, since the story is already rendered on an open page.
-
-Queries search the whole page, not just the story's root, so dialogs rendered in portals are
-found. Checks and actions retry until Testing Library's `asyncUtilTimeout`, which is one second
-by default. `Fill` sets a field's text in one go, as Playwright does, and `Type` types it a
-key at a time.
-
-See [`examples/storybook`](../examples/storybook) for a working project.
+Example: [`examples/storybook`](../examples/storybook).
