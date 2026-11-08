@@ -37,18 +37,25 @@ import { storybook } from '@gpp-lang/storybook/config'
 export default defineConfig({ backends: [storybook()] }) // *.stories.*, or { files }
 ```
 
-Run stories as tests with
-[Storybook's Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon).
-
-## Templates
+## Writing
 
 - Steps only: no `Feature:` or `Scenario:`.
 - No `${…}`. Write values out.
-- Mistakes fail the story before it runs.
 - [Defines](writing-specs.md#where-defines-work) work. Edit one and stories reload.
+
+## Running
+
+Open the story, or run stories as tests with
+[Storybook's Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon).
+Mistakes fail the story before it runs.
+
+## Tags
+
+None. Use the story's own `tags`.
 
 ## Behaviour
 
+- No words of its own.
 - Queries search the whole page, so portals are found.
 - Checks and actions retry for `asyncUtilTimeout` (1s by default).
 - `Fill` sets text at once. `Type` types key by key.

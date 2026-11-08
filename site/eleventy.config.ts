@@ -29,12 +29,12 @@ const REPO = 'https://github.com/willmartian/gpp-lang'
 
 const PAGES = [
   { file: 'README.md', url: '/', nav: 'Overview' },
-  { file: 'docs/writing-specs.md', url: '/writing-specs/', nav: 'Writing specs', section: 'Language' },
+  { file: 'docs/writing-specs.md', url: '/writing-specs/', nav: 'Writing specs' },
   { file: 'docs/built-in-words.md', url: '/built-in-words/', nav: 'Built-in words', layout: 'words.njk' },
+  { file: 'docs/tools.md', url: '/tools/', nav: 'CLI and editors' },
   { file: 'docs/playwright.md', url: '/playwright/', nav: 'Playwright', section: 'Backends' },
   { file: 'docs/storybook.md', url: '/storybook/', nav: 'Storybook' },
   { file: 'docs/testing-library.md', url: '/testing-library/', nav: 'Testing Library' },
-  { file: 'docs/tools.md', url: '/tools/', nav: 'CLI and editors', section: 'Tools' },
 ]
 
 const FONTS = [

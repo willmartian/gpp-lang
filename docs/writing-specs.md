@@ -88,7 +88,7 @@ Feature: The grocery list
 - Defines go above `Feature:`, or in a file without one.
 - Types are inferred from the body, so `When I Add the Button "Milk"` is an error.
 
-### Nouns
+## Nouns
 
 A Define that leaves one value is a noun. Its name is a type.
 
@@ -109,7 +109,7 @@ When I Click the Cart
 When I Add "Milk" to the Region "Shopping cart"
 ```
 
-### Overloads
+## Overloads
 
 ```gherkin
 Define: Add Text (Item) to Cart
@@ -122,7 +122,7 @@ Define: Add Text (Email) to Settings
 When several fit, the one taking more arguments wins, then the one with narrower types (Cart
 over Element, anything over `Any`). Defines that always both fit are an error.
 
-### Where Defines work
+## Where Defines work
 
 Everywhere under the same `gpp.config.ts`: `.gpp` files, Markdown and templates. A
 directory with its own `gpp.config.ts` is a separate project.

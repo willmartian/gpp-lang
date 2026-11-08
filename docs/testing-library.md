@@ -63,12 +63,20 @@ setupFilesAfterEnv: ['<rootDir>/gpp.setup.ts'],
 transformIgnorePatterns: ['node_modules/(?!(gpp-lang|@gpp-lang|@cucumber)/)'],
 ```
 
-## Templates
+## Writing
 
 - Each test starts empty. `Render` something in each Scenario or the Background.
 - `${…}` only after `Render`.
-- Mistakes fail the test before it renders.
 - [Defines](writing-specs.md#where-defines-work) work.
+
+## Running
+
+```sh
+npx vitest                  # or npx jest
+npx vitest -t "@smoke"      # scenarios tagged @smoke
+```
+
+Mistakes fail the test before it renders.
 
 ## Tags
 
@@ -81,6 +89,7 @@ transformIgnorePatterns: ['node_modules/(?!(gpp-lang|@gpp-lang|@cucumber)/)'],
 
 ## Behaviour
 
+- Adds `Render`.
 - Queries search the whole document, so portals are found.
 - Checks and actions retry for `asyncUtilTimeout` (1s by default).
 - jsdom has no layout, so `Hidden` only sees CSS.

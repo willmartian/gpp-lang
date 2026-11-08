@@ -33,32 +33,11 @@ export default defineConfig({
 })
 ```
 
-Gitignore `.gpp-tests/`. Projects, retries, sharding, UI mode and traces all work.
+Gitignore `.gpp-tests/`.
 
-## Running
+## Writing
 
-```sh
-npx playwright test                          # everything
-npx playwright test features/sign-in.gpp:12  # the scenario on line 12
-npx playwright test --grep @smoke            # scenarios tagged @smoke
-```
-
-`@skip`, `@fixme`, `@fail`, `@slow` and `@only` work as in Playwright. Other tags are
-Playwright tags.
-
-## Words
-
-```gherkin
-Given I Visit "/settings"
-When I Reload
-And I go Back
-Then I should be At "/"
-And the page should be Titled "Home"
-```
-
-## Markdown
-
-` ```gpp ` blocks in Markdown run as tests.
+Features go in `.gpp` files, or in ` ```gpp ` blocks in Markdown:
 
 ````markdown
 Signing in takes an email and a password.
@@ -84,5 +63,35 @@ With the wrong password, you stay where you are:
 | `Scenario:` or a step | more of the Feature above |
 | anything else | Defines |
 
-` ```gpp ignore ` blocks are shown, not run. `npx playwright test README.md:12` works.
+` ```gpp ignore ` blocks are shown, not run.
 Example: [`examples/demo/features/README.md`](../examples/demo/features/README.md).
+
+## Running
+
+```sh
+npx playwright test                          # everything
+npx playwright test features/sign-in.gpp:12  # the scenario on line 12
+npx playwright test README.md:12             # works for Markdown too
+npx playwright test --grep @smoke            # scenarios tagged @smoke
+```
+
+Projects, retries, sharding, UI mode and traces all work.
+
+## Tags
+
+| Tag | Is |
+| --- | --- |
+| `@skip`, `@fixme`, `@fail`, `@slow`, `@only` | as in Playwright |
+| other | a Playwright tag, for `--grep` |
+
+## Behaviour
+
+Adds words for the page:
+
+```gherkin
+Given I Visit "/settings"
+When I Reload
+And I go Back
+Then I should be At "/"
+And the page should be Titled "Home"
+```
