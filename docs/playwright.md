@@ -71,11 +71,8 @@ Example: [`examples/demo/features/README.md`](../examples/demo/features/README.m
 ```sh
 npx playwright test                          # everything
 npx playwright test features/sign-in.gpp:12  # the scenario on line 12
-npx playwright test README.md:12             # works for Markdown too
 npx playwright test --grep @smoke            # scenarios tagged @smoke
 ```
-
-Projects, retries, sharding, UI mode and traces all work.
 
 ## Tags
 

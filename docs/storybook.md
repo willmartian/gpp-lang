@@ -41,13 +41,12 @@ export default defineConfig({ backends: [storybook()] }) // *.stories.*, or { fi
 
 - Steps only: no `Feature:` or `Scenario:`.
 - No `${…}`. Write values out.
-- [Defines](writing-specs.md#where-defines-work) work. Edit one and stories reload.
+- [Defines](writing-specs.md#where-defines-work) work.
 
 ## Running
 
 Open the story, or run stories as tests with
 [Storybook's Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon).
-Mistakes fail the story before it runs.
 
 ## Tags
 
@@ -57,7 +56,6 @@ None. Use the story's own `tags`.
 
 - No words of its own.
 - Queries search the whole page, so portals are found.
-- Checks and actions retry for `asyncUtilTimeout` (1s by default).
-- `Fill` sets text at once. `Type` types key by key.
+- Checks and actions retry for `asyncUtilTimeout`.
 
 Example: [`examples/storybook`](../examples/storybook).

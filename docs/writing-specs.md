@@ -5,7 +5,7 @@ When I Fill the Field "Email" with "will@example.com"
 ```
 
 Capitalised words are code, quoted text and numbers are values, and lowercase words are
-ignored. Quote or lowercase any other capitalised name.
+ignored.
 
 ## Reading a step
 
@@ -40,8 +40,7 @@ Elements are found by role, label or text, as in
 Button : Text | Pattern, Scope -> Element
 ```
 
-Takes text or a pattern, then a scope, and leaves an element. Hover a word or run
-`npx gpp-lang words` to see its signatures.
+Takes text or a pattern, then a scope, and leaves an element.
 
 | Type | Example |
 | --- | --- |
@@ -81,7 +80,7 @@ Feature: The grocery list
     Then I should See the Cell "Milk"
 ```
 
-- `Text (Item)` takes text, called `Item` in the body. Plain `Text` is called `Text`.
+- `Text (Item)` takes text, called `Item` in the body.
 - Arguments can be `Text`, `Number`, `Element`, `Table`, `Any` or a noun.
 - Two of the same type need names: `Move Element (Source) to Element (Target)`.
 - The body is steps without `Given`, `When` or `Then`.
@@ -120,12 +119,11 @@ Define: Add Text (Email) to Settings
 ```
 
 When several fit, the one taking more arguments wins, then the one with narrower types (Cart
-over Element, anything over `Any`). Defines that always both fit are an error.
+over Element, anything over `Any`).
 
 ## Where Defines work
 
-Everywhere under the same `gpp.config.ts`: `.gpp` files, Markdown and templates. A
-directory with its own `gpp.config.ts` is a separate project.
+Everywhere under the same `gpp.config.ts`: `.gpp` files, Markdown and templates.
 
 ## Backend words
 
@@ -134,5 +132,3 @@ directory with its own `gpp.config.ts` is a separate project.
 | Playwright | `Visit`, `Reload`, `Back`, `At`, `Titled` |
 | Testing Library | `Render` |
 | Storybook | nothing |
-
-A Define that uses one only works in that backend's files.

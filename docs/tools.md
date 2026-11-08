@@ -14,9 +14,7 @@ TS files.
 ## Language server
 
 Diagnostics, hover, go to definition, references, completion, symbols and semantic
-highlighting. Templates get everything but symbols and highlighting.
-
-It runs `gpp.config.ts`, so in an untrusted workspace it only reports syntax errors.
+highlighting.
 
 ## VS Code
 

@@ -76,8 +76,6 @@ npx vitest                  # or npx jest
 npx vitest -t "@smoke"      # scenarios tagged @smoke
 ```
 
-Mistakes fail the test before it renders.
-
 ## Tags
 
 | Tag | Is |
@@ -91,7 +89,6 @@ Mistakes fail the test before it renders.
 
 - Adds `Render`.
 - Queries search the whole document, so portals are found.
-- Checks and actions retry for `asyncUtilTimeout` (1s by default).
-- jsdom has no layout, so `Hidden` only sees CSS.
+- Checks and actions retry for `asyncUtilTimeout`.
 
 Example: [`examples/testing-library`](../examples/testing-library).
